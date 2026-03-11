@@ -618,6 +618,9 @@ const SupervisorDashboard = {
       showToast(`Worker "${name}" added!`, 'success');
     }
     
+    // Save state after worker modification
+    AFV.saveState();
+    
     this.closeWorkerModal();
     this.showPage('workers');
   },
@@ -632,6 +635,7 @@ const SupervisorDashboard = {
     
     AFV.workers = AFV.workers.filter(w => w.id !== workerId);
     AFV.logActivity('🗑️', `Worker deleted: ${worker.name}`);
+    AFV.saveState();
     showToast(`Worker "${worker.name}" deleted`, 'success');
     this.showPage('workers');
   },

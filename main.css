@@ -192,6 +192,15 @@
   display: none;
 }
 
+/* Sidebar toggle button - base styling */
+.sidebar-toggle {
+  display: none;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -1767,10 +1776,352 @@ tbody tr:last-child td { border-bottom: none; }
   }
 }
 
-/* Extra small devices */
+/* ============================================ ENHANCED MOBILE RESPONSIVE */
+
+/* Tablet portrait (600px) */
+@media (max-width: 600px) {
+  /* Login page */
+  .login-card {
+    padding: 28px 20px;
+    margin: 12px;
+    max-width: calc(100% - 24px);
+  }
+  
+  .logo-icon {
+    font-size: 2.8rem;
+  }
+  
+  .login-logo h1 {
+    font-size: 1.5rem;
+  }
+  
+  .login-logo h1 span {
+    font-size: 1.1rem;
+  }
+  
+  .role-selector {
+    gap: 6px;
+    padding: 5px;
+  }
+  
+  .role-btn {
+    padding: 8px 6px;
+  }
+  
+  .role-icon {
+    font-size: 1.3rem;
+  }
+  
+  .role-btn span:last-child {
+    font-size: 0.72rem;
+  }
+  
+  .input-group input {
+    padding: 11px 14px;
+    font-size: 0.9rem;
+  }
+  
+  .login-btn {
+    padding: 13px 20px;
+    font-size: 0.95rem;
+  }
+  
+  /* Dashboard */
+  .page-header {
+    padding: 14px 16px;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+  
+  /* Stats */
+  .page-body {
+    padding: 16px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 18px;
+  }
+  
+  .stat-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 1.6rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  /* Greenhouse cards */
+  .greenhouses-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  
+  /* Forms */
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .form-group {
+    width: 100%;
+  }
+  
+  /* Tables */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    font-size: 0.85rem;
+  }
+  
+  th, td {
+    padding: 10px 8px;
+  }
+  
+  /* Cards */
+  .card {
+    padding: 16px;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  /* Task items */
+  .task-item {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .task-checkbox {
+    flex-shrink: 0;
+  }
+  
+  .task-info {
+    flex-basis: calc(100% - 30px);
+  }
+  
+  /* Modals */
+  .modal {
+    max-width: calc(100% - 24px);
+    margin: 12px;
+  }
+  
+  .modal-header {
+    padding: 16px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+  }
+  
+  /* Task modal */
+  .task-modal {
+    max-width: calc(100% - 24px);
+    padding: 24px 20px;
+  }
+  
+  .task-modal-icon {
+    font-size: 3rem;
+  }
+  
+  .task-modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .task-modal-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* AI modal */
+  .ai-modal {
+    max-width: calc(100% - 24px);
+    max-height: 85vh;
+    border-radius: var(--radius-lg);
+  }
+  
+  .ai-modal-header {
+    padding: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .ai-title h3 {
+    font-size: 0.95rem;
+  }
+  
+  .ai-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .ai-settings {
+    padding: 12px;
+  }
+  
+  .settings-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .settings-row select,
+  .settings-row input {
+    width: 100%;
+  }
+  
+  .ai-messages {
+    max-height: 40vh;
+  }
+  
+  .ai-message {
+    max-width: 85%;
+  }
+  
+  .ai-input-area {
+    padding: 12px;
+  }
+  
+  .ai-suggestions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .ai-suggestions button {
+    font-size: 0.72rem;
+    padding: 6px 10px;
+  }
+  
+  .ai-input-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .ai-input-row textarea {
+    width: 100%;
+  }
+  
+  .ai-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Weather bar */
+  .weather-bar {
+    flex-wrap: wrap;
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .weather-item {
+    font-size: 0.8rem;
+  }
+  
+  /* Floating button */
+  .ai-float-btn {
+    bottom: 14px;
+    right: 14px;
+    width: 52px;
+    height: 52px;
+    font-size: 1.3rem;
+  }
+  
+  /* Toast */
+  #toast-container {
+    left: 10px;
+    right: 10px;
+    top: 10px;
+  }
+  
+  .toast {
+    min-width: auto;
+    max-width: 100%;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+  
+  /* Worker hero */
+  .worker-task-hero {
+    padding: 16px;
+  }
+  
+  .hero-task {
+    font-size: 1.2rem;
+  }
+  
+  .hero-gh {
+    font-size: 0.85rem;
+  }
+  
+  /* Search and filters */
+  .search-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .filter-btn {
+    font-size: 0.78rem;
+    padding: 6px 10px;
+  }
+  
+  /* Charts placeholder */
+  .chart-container {
+    min-height: 200px;
+    padding: 12px;
+  }
+}
+
+/* Extra small devices (480px and below) */
 @media (max-width: 480px) {
   .login-card {
-    padding: 24px 18px;
+    padding: 24px 16px;
+    margin: 10px;
+    border-radius: var(--radius-lg);
   }
   
   .logo-icon {
@@ -1778,19 +2129,24 @@ tbody tr:last-child td { border-bottom: none; }
   }
   
   .login-logo h1 {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
   }
   
   .login-logo h1 span {
     font-size: 1rem;
   }
   
+  .login-logo p {
+    font-size: 0.78rem;
+  }
+  
   .role-selector {
-    gap: 6px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
   }
   
   .role-btn {
-    padding: 8px 4px;
+    padding: 7px 4px;
   }
   
   .role-icon {
@@ -1798,33 +2154,424 @@ tbody tr:last-child td { border-bottom: none; }
   }
   
   .role-btn span:last-child {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+  }
+  
+  .input-group label {
+    font-size: 0.75rem;
   }
   
   .input-group input {
     padding: 10px 12px;
+    font-size: 0.88rem;
   }
   
   .login-btn {
     padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .login-hint {
+    font-size: 0.7rem;
+    padding: 6px;
+  }
+  
+  /* Dashboard */
+  .page-header {
+    padding: 12px 14px;
   }
   
   .page-title {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
+  }
+  
+  .page-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .header-actions {
+    gap: 6px;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+  
+  .page-body {
+    padding: 12px;
+  }
+  
+  .stats-grid {
+    gap: 10px;
   }
   
   .stat-card {
-    padding: 16px;
+    padding: 14px;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
   }
   
   .stat-icon {
-    width: 44px;
-    height: 44px;
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.4rem;
   }
   
   .stat-value {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+  }
+  
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .greenhouses-grid {
+    gap: 12px;
+  }
+  
+  .gh-card-header {
+    height: 100px;
+  }
+  
+  .gh-card-body {
+    padding: 12px;
+  }
+  
+  .gh-name {
+    font-size: 1rem;
+  }
+  
+  .gh-info {
+    font-size: 0.78rem;
+  }
+  
+  /* Forms */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .form-group label {
+    font-size: 0.75rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 9px 11px;
+    font-size: 0.85rem;
+  }
+  
+  /* Tables */
+  .table-wrapper {
+    font-size: 0.78rem;
+  }
+  
+  th, td {
+    padding: 8px 6px;
+  }
+  
+  /* Cards */
+  .card {
+    padding: 12px;
+    border-radius: var(--radius-md);
+  }
+  
+  .card-title {
+    font-size: 1rem;
+  }
+  
+  /* Task items */
+  .task-item {
+    padding: 10px;
+  }
+  
+  .task-title {
+    font-size: 0.85rem;
+  }
+  
+  .task-meta {
+    font-size: 0.7rem;
+  }
+  
+  .task-actions {
+    gap: 4px;
+  }
+  
+  .task-action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+  
+  /* Modals */
+  .modal {
+    margin: 8px;
+    border-radius: var(--radius-md);
+  }
+  
+  .modal-header {
+    padding: 12px;
+  }
+  
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+  
+  .modal-body {
+    padding: 12px;
+  }
+  
+  .modal-body p {
+    font-size: 0.85rem;
+  }
+  
+  /* Task modal */
+  .task-modal {
+    padding: 20px 16px;
+  }
+  
+  .task-modal-icon {
+    font-size: 2.5rem;
+  }
+  
+  .task-modal h3 {
+    font-size: 1.1rem;
+  }
+  
+  .task-modal p {
+    font-size: 0.85rem;
+  }
+  
+  .task-modal-actions button {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  
+  /* AI modal */
+  .ai-modal {
+    max-width: calc(100% - 16px);
+    max-height: 80vh;
+    border-radius: var(--radius-md);
+  }
+  
+  .ai-modal-header {
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ai-title {
+    gap: 8px;
+  }
+  
+  .ai-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+  
+  .ai-title h3 {
+    font-size: 0.9rem;
+  }
+  
+  .ai-status {
+    font-size: 0.65rem;
+  }
+  
+  .ai-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .ai-settings-btn, .ai-close-btn {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+  
+  .ai-messages {
+    max-height: 35vh;
+    padding: 12px;
+  }
+  
+  .ai-message {
+    max-width: 90%;
+  }
+  
+  .msg-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+  
+  .msg-bubble {
+    font-size: 0.85rem;
+    padding: 10px 12px;
+  }
+  
+  .ai-input-area {
+    padding: 10px;
+  }
+  
+  .ai-suggestions {
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+  
+  .ai-suggestions button {
+    font-size: 0.68rem;
+    padding: 5px 8px;
+    border-radius: 12px;
+  }
+  
+  .ai-input-row textarea {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+  
+  .ai-send-btn {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+  
+  /* Weather */
+  .weather-bar {
+    padding: 10px;
+    gap: 6px;
+  }
+  
+  .weather-item {
+    font-size: 0.72rem;
+  }
+  
+  .weather-icon {
+    font-size: 1rem;
+  }
+  
+  /* Floating button */
+  .ai-float-btn {
+    bottom: 12px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+  
+  /* Toast */
+  #toast-container {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+  }
+  
+  .toast {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+  
+  /* Worker hero */
+  .worker-task-hero {
+    padding: 14px;
+  }
+  
+  .hero-task {
+    font-size: 1.1rem;
+  }
+  
+  .hero-gh {
+    font-size: 0.78rem;
+  }
+  
+  .hero-complete-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Search and filters */
+  .search-bar {
+    gap: 8px;
+  }
+  
+  .search-input {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .filter-group {
+    gap: 5px;
+  }
+  
+  .filter-btn {
+    font-size: 0.72rem;
+    padding: 5px 8px;
+  }
+  
+  /* Forgot password modal */
+  #forgot-password-modal .modal {
+    padding: 20px;
+  }
+  
+  #forgot-password-modal .input-group input {
+    width: 100%;
+  }
+  
+  #forgot-password-modal .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .splash-screen {
+    flex-direction: row;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .splash-logo {
+    font-size: 3rem;
+  }
+  
+  .splash-title {
+    font-size: 1.5rem;
+  }
+  
+  .splash-loader {
+    margin-top: 20px;
+  }
+  
+  .login-card {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .ai-modal {
+    max-height: 90vh;
+  }
+  
+  .ai-messages {
+    max-height: 30vh;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .stat-icon,
+  .gh-card-img-placeholder {
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

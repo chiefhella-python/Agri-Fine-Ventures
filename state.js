@@ -51,7 +51,14 @@ const AFV = {
 
   // TASK UTILITIES
   getTasksForWorker(workerId) {
-    const user = this.users[workerId];
+    // First check in the main users object (for supervisor/agronomist)
+    let user = this.users[workerId];
+    
+    // If not found, check in workers array
+    if (!user || !user.assignedGH) {
+      user = this.workers?.find(w => w.id === workerId);
+    }
+    
     if (!user || !user.assignedGH) return [];
 
     const tasks = [];
@@ -466,7 +473,9 @@ const AFV = {
         greenhouses: this.greenhouses,
         notifications: this.notifications,
         feedingProgram: this.feedingProgram,
-        aiSettings: this.aiSettings
+        aiSettings: this.aiSettings,
+        agronomistReports: this.agronomistReports,
+        activityLog: this.activityLog
       };
       localStorage.setItem('afv_state', JSON.stringify(stateToSave));
     } catch (e) {
@@ -488,6 +497,8 @@ const AFV = {
         if (parsed.notifications) this.notifications = parsed.notifications;
         if (parsed.feedingProgram) this.feedingProgram = parsed.feedingProgram;
         if (parsed.aiSettings) this.aiSettings = parsed.aiSettings;
+        if (parsed.agronomistReports) this.agronomistReports = parsed.agronomistReports;
+        if (parsed.activityLog) this.activityLog = parsed.activityLog;
         
         // Convert date strings back to Date objects
         this.passwordResetRequests?.forEach(r => {
@@ -497,6 +508,26 @@ const AFV = {
         this.weeklyReports?.forEach(r => {
           r.submittedAt = new Date(r.submittedAt);
           r.weekStart = new Date(r.weekStart);
+        });
+        
+        // Convert greenhouse date fields
+        this.greenhouses?.forEach(gh => {
+          gh.plantedDate = gh.plantedDate ? new Date(gh.plantedDate) : null;
+          gh.expectedHarvest = gh.expectedHarvest ? new Date(gh.expectedHarvest) : null;
+          gh.tasks?.forEach(task => {
+            task.completedAt = task.completedAt ? new Date(task.completedAt) : null;
+          });
+        });
+        
+        // Convert agronomist report timestamps
+        this.agronomistReports?.forEach(r => {
+          r.timestamp = new Date(r.timestamp);
+          r.editedAt = r.editedAt ? new Date(r.editedAt) : null;
+        });
+        
+        // Convert activity log timestamps
+        this.activityLog?.forEach(log => {
+          log.time = new Date(log.time);
         });
       }
     } catch (e) {

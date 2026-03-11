@@ -390,6 +390,7 @@ const AgronomistDashboard = {
 
     const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
     AFV.addAgronomistReport(ghId, type || 'observation', text, tags);
+    AFV.saveState();
     showToast('Report submitted to Admin! 🔬', 'success');
     this.showPage('reports');
   },
@@ -481,6 +482,7 @@ const AgronomistDashboard = {
 
     const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
     AFV.updateAgronomistReport(r.id, ghId, type || 'observation', text, tags);
+    AFV.saveState();
     showToast('Report updated successfully! 🔬', 'success');
     this.currentEditingReport = null;
     this.showPage('reports');

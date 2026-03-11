@@ -2020,6 +2020,9 @@ const AdminDashboard = {
       showToast('New task added successfully!', 'success');
     }
     
+    // Save state after task modification
+    AFV.saveState();
+    
     this.closeTaskModal();
     this.showPage(this.currentPage);
   },
@@ -2035,6 +2038,7 @@ const AdminDashboard = {
     }
     
     AFV.deleteTask(ghId, taskId);
+    AFV.saveState();
     showToast('Task deleted successfully!', 'success');
     this.closeTaskModal();
     this.showPage(this.currentPage);
@@ -2056,6 +2060,9 @@ const AdminDashboard = {
       // Complete the task
       AFV.completeTask(ghId, taskId);
     }
+    
+    // Save state after task update
+    AFV.saveState();
     
     this.showPage(this.currentPage);
   },
@@ -2341,6 +2348,9 @@ AdminDashboard.saveInventory = function(e) {
     showToast(`"${name}" added successfully!`, 'success');
   }
   
+  // Save state after inventory update
+  AFV.saveState();
+  
   this.closeInventoryModal();
   this.showPage('inventory');
 };
@@ -2355,6 +2365,7 @@ AdminDashboard.deleteInventory = function(itemId) {
   
   AFV.inventory = AFV.inventory.filter(i => i.id !== itemId);
   AFV.logActivity('🗑️', `Inventory deleted: ${item.name}`);
+  AFV.saveState();
   showToast(`"${item.name}" has been deleted`, 'success');
   this.showPage('inventory');
 };

@@ -117,6 +117,9 @@ function confirmTaskComplete() {
   const nextTask = AFV.completeTask(ghId, taskId);
   document.getElementById('task-modal').style.display = 'none';
   AFV.pendingTaskComplete = null;
+  
+  // Save state after task completion
+  AFV.saveState();
 
   // Re-render worker dashboard
   if (AFV.currentRole === 'supervisor') {
@@ -258,6 +261,22 @@ document.getElementById('forgot-password-modal')?.addEventListener('click', func
 
 // Load saved state on init
 AFV.loadState();
+
+// Auto-initialize feeding calendar if not set (default to today)
+if (!AFV.feedingProgram?.calendarStartDate) {
+  AFV.setFeedingCalendarStart(new Date().toISOString().split('T')[0]);
+}
+
+// Helper function to reset state (for testing)
+function resetAppState() {
+  if (confirm('Are you sure you want to reset all data? This will clear all changes and restore default data.')) {
+    localStorage.removeItem('afv_state');
+    location.reload();
+  }
+}
+
+// Expose reset function globally for testing
+window.resetAppState = resetAppState;
 
 // ============================================ FORGOT PASSWORD
 function openForgotPasswordModal() {
