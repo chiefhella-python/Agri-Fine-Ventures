@@ -1,0 +1,199 @@
+// ============================================
+// AGRI-FINE VENTURES — MAIN APP
+// ============================================
+
+// Initialize AI Assistant
+AIAssistant.init();
+
+// ============================================ AUTH
+
+function handleLogin() {
+  const username = document.getElementById('login-username')?.value?.trim();
+  const password = document.getElementById('login-password')?.value?.trim();
+  const roleBtn = document.querySelector('.role-btn.active');
+  const selectedRole = roleBtn?.dataset?.role;
+
+  if (!username || !password) {
+    showToast('Please enter username and password', 'error');
+    return;
+  }
+
+  const user = AFV.users[username];
+  if (!user || user.password !== password) {
+    showToast('Invalid credentials. Try admin/1234', 'error');
+    return;
+  }
+
+  if (user.role !== selectedRole) {
+    showToast(`This account is a ${user.role}, not ${selectedRole}`, 'error');
+    return;
+  }
+
+  AFV.currentUser = user;
+  AFV.currentRole = user.role;
+  AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
+
+  navigateTo(user.role);
+  showToast(`Welcome, ${user.name}! 🌾`, 'success');
+}
+
+function navigateTo(role) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+  if (role === 'admin') {
+    document.getElementById('admin-screen').classList.add('active');
+    AdminDashboard.init();
+  } else if (role === 'worker') {
+    document.getElementById('worker-screen').classList.add('active');
+    WorkerDashboard.init();
+  } else if (role === 'agronomist') {
+    document.getElementById('agronomist-screen').classList.add('active');
+    AgronomistDashboard.init();
+  }
+}
+
+function handleLogout() {
+  const userName = AFV.currentUser?.name;
+  AFV.logActivity('🚪', `${userName} logged out`);
+  AFV.currentUser = null;
+  AFV.currentRole = null;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('login-screen').classList.add('active');
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  showToast('Logged out successfully', 'success');
+}
+
+// ============================================ ROLE SWITCHER
+
+document.querySelectorAll('.role-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Allow Enter key to login
+document.getElementById('login-password')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+
+// ============================================ TASK COMPLETION
+
+function closeTaskModal() {
+  document.getElementById('task-modal').style.display = 'none';
+  AFV.pendingTaskComplete = null;
+}
+
+function confirmTaskComplete() {
+  if (!AFV.pendingTaskComplete) return;
+  const { ghId, taskId } = AFV.pendingTaskComplete;
+  const nextTask = AFV.completeTask(ghId, taskId);
+  document.getElementById('task-modal').style.display = 'none';
+  AFV.pendingTaskComplete = null;
+
+  // Re-render worker dashboard
+  if (AFV.currentRole === 'worker') {
+    WorkerDashboard.showPage('mytasks');
+  }
+
+  if (nextTask) {
+    showToast(`Task done! ✅ Next: "${nextTask.name}"`, 'success');
+  } else {
+    showToast('🎉 All tasks in this greenhouse complete!', 'success');
+  }
+}
+
+// ============================================ TOAST
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '✅', error: '❌', warn: '⚠️' };
+  toast.innerHTML = `<span>${icons[type] || '📢'}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = '0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// ============================================ UTILS
+
+function timeAgo(date) {
+  if (!date) return 'Unknown';
+  const d = new Date(date);
+  const seconds = Math.floor((new Date() - d) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return d.toLocaleDateString('en-KE');
+}
+
+// ============================================ FEEDING PROGRAM
+
+function updateFertilizerAmount(fertilizerKey) {
+  // Map short keys to full keys for state storage
+  const keyMap = {
+    'mg': 'magnesiumSulphate',
+    'ca': 'calciumCarbonate',
+    'k': 'potassiumSulphate'
+  };
+  const stateKey = keyMap[fertilizerKey] || fertilizerKey;
+  
+  const amountInput = document.getElementById(`fert-${fertilizerKey}-amount`);
+  const unitInput = document.getElementById(`fert-${fertilizerKey}-unit`);
+  
+  if (!amountInput || !unitInput) {
+    showToast('Error: Input fields not found', 'error');
+    return;
+  }
+  
+  const amount = amountInput.value;
+  const unit = unitInput.value;
+  
+  if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+    showToast('Please enter a valid amount', 'error');
+    return;
+  }
+  
+  AFV.updateFertilizerAmount(stateKey, amount, unit);
+  showToast(`${stateKey} updated to ${amount}${unit}`, 'success');
+  
+  // Refresh the feeding program page for all roles
+  if (AFV.currentRole === 'admin') {
+    AdminDashboard.showPage('feeding');
+  } else if (AFV.currentRole === 'agronomist') {
+    AgronomistDashboard.showPage('feeding');
+  } else if (AFV.currentRole === 'worker') {
+    WorkerDashboard.showPage('feeding');
+  }
+}
+
+// ============================================ INIT
+
+// Auto-refresh dashboard data every 60 seconds
+setInterval(() => {
+  if (AFV.currentRole === 'admin' && AdminDashboard.currentPage) {
+    // Silently update stats
+  }
+}, 60000);
+
+// Close modal on overlay click
+document.getElementById('ai-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeAIModal();
+});
+
+document.getElementById('task-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeTaskModal();
+});
+
+console.log('🌾 Agri-Fine Ventures Platform initialized successfully');
+console.log('Demo accounts: admin/1234 | worker1/1234 | agronomist/1234');
