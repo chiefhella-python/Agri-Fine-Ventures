@@ -103,7 +103,7 @@ const SupervisorDashboard = {
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
           <div class="stat-card">
             <div class="stat-icon">🎯</div>
-            <div><div class="stat-value">${tasks.length}</div><div class="stat-label">Active Next Tasks</div></div>
+            <div><div class="stat-value">${tasks.length}</div><div class="stat-label">Total Pending Tasks</div></div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">✅</div>
@@ -120,22 +120,27 @@ const SupervisorDashboard = {
             <div class="hero-label">Task Status</div>
             <div class="hero-task">🎉 All Tasks Complete!</div>
             <div style="opacity:0.8;font-size:0.9rem;margin-top:8px">You've completed all assigned tasks. Excellent work! Check back for new assignments.</div>
-          </div>` : tasks.map(({gh, task}, i) => `
-          <div class="worker-task-hero" style="background:${i===0?'linear-gradient(135deg,#1a2e4a 0%,#2d4a6e 100%)':'linear-gradient(135deg,#2a1a1a 0%,#4a2d2d 100%)'}">
-            <div class="hero-label">
-              ${i === 0 ? '⚡ YOUR NEXT TASK — DO THIS NOW' : `📋 TASK ${i+1} (After completing task ${i})`}
-            </div>
-            <div class="hero-gh"><span>${gh.cropEmoji}</span><span>${gh.name} · ${gh.crop}</span></div>
-            <div class="hero-task">${task.name}</div>
-            <div class="hero-time">⏱ Estimated: ${task.duration} · Priority: <strong style="color:${task.priority==='high'?'#ff7675':task.priority==='medium'?'#fdcb6e':'#55efc4'}">${task.priority.toUpperCase()}</strong></div>
-            <div style="margin-top:14px;background:rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:14px;font-size:0.85rem;line-height:1.6">
-              <div style="font-size:0.72rem;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:6px">📝 Instructions</div>
-              ${task.desc}
-            </div>
-            ${i === 0 ? `<button class="hero-complete-btn" onclick="SupervisorDashboard.initiateComplete(${gh.id}, '${task.id}', '${task.name.replace(/'/g,"\\'")}')">
-              ✅ Mark as Complete
-            </button>` : ''}
-          </div>`) .join('')}
+          </div>` : `
+          <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+            ${tasks.map(({gh, task}, i) => `
+              <div class="worker-task-hero" style="background:linear-gradient(135deg,#2a1a1a 0%,#4a2d2d 100%);position:relative">
+                <div class="hero-label">
+                  ${gh.cropEmoji} ${gh.name}
+                </div>
+                <div class="hero-gh"><span>${gh.crop}</span></div>
+                <div class="hero-task">${task.name}</div>
+                <div class="hero-time">⏱ Estimated: ${task.duration} · Priority: <strong style="color:${task.priority==='high'?'#ff7675':task.priority==='medium'?'#fdcb6e':'#55efc4'}">${task.priority.toUpperCase()}</strong></div>
+                <div style="margin-top:14px;background:rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:14px;font-size:0.85rem;line-height:1.6">
+                  <div style="font-size:0.72rem;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:6px">📝 Instructions</div>
+                  ${task.desc}
+                </div>
+                <button class="hero-complete-btn" onclick="SupervisorDashboard.initiateComplete(${gh.id}, '${task.id}', '${task.name.replace(/'/g,"\\'")}')">
+                  ✅ Mark as Complete
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `}
 
         ${(user.assignedGH || []).map(ghId => {
           const gh = AFV.greenhouses.find(g => g.id === ghId);

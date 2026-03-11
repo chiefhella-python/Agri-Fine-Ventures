@@ -58,10 +58,11 @@ const AFV = {
       const gh = AFV.greenhouses?.find(g => g.id === ghId);
       if (!gh) return;
 
+      // Get all pending tasks for this greenhouse (not just the first one)
       const pending = gh.tasks.filter(t => !t.completed);
-      if (pending.length > 0) {
-        tasks.push({ gh, task: pending[0] });
-      }
+      pending.forEach(task => {
+        tasks.push({ gh, task });
+      });
     });
 
     return tasks;
