@@ -526,7 +526,7 @@ const AdminDashboard = {
         <div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="supervisor-modal-title">Add New Supervisor</h2>
-            <button onclick="AdminDashboard.closeWorkerModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+            <button onclick="AdminDashboard.closeSupervisorModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
           </div>
           <form id="supervisor-form" onsubmit="AdminDashboard.saveSupervisor(event)">
             <input type="hidden" id="supervisor-id">
@@ -568,7 +568,7 @@ const AdminDashboard = {
               </div>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
-              <button type="button" onclick="AdminDashboard.closeWorkerModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
+              <button type="button" onclick="AdminDashboard.closeSupervisorModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
               <button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Supervisor</button>
             </div>
           </form>
