@@ -89,12 +89,12 @@
   </div>
 
   <!-- Worker Dashboard -->
-  <div id="worker-screen" class="screen dashboard-screen">
+  <div id="supervisor-screen" class="screen dashboard-screen">
     <button class="sidebar-toggle" onclick="toggleSidebar('worker')" aria-label="Toggle menu">
       <span>☰</span>
     </button>
-    <div class="sidebar-overlay" onclick="closeSidebar('worker')"></div>
-    <div id="worker-nav" class="sidebar worker-sidebar"></div>
+    <div class="sidebar-overlay" onclick="closeSidebar('supervisor')"></div>
+    <div id="supervisor-nav" class="sidebar supervisor-sidebar"></div>
     <div class="main-content">
       <div id="worker-content"></div>
     </div>
@@ -184,7 +184,7 @@
 <script src="state.js"></script>
 <script src="greenhouse-data.js"></script>
 <script src="admin.js"></script>
-<script src="worker.js"></script>
+<script src="supervisor.js"></script>
 <script src="agronomist.js"></script>
 <script src="ai-assistant.js"></script>
 <script src="app.js"></script>

@@ -444,7 +444,7 @@ body {
   box-shadow: 4px 0 20px rgba(0,0,0,0.15);
 }
 
-.worker-sidebar {
+.supervisor-sidebar {
   background: linear-gradient(180deg, #1a2e4a 0%, #2d4a6e 60%, #3d6b9e 100%);
 }
 

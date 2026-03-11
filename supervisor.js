@@ -1,8 +1,8 @@
 // ============================================
-// AGRI-FINE VENTURES — WORKER DASHBOARD
+// AGRI-FINE VENTURES — SUPERVISOR DASHBOARD
 // ============================================
 
-const WorkerDashboard = {
+const SupervisorDashboard = {
   currentPage: 'mytasks',
 
   init() {
@@ -11,36 +11,36 @@ const WorkerDashboard = {
   },
 
   renderNav() {
-    const nav = document.getElementById('worker-nav');
+    const nav = document.getElementById('supervisor-nav');
     nav.innerHTML = `
       <div class="sidebar-logo">
         <div style="font-size:1.8rem;margin-bottom:6px">🌾</div>
         <div class="sidebar-logo-title">Agri-Fine</div>
-        <div class="sidebar-logo-sub">Field Worker</div>
+        <div class="sidebar-logo-sub">Supervisor</div>
       </div>
       <div class="sidebar-user">
         <div class="user-avatar" style="background:var(--blue-water)">${AFV.currentUser.imageUrl ? `<img src="${AFV.currentUser.imageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : AFV.currentUser.avatar}</div>
         <div>
           <div class="user-name">${AFV.currentUser.name}</div>
-          <div class="user-role">Field Worker</div>
+          <div class="user-role">Supervisor</div>
         </div>
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section-label">My Work</div>
-        <button class="nav-item active" data-page="mytasks" onclick="WorkerDashboard.showPage('mytasks')">
+        <button class="nav-item active" data-page="mytasks" onclick="SupervisorDashboard.showPage('mytasks')">
           <span class="nav-icon">🎯</span><span>My Tasks</span>
         </button>
-        <button class="nav-item" data-page="mygreenhouses" onclick="WorkerDashboard.showPage('mygreenhouses')">
+        <button class="nav-item" data-page="mygreenhouses" onclick="SupervisorDashboard.showPage('mygreenhouses')">
           <span class="nav-icon">🏡</span><span>My Greenhouses</span>
         </button>
-        <button class="nav-item" data-page="history" onclick="WorkerDashboard.showPage('history')">
+        <button class="nav-item" data-page="history" onclick="SupervisorDashboard.showPage('history')">
           <span class="nav-icon">📜</span><span>Task History</span>
         </button>
         <div class="nav-section-label">Resources</div>
-        <button class="nav-item" data-page="guide" onclick="WorkerDashboard.showPage('guide')">
+        <button class="nav-item" data-page="guide" onclick="SupervisorDashboard.showPage('guide')">
           <span class="nav-icon">📖</span><span>Task Guide</span>
         </button>
-        <button class="nav-item" data-page="feeding" onclick="WorkerDashboard.showPage('feeding')">
+        <button class="nav-item" data-page="feeding" onclick="SupervisorDashboard.showPage('feeding')">
           <span class="nav-icon">🧪</span><span>Feeding Program</span>
         </button>
         <button class="nav-item" data-page="ai" onclick="openAIModal()">
@@ -124,7 +124,7 @@ const WorkerDashboard = {
               <div style="font-size:0.72rem;font-weight:700;opacity:0.6;text-transform:uppercase;margin-bottom:6px">📝 Instructions</div>
               ${task.desc}
             </div>
-            ${i === 0 ? `<button class="hero-complete-btn" onclick="WorkerDashboard.initiateComplete(${gh.id}, '${task.id}', '${task.name.replace(/'/g,"\\'")}')">
+            ${i === 0 ? `<button class="hero-complete-btn" onclick="SupervisorDashboard.initiateComplete(${gh.id}, '${task.id}', '${task.name.replace(/'/g,"\\'")}')">
               ✅ Mark as Complete
             </button>` : ''}
           </div>`) .join('')}
@@ -333,9 +333,9 @@ const WorkerDashboard = {
         </div>
         <div class="header-actions">
           ${hasCalendar ? `
-            <button class="btn-secondary" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:white" onclick="WorkerDashboard.showFeedingCalendar()">🗓️ Calendar</button>
+            <button class="btn-secondary" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:white" onclick="SupervisorDashboard.showFeedingCalendar()">🗓️ Calendar</button>
           ` : ''}
-          <div style="background:rgba(255,255,255,0.15);padding:8px 14px;border-radius:8px;margin-left:10px;text-align:center;cursor:pointer" onclick="${hasCalendar ? 'WorkerDashboard.showFeedingCalendar()' : ''}">
+          <div style="background:rgba(255,255,255,0.15);padding:8px 14px;border-radius:8px;margin-left:10px;text-align:center;cursor:pointer" onclick="${hasCalendar ? 'SupervisorDashboard.showFeedingCalendar()' : ''}">
             <div style="font-size:0.7rem;color:rgba(255,255,255,0.7)">${dayName}</div>
             <div style="font-size:0.9rem;font-weight:700">${dateStr}</div>
           </div>
@@ -452,7 +452,7 @@ const WorkerDashboard = {
           <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">34-week cycle calendar with notes · Currently Week ${currentWeek} (Cycle ${currentCycle})</div>
         </div>
         <div class="header-actions">
-          <button class="btn-secondary" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:white" onclick="WorkerDashboard.showPage('feeding')">← Back</button>
+          <button class="btn-secondary" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:white" onclick="SupervisorDashboard.showPage('feeding')">← Back</button>
         </div>
       </div>
       <div class="page-body">

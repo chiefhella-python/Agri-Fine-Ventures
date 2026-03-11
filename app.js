@@ -69,9 +69,9 @@ function navigateTo(role) {
   if (role === 'admin') {
     document.getElementById('admin-screen').classList.add('active');
     AdminDashboard.init();
-  } else if (role === 'worker') {
-    document.getElementById('worker-screen').classList.add('active');
-    WorkerDashboard.init();
+  } else if (role === 'supervisor') {
+    document.getElementById('supervisor-screen').classList.add('active');
+    SupervisorDashboard.init();
   } else if (role === 'agronomist') {
     document.getElementById('agronomist-screen').classList.add('active');
     AgronomistDashboard.init();
@@ -119,8 +119,8 @@ function confirmTaskComplete() {
   AFV.pendingTaskComplete = null;
 
   // Re-render worker dashboard
-  if (AFV.currentRole === 'worker') {
-    WorkerDashboard.showPage('mytasks');
+  if (AFV.currentRole === 'supervisor') {
+    SupervisorDashboard.showPage('mytasks');
   }
 
   if (nextTask) {
@@ -198,8 +198,8 @@ function updateFertilizerAmount(fertilizerKey) {
     AdminDashboard.showPage('feeding');
   } else if (AFV.currentRole === 'agronomist') {
     AgronomistDashboard.showPage('feeding');
-  } else if (AFV.currentRole === 'worker') {
-    WorkerDashboard.showPage('feeding');
+  } else if (AFV.currentRole === 'supervisor') {
+    SupervisorDashboard.showPage('feeding');
   }
 }
 
