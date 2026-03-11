@@ -36,8 +36,8 @@ const AdminDashboard = {
         <button class="nav-item" data-page="tasks" onclick="AdminDashboard.showPage('tasks')">
           <span class="nav-icon">📋</span><span>All Tasks</span>
         </button>
-        <button class="nav-item" data-page="workers" onclick="AdminDashboard.showPage('workers')">
-          <span class="nav-icon">👥</span><span>Workers</span>
+        <button class="nav-item" data-page="supervisors" onclick="AdminDashboard.showPage('supervisors')">
+          <span class="nav-icon">👥</span><span>Supervisors</span>
         </button>
         <div class="nav-section-label">Intelligence</div>
         <button class="nav-item" data-page="agronomists" onclick="AdminDashboard.showPage('agronomists')">
@@ -82,7 +82,7 @@ const AdminDashboard = {
       case 'overview': content.innerHTML = this.renderOverview(); break;
       case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
       case 'tasks': content.innerHTML = this.renderAllTasks(); break;
-      case 'workers': content.innerHTML = this.renderWorkers(); break;
+      case 'supervisors': content.innerHTML = this.renderSupervisors(); break;
       case 'agronomists': content.innerHTML = this.renderAgronomists(); this.attachAgronomistEvents(); break;
       case 'agro-reports': content.innerHTML = this.renderAgroReports(); break;
       case 'analytics': content.innerHTML = this.renderAnalytics(); break;
@@ -454,45 +454,45 @@ const AdminDashboard = {
     `;
   },
 
-  renderWorkers() {
-    const workers = Object.values(AFV.users).filter(u => u.role === 'worker');
+  renderSupervisors() {
+    const supervisors = Object.values(AFV.users).filter(u => u.role === 'supervisor');
     const avatars = ['👨‍🌾', '👩‍🌾'];
-    const availableAvatars = avatars.filter(a => !workers.some(w => w.avatar === a));
+    const availableAvatars = avatars.filter(a => !supervisors.some(s => s.avatar === a));
     return `
       <div class="page-header">
         <div>
-          <div class="page-title">Workers 👥</div>
-          <div class="page-subtitle">Manage your field team</div>
+          <div class="page-title">Supervisors 👥</div>
+          <div class="page-subtitle">Manage your supervisors</div>
         </div>
         <div class="header-actions">
-          <button class="btn-primary" onclick="AdminDashboard.openWorkerModal()">➕ Add Worker</button>
+          <button class="btn-primary" onclick="AdminDashboard.openSupervisorModal()">➕ Add Supervisor</button>
         </div>
       </div>
       <div class="page-body">
         <div class="stats-grid">
-          ${workers.map(w => {
-            const tasks = AFV.getTasksForWorker(w.id);
-            const totalAssigned = w.assignedGH?.reduce((s, ghId) => {
+          ${supervisors.map(s => {
+            const tasks = AFV.getTasksForWorker(s.id);
+            const totalAssigned = s.assignedGH?.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => g.id === ghId);
               return s + (gh ? gh.tasks.length : 0);
             }, 0) || 0;
-            const doneAssigned = w.assignedGH?.reduce((s, ghId) => {
+            const doneAssigned = s.assignedGH?.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => g.id === ghId);
               return s + (gh ? gh.tasks.filter(t => t.completed).length : 0);
             }, 0) || 0;
             return `
               <div class="card" style="text-align:center;border:1px solid var(--green-pale)">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-                  <div style="font-size:3rem;">${w.imageUrl ? `<img src="${w.imageUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid var(--green-primary)">` : w.avatar}</div>
+                  <div style="font-size:3rem;">${s.imageUrl ? `<img src="${s.imageUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid var(--green-primary)">` : s.avatar}</div>
                   <div style="display:flex;gap:6px">
-                    <button onclick="AdminDashboard.openWorkerModal('${w.id}')" class="btn-icon" title="Edit worker" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
-                    <button onclick="AdminDashboard.deleteWorker('${w.id}')" class="btn-icon" title="Delete worker" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
+                    <button onclick="AdminDashboard.openSupervisorModal('${s.id}')" class="btn-icon" title="Edit worker" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
+                    <button onclick="AdminDashboard.deleteSupervisor('${s.id}')" class="btn-icon" title="Delete worker" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
                   </div>
                 </div>
-                <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${w.name}</div>
-                <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Field Worker</div>
+                <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.name}</div>
+                <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Supervisor</div>
                 <div style="margin-bottom:10px">
-                  ${w.assignedGH?.map(ghId => {
+                  ${s.assignedGH?.map(ghId => {
                     const gh = AFV.greenhouses.find(g => g.id === ghId);
                     return gh ? `<span class="badge badge-green" style="margin:2px">${gh.cropEmoji} ${gh.name}</span>` : '';
                   }).join('') || '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
@@ -522,44 +522,45 @@ const AdminDashboard = {
           }).join('')}
         </div>
       </div>
-      <div id="worker-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+      <div id="supervisor-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
         <div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="worker-modal-title">Add New Worker</h2>
+            <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="supervisor-modal-title">Add New Supervisor</h2>
             <button onclick="AdminDashboard.closeWorkerModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
           </div>
-          <form id="worker-form" onsubmit="AdminDashboard.saveWorker(event)">
-            <input type="hidden" id="worker-id">
+          <form id="supervisor-form" onsubmit="AdminDashboard.saveSupervisor(event)">
+            <input type="hidden" id="supervisor-id">
+            <input type="hidden" id="supervisor-role" value="supervisor">
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Username (Login ID)</label>
-              <input type="text" id="worker-username" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker1">
+              <input type="text" id="supervisor-username" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker1">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Full Name</label>
-              <input type="text" id="worker-name" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Enter worker's full name">
+              <input type="text" id="supervisor-name" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Enter worker's full name">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Avatar</label>
-              <div id="worker-avatar-options" style="display:flex;gap:8px;flex-wrap:wrap">
+              <div id="supervisor-avatar-options" style="display:flex;gap:8px;flex-wrap:wrap">
                 ${avatars.map(a => `<label style="cursor:pointer"><input type="radio" name="worker-avatar" value="${a}" style="display:none"><div class="avatar-option" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:2px solid var(--green-pale);border-radius:50%;transition:all 0.2s">${a}</div></label>`).join('')}
               </div>
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Or Upload Photo</label>
-              <input type="file" id="worker-image-input" accept="image/*" onchange="AdminDashboard.handleWorkerImageUpload(this)" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem;background:white">
-              <input type="hidden" id="worker-image-url">
-              <div id="worker-image-preview" style="margin-top:10px"></div>
+              <input type="file" id="supervisor-image-input" accept="image/*" onchange="AdminDashboard.handleWorkerImageUpload(this)" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem;background:white">
+              <input type="hidden" id="supervisor-image-url">
+              <div id="supervisor-image-preview" style="margin-top:10px"></div>
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
-              <input type="text" id="worker-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
+              <input type="text" id="supervisor-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assigned Greenhouses</label>
               <div style="display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto">
                 ${AFV.greenhouses.map(gh => `
                   <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)">
-                    <input type="checkbox" class="worker-gh-checkbox" value="${gh.id}" style="width:18px;height:18px">
+                    <input type="checkbox" class="supervisor-gh-checkbox" value="${gh.id}" style="width:18px;height:18px">
                     <span style="font-size:1.2rem">${gh.cropEmoji}</span>
                     <span style="font-size:0.9rem;font-weight:500">${gh.name}</span>
                   </label>
@@ -568,7 +569,7 @@ const AdminDashboard = {
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
               <button type="button" onclick="AdminDashboard.closeWorkerModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
-              <button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Worker</button>
+              <button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Supervisor</button>
             </div>
           </form>
         </div>
@@ -581,10 +582,10 @@ const AdminDashboard = {
     `;
   },
 
-  openWorkerModal(workerId = null) {
-    const modal = document.getElementById('worker-modal');
-    const title = document.getElementById('worker-modal-title');
-    const form = document.getElementById('worker-form');
+  openSupervisorModal(workerId = null) {
+    const modal = document.getElementById('supervisor-modal');
+    const title = document.getElementById('supervisor-modal-title');
+    const form = document.getElementById('supervisor-form');
     
     form.reset();
     document.querySelectorAll('.avatar-option').forEach(el => el.style.borderColor = 'var(--green-pale)');
@@ -593,35 +594,35 @@ const AdminDashboard = {
     if (workerId) {
       const worker = AFV.users[workerId];
       if (worker) {
-        title.textContent = 'Edit Worker';
-        document.getElementById('worker-id').value = worker.id;
-        document.getElementById('worker-username').value = worker.id;
-        document.getElementById('worker-name').value = worker.name;
-        document.getElementById('worker-password').value = worker.password;
-        document.getElementById('worker-image-url').value = worker.imageUrl || '';
+        title.textContent = 'Edit Supervisor';
+        document.getElementById('supervisor-id').value = worker.id;
+        document.getElementById('supervisor-username').value = worker.id;
+        document.getElementById('supervisor-name').value = worker.name;
+        document.getElementById('supervisor-password').value = worker.password;
+        document.getElementById('supervisor-image-url').value = worker.imageUrl || '';
         
         // Show existing image preview
         if (worker.imageUrl) {
-          document.getElementById('worker-image-preview').innerHTML = `<img src="${worker.imageUrl}" style="width:60px;height:60px;object-fit:cover;border-radius:50%"> <button type="button" onclick="AdminDashboard.clearWorkerImage()" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-left:8px">Remove</button>`;
+          document.getElementById('supervisor-image-preview').innerHTML = `<img src="${worker.imageUrl}" style="width:60px;height:60px;object-fit:cover;border-radius:50%"> <button type="button" onclick="AdminDashboard.clearSupervisorImage()" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-left:8px">Remove</button>`;
         }
         
         // Set avatar
-        const avatarInput = document.querySelector(`input[name="worker-avatar"][value="${worker.avatar}"]`);
+        const avatarInput = document.querySelector(`input[name="supervisor-avatar"][value="${worker.avatar}"]`);
         if (avatarInput) {
           avatarInput.checked = true;
           avatarInput.nextElementSibling.style.borderColor = 'var(--green-fresh)';
         }
         
         // Set greenhouse assignments
-        document.querySelectorAll('.worker-gh-checkbox').forEach(cb => {
+        document.querySelectorAll('.supervisor-gh-checkbox').forEach(cb => {
           cb.checked = worker.assignedGH?.includes(parseInt(cb.value));
         });
       }
     } else {
-      title.textContent = 'Add New Worker';
-      document.getElementById('worker-id').value = '';
+      title.textContent = 'Add New Supervisor';
+      document.getElementById('supervisor-id').value = '';
       // Select first available avatar by default
-      const firstAvatar = document.querySelector('input[name="worker-avatar"]');
+      const firstAvatar = document.querySelector('input[name="supervisor-avatar"]');
       if (firstAvatar) {
         firstAvatar.checked = true;
         firstAvatar.nextElementSibling.style.borderColor = 'var(--green-fresh)';
@@ -629,7 +630,7 @@ const AdminDashboard = {
     }
     
     // Add click handlers for avatar selection
-    document.querySelectorAll('input[name="worker-avatar"]').forEach(input => {
+    document.querySelectorAll('input[name="supervisor-avatar"]').forEach(input => {
       input.onchange = function() {
         document.querySelectorAll('.avatar-option').forEach(el => el.style.borderColor = 'var(--green-pale)');
         this.nextElementSibling.style.borderColor = 'var(--green-fresh)';
@@ -639,8 +640,8 @@ const AdminDashboard = {
     modal.style.display = 'flex';
   },
 
-  closeWorkerModal() {
-    document.getElementById('worker-modal').style.display = 'none';
+  closeSupervisorModal() {
+    document.getElementById('supervisor-modal').style.display = 'none';
   },
 
   handleWorkerImageUpload(event) {
@@ -656,21 +657,21 @@ const AdminDashboard = {
     reader.readAsDataURL(file);
   },
 
-  clearWorkerImage() {
-    document.getElementById('worker-image-url').value = '';
+  clearSupervisorImage() {
+    document.getElementById('supervisor-image-url').value = '';
     document.getElementById('worker-image-preview').innerHTML = '';
     document.getElementById('worker-image-input').value = '';
   },
 
-  saveWorker(e) {
+  saveSupervisor(e) {
     e.preventDefault();
-    const id = document.getElementById('worker-id').value;
-    const username = document.getElementById('worker-username').value.trim();
-    const name = document.getElementById('worker-name').value.trim();
-    const password = document.getElementById('worker-password').value.trim();
-    const avatar = document.querySelector('input[name="worker-avatar"]:checked')?.value || '👨‍🌾';
-    const imageUrl = document.getElementById('worker-image-url').value || '';
-    const assignedGH = Array.from(document.querySelectorAll('.worker-gh-checkbox:checked')).map(cb => parseInt(cb.value));
+    const id = document.getElementById('supervisor-id').value;
+    const username = document.getElementById('supervisor-username').value.trim();
+    const name = document.getElementById('supervisor-name').value.trim();
+    const password = document.getElementById('supervisor-password').value.trim();
+    const avatar = document.querySelector('input[name="supervisor-avatar"]:checked')?.value || '👨‍🌾';
+    const imageUrl = document.getElementById('supervisor-image-url').value || '';
+    const assignedGH = Array.from(document.querySelectorAll('.supervisor-gh-checkbox:checked')).map(cb => parseInt(cb.value));
     
     if (!username || !name || !password) {
       showToast('Please fill in all required fields', 'error');
@@ -713,7 +714,7 @@ const AdminDashboard = {
           // Update current user if it's the same worker
           if (AFV.currentUser?.id === id) {
             AFV.currentUser = AFV.users[username];
-            AFV.currentRole = 'worker';
+            AFV.currentRole = 'supervisor';
           }
           
           // Delete old user
@@ -747,11 +748,11 @@ const AdminDashboard = {
       showToast(`Worker "${name}" added successfully!`, 'success');
     }
     
-    this.closeWorkerModal();
+    this.closeSupervisorModal();
     this.showPage('workers');
   },
 
-  deleteWorker(workerId) {
+  deleteSupervisor(workerId) {
     const worker = AFV.users[workerId];
     if (!worker) return;
     

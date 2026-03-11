@@ -14,9 +14,7 @@ const AFV = {
   // USERS
   users: {
     admin: { id: 'admin', name: 'Admin', role: 'admin', password: '1234', avatar: '👑', imageUrl: '' },
-    worker1: { id: 'worker1', name: 'Peter Kamau', role: 'worker', password: '1234', avatar: '👨‍🌾', assignedGH: [1, 2], imageUrl: '' },
-    worker2: { id: 'worker2', name: 'Mary Wanjiku', role: 'worker', password: '1234', avatar: '👩‍🌾', assignedGH: [3, 4], imageUrl: '' },
-    worker3: { id: 'worker3', name: 'John Otieno', role: 'worker', password: '1234', avatar: '👨‍🌾', assignedGH: [5], imageUrl: '' },
+    supervisor: { id: 'supervisor', name: 'James Kariuki', role: 'supervisor', password: '1234', avatar: '👨‍🌾', assignedGH: [1, 2, 3], imageUrl: '' },
     agronomist: { id: 'agronomist', name: 'Dr. Grace Njeri', role: 'agronomist', password: '1234', avatar: '🔬', imageUrl: '' },
   },
 
