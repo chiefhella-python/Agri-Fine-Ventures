@@ -589,7 +589,7 @@ const AdminDashboard = {
     
     form.reset();
     document.querySelectorAll('.avatar-option').forEach(el => el.style.borderColor = 'var(--green-pale)');
-    document.getElementById('worker-image-preview').innerHTML = '';
+    document.getElementById('supervisor-image-preview').innerHTML = '';
     
     if (workerId) {
       const worker = AFV.users[workerId];
