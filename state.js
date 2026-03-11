@@ -18,6 +18,20 @@ const AFV = {
     agronomist: { id: 'agronomist', name: 'Dr. Grace Njeri', role: 'agronomist', password: '1234', avatar: '🔬', imageUrl: '' },
   },
 
+  // INVENTORY
+  inventory: [
+    { id: 1, name: 'Calcium Nitrate (Ca-Nit)', category: 'Fertilizer', qty: 180, unit: 'kg', reorder: 50, status: 'good' },
+    { id: 2, name: 'Mancozeb 80WP', category: 'Fungicide', qty: 12, unit: 'kg', reorder: 20, status: 'low' },
+    { id: 3, name: 'Abamectin 1.8EC', category: 'Pesticide', qty: 3, unit: 'L', reorder: 5, status: 'critical' },
+    { id: 4, name: 'NPK 17:17:17', category: 'Fertilizer', qty: 250, unit: 'kg', reorder: 100, status: 'good' },
+    { id: 5, name: 'Magnesium Sulphate', category: 'Fertilizer', qty: 45, unit: 'kg', reorder: 30, status: 'good' },
+    { id: 6, name: 'Drip Emitters', category: 'Equipment', qty: 280, unit: 'pcs', reorder: 100, status: 'good' },
+    { id: 7, name: 'Jute String (500m)', category: 'Supplies', qty: 4, unit: 'rolls', reorder: 5, status: 'low' },
+    { id: 8, name: 'Coco Peat Bags', category: 'Media', qty: 320, unit: 'bags', reorder: 200, status: 'good' },
+    { id: 9, name: 'Sticky Yellow Traps', category: 'Pest Control', qty: 85, unit: 'pcs', reorder: 50, status: 'good' },
+    { id: 10, name: 'Vapor Gard (Anti-transpirant)', category: 'Chemicals', qty: 2, unit: 'L', reorder: 5, status: 'critical' },
+  ],
+
   // ACTIVITY LOG
   activityLog: [],
 

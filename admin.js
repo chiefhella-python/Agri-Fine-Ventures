@@ -1141,18 +1141,7 @@ const AdminDashboard = {
   },
 
   renderInventory() {
-    const items = [
-      { name: 'Calcium Nitrate (Ca-Nit)', category: 'Fertilizer', qty: 180, unit: 'kg', reorder: 50, status: 'good' },
-      { name: 'Mancozeb 80WP', category: 'Fungicide', qty: 12, unit: 'kg', reorder: 20, status: 'low' },
-      { name: 'Abamectin 1.8EC', category: 'Pesticide', qty: 3, unit: 'L', reorder: 5, status: 'critical' },
-      { name: 'NPK 17:17:17', category: 'Fertilizer', qty: 250, unit: 'kg', reorder: 100, status: 'good' },
-      { name: 'Magnesium Sulphate', category: 'Fertilizer', qty: 45, unit: 'kg', reorder: 30, status: 'good' },
-      { name: 'Drip Emitters', category: 'Equipment', qty: 280, unit: 'pcs', reorder: 100, status: 'good' },
-      { name: 'Jute String (500m)', category: 'Supplies', qty: 4, unit: 'rolls', reorder: 5, status: 'low' },
-      { name: 'Coco Peat Bags', category: 'Media', qty: 320, unit: 'bags', reorder: 200, status: 'good' },
-      { name: 'Sticky Yellow Traps', category: 'Pest Control', qty: 85, unit: 'pcs', reorder: 50, status: 'good' },
-      { name: 'Vapor Gard (Anti-transpirant)', category: 'Chemicals', qty: 2, unit: 'L', reorder: 5, status: 'critical' },
-    ];
+    const items = AFV.inventory;
     return `
       <div class="page-header">
         <div>
@@ -1160,7 +1149,7 @@ const AdminDashboard = {
           <div class="page-subtitle">Farm supplies and stock levels</div>
         </div>
         <div class="header-actions">
-          <button class="btn-primary">+ Add Item</button>
+          <button class="btn-primary" onclick="AdminDashboard.openInventoryModal()">+ Add Item</button>
         </div>
       </div>
       <div class="page-body">
@@ -1172,7 +1161,7 @@ const AdminDashboard = {
         <div class="card">
           <div class="scroll-x">
             <table>
-              <thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Reorder At</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Reorder At</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 ${items.map(i => `
                   <tr>
@@ -1181,11 +1170,60 @@ const AdminDashboard = {
                     <td style="font-family:'JetBrains Mono',monospace">${i.qty} ${i.unit}</td>
                     <td style="font-family:'JetBrains Mono',monospace;color:var(--text-light)">${i.reorder} ${i.unit}</td>
                     <td><span class="badge ${i.status==='good'?'badge-green':i.status==='low'?'badge-orange':'badge-red'}">${i.status==='good'?'✓ Good':i.status==='low'?'⚠ Low':'🔴 Critical'}</span></td>
-                    <td><button style="font-size:0.78rem;padding:4px 12px;background:var(--green-forest);color:white;border:none;border-radius:6px;cursor:pointer">Order</button></td>
+                    <td>
+                      <button onclick="AdminDashboard.openInventoryModal(${i.id})" style="font-size:0.78rem;padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer;margin-right:4px">✏️ Edit</button>
+                      <button onclick="AdminDashboard.deleteInventory(${i.id})" style="font-size:0.78rem;padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:6px;cursor:pointer">🗑️</button>
+                    </td>
                   </tr>`).join('')}
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+      <div id="inventory-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+        <div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="inventory-modal-title">Add Inventory Item</h2>
+            <button onclick="AdminDashboard.closeInventoryModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+          </div>
+          <form id="inventory-form" onsubmit="AdminDashboard.saveInventory(event)">
+            <input type="hidden" id="inventory-id">
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Item Name</label>
+              <input type="text" id="inventory-name" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Category</label>
+              <select id="inventory-category" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+                <option value="Fertilizer">Fertilizer</option>
+                <option value="Fungicide">Fungicide</option>
+                <option value="Pesticide">Pesticide</option>
+                <option value="Equipment">Equipment</option>
+                <option value="Supplies">Supplies</option>
+                <option value="Media">Media</option>
+                <option value="Pest Control">Pest Control</option>
+                <option value="Chemicals">Chemicals</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="margin-bottom:16px;flex:1">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Quantity</label>
+                <input type="number" id="inventory-qty" required min="0" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+              </div>
+              <div style="margin-bottom:16px;flex:1">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Unit</label>
+                <input type="text" id="inventory-unit" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="kg, L, pcs">
+              </div>
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Reorder At</label>
+              <input type="number" id="inventory-reorder" required min="0" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+              <button type="button" onclick="AdminDashboard.closeInventoryModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
+              <button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Item</button>
+            </div>
+          </form>
         </div>
       </div>
       <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
@@ -2069,3 +2107,82 @@ function saveAIFromSettings() {
   if (key) AFV.aiSettings.apiKey = key;
   showToast('AI settings saved!', 'success');
 }
+
+// Inventory Management
+AdminDashboard.openInventoryModal = function(itemId = null) {
+  const modal = document.getElementById('inventory-modal');
+  const title = document.getElementById('inventory-modal-title');
+  const form = document.getElementById('inventory-form');
+  
+  form.reset();
+  
+  if (itemId) {
+    const item = AFV.inventory.find(i => i.id === itemId);
+    if (item) {
+      title.textContent = 'Edit Inventory Item';
+      document.getElementById('inventory-id').value = item.id;
+      document.getElementById('inventory-name').value = item.name;
+      document.getElementById('inventory-category').value = item.category;
+      document.getElementById('inventory-qty').value = item.qty;
+      document.getElementById('inventory-unit').value = item.unit;
+      document.getElementById('inventory-reorder').value = item.reorder;
+    }
+  } else {
+    title.textContent = 'Add Inventory Item';
+    document.getElementById('inventory-id').value = '';
+  }
+  
+  modal.style.display = 'flex';
+};
+
+AdminDashboard.closeInventoryModal = function() {
+  document.getElementById('inventory-modal').style.display = 'none';
+};
+
+AdminDashboard.saveInventory = function(e) {
+  e.preventDefault();
+  const id = document.getElementById('inventory-id').value;
+  const name = document.getElementById('inventory-name').value.trim();
+  const category = document.getElementById('inventory-category').value;
+  const qty = parseInt(document.getElementById('inventory-qty').value);
+  const unit = document.getElementById('inventory-unit').value.trim();
+  const reorder = parseInt(document.getElementById('inventory-reorder').value);
+  
+  // Determine status based on quantity vs reorder level
+  let status = 'good';
+  if (qty <= 0) status = 'critical';
+  else if (qty <= reorder) status = 'low';
+  
+  if (id) {
+    // Edit existing item
+    const index = AFV.inventory.findIndex(i => i.id === parseInt(id));
+    if (index !== -1) {
+      AFV.inventory[index] = { id: parseInt(id), name, category, qty, unit, reorder, status };
+      AFV.logActivity('✏️', `Inventory updated: ${name}`);
+      showToast(`"${name}" updated successfully!`, 'success');
+    }
+  } else {
+    // Add new item
+    const newId = Math.max(...AFV.inventory.map(i => i.id), 0) + 1;
+    AFV.inventory.push({ id: newId, name, category, qty, unit, reorder, status });
+    AFV.logActivity('➕', `Inventory added: ${name}`);
+    showToast(`"${name}" added successfully!`, 'success');
+  }
+  
+  this.closeInventoryModal();
+  this.showPage('inventory');
+};
+
+AdminDashboard.deleteInventory = function(itemId) {
+  const item = AFV.inventory.find(i => i.id === itemId);
+  if (!item) return;
+  
+  if (!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
+    return;
+  }
+  
+  AFV.inventory = AFV.inventory.filter(i => i.id !== itemId);
+  AFV.logActivity('🗑️', `Inventory deleted: ${item.name}`);
+  showToast(`"${item.name}" has been deleted`, 'success');
+  this.showPage('inventory');
+};
