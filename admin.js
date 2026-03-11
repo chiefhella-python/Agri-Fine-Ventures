@@ -413,8 +413,20 @@ const AdminDashboard = {
               </thead>
               <tbody>
                 ${pending.map(t => {
-                  const workerKey = Object.keys(AFV.users).find(k => AFV.users[k].role === 'worker' && AFV.users[k].assignedGH?.includes(t.gh.id));
-                  const worker = workerKey ? AFV.users[workerKey] : null;
+                  // Check task.assignedTo first, then fallback to assignedGH logic
+                  let worker = null;
+                  if (t.assignedTo) {
+                    // Check in AFV.workers (supervisor-added workers)
+                    worker = AFV.workers.find(w => w.id === t.assignedTo);
+                    // Also check in AFV.users
+                    if (!worker && AFV.users[t.assignedTo]) {
+                      worker = AFV.users[t.assignedTo];
+                    }
+                  } else {
+                    // Fallback: find worker by assignedGH
+                    const workerKey = Object.keys(AFV.users).find(k => AFV.users[k].role === 'worker' && AFV.users[k].assignedGH?.includes(t.gh.id));
+                    worker = workerKey ? AFV.users[workerKey] : null;
+                  }
                   return `
                     <tr>
                       <td><div style="font-weight:600">${t.name}</div><div style="font-size:0.72rem;color:var(--text-light)">${t.desc?.substring(0,60)}...</div></td>
@@ -439,7 +451,16 @@ const AdminDashboard = {
               <thead><tr><th>Task</th><th>Greenhouse</th><th>Completed</th><th>By</th><th>Actions</th></tr></thead>
               <tbody>
                 ${done.map(t => {
-                  const worker = t.completedBy ? AFV.users[t.completedBy] : null;
+                  // Check task.assignedTo first, then fallback to completedBy
+                  let worker = null;
+                  if (t.assignedTo) {
+                    worker = AFV.workers.find(w => w.id === t.assignedTo);
+                    if (!worker && AFV.users[t.assignedTo]) {
+                      worker = AFV.users[t.assignedTo];
+                    }
+                  } else if (t.completedBy) {
+                    worker = AFV.users[t.completedBy];
+                  }
                   return `
                     <tr>
                       <td style="text-decoration:line-through;opacity:0.7">${t.name}</td>
