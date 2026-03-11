@@ -8,11 +8,16 @@ AIAssistant.init();
 // ============================================ SPLASH SCREEN
 document.addEventListener('DOMContentLoaded', function() {
   const splash = document.getElementById('splash-screen');
+  const loginScreen = document.getElementById('login-screen');
   
   // Show splash screen for 2.5 seconds then fade to login
   setTimeout(function() {
     if (splash) {
       splash.classList.add('fade-out');
+      // Show login screen after splash starts fading
+      setTimeout(function() {
+        loginScreen.classList.add('active');
+      }, 300);
       // Remove splash from DOM after animation completes
       setTimeout(function() {
         splash.style.display = 'none';
