@@ -256,6 +256,9 @@ document.getElementById('forgot-password-modal')?.addEventListener('click', func
   if (e.target === this) closeForgotPasswordModal();
 });
 
+// Load saved state on init
+AFV.loadState();
+
 // ============================================ FORGOT PASSWORD
 function openForgotPasswordModal() {
   document.getElementById('forgot-password-modal').style.display = 'flex';

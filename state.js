@@ -453,5 +453,54 @@ const AFV = {
     }
 
     this.logActivity('🧪', `Fertilizer amount updated: ${fertilizerKey} = ${amount}${unit}`);
+  },
+
+  // Save state to localStorage
+  saveState() {
+    try {
+      const stateToSave = {
+        passwordResetRequests: this.passwordResetRequests,
+        weeklyReports: this.weeklyReports,
+        workers: this.workers,
+        inventory: this.inventory,
+        greenhouses: this.greenhouses,
+        notifications: this.notifications,
+        feedingProgram: this.feedingProgram,
+        aiSettings: this.aiSettings
+      };
+      localStorage.setItem('afv_state', JSON.stringify(stateToSave));
+    } catch (e) {
+      console.error('Error saving state:', e);
+    }
+  },
+
+  // Load state from localStorage
+  loadState() {
+    try {
+      const saved = localStorage.getItem('afv_state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.passwordResetRequests) this.passwordResetRequests = parsed.passwordResetRequests;
+        if (parsed.weeklyReports) this.weeklyReports = parsed.weeklyReports;
+        if (parsed.workers) this.workers = parsed.workers;
+        if (parsed.inventory) this.inventory = parsed.inventory;
+        if (parsed.greenhouses) this.greenhouses = parsed.greenhouses;
+        if (parsed.notifications) this.notifications = parsed.notifications;
+        if (parsed.feedingProgram) this.feedingProgram = parsed.feedingProgram;
+        if (parsed.aiSettings) this.aiSettings = parsed.aiSettings;
+        
+        // Convert date strings back to Date objects
+        this.passwordResetRequests?.forEach(r => {
+          r.requestedAt = new Date(r.requestedAt);
+          r.resolvedAt = r.resolvedAt ? new Date(r.resolvedAt) : null;
+        });
+        this.weeklyReports?.forEach(r => {
+          r.submittedAt = new Date(r.submittedAt);
+          r.weekStart = new Date(r.weekStart);
+        });
+      }
+    } catch (e) {
+      console.error('Error loading state:', e);
+    }
   }
 };
