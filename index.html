@@ -10,7 +10,23 @@
 <link rel="stylesheet" href="main.css">
 </head>
 <body>
-<div id="app">
+  <!-- Pre-login Splash Animation -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">🌾</div>
+      <h1 class="splash-title">Agri-Fine<span>Ventures</span></h1>
+      <p class="splash-tagline">Smart Greenhouse Management</p>
+      <div class="splash-loader">
+        <div class="loader-leaf leaf1">🌿</div>
+        <div class="loader-leaf leaf2">🍃</div>
+        <div class="loader-leaf leaf3">🌱</div>
+        <div class="loader-leaf leaf4">🍀</div>
+      </div>
+    </div>
+    <div class="splash-overlay"></div>
+  </div>
+
+  <div id="app">
   <!-- Login Screen -->
   <div id="login-screen" class="screen active">
     <div class="login-bg">
@@ -62,6 +78,10 @@
 
   <!-- Admin Dashboard -->
   <div id="admin-screen" class="screen dashboard-screen">
+    <button class="sidebar-toggle" onclick="toggleSidebar('admin')" aria-label="Toggle menu">
+      <span>☰</span>
+    </button>
+    <div class="sidebar-overlay" onclick="closeSidebar('admin')"></div>
     <div id="admin-nav" class="sidebar"></div>
     <div class="main-content">
       <div id="admin-content"></div>
@@ -70,6 +90,10 @@
 
   <!-- Worker Dashboard -->
   <div id="worker-screen" class="screen dashboard-screen">
+    <button class="sidebar-toggle" onclick="toggleSidebar('worker')" aria-label="Toggle menu">
+      <span>☰</span>
+    </button>
+    <div class="sidebar-overlay" onclick="closeSidebar('worker')"></div>
     <div id="worker-nav" class="sidebar worker-sidebar"></div>
     <div class="main-content">
       <div id="worker-content"></div>
@@ -78,6 +102,10 @@
 
   <!-- Agronomist Dashboard -->
   <div id="agronomist-screen" class="screen dashboard-screen">
+    <button class="sidebar-toggle" onclick="toggleSidebar('agronomist')" aria-label="Toggle menu">
+      <span>☰</span>
+    </button>
+    <div class="sidebar-overlay" onclick="closeSidebar('agronomist')"></div>
     <div id="agronomist-nav" class="sidebar agro-sidebar"></div>
     <div class="main-content">
       <div id="agronomist-content"></div>

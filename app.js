@@ -5,6 +5,22 @@
 // Initialize AI Assistant
 AIAssistant.init();
 
+// ============================================ SPLASH SCREEN
+document.addEventListener('DOMContentLoaded', function() {
+  const splash = document.getElementById('splash-screen');
+  
+  // Show splash screen for 2.5 seconds then fade to login
+  setTimeout(function() {
+    if (splash) {
+      splash.classList.add('fade-out');
+      // Remove splash from DOM after animation completes
+      setTimeout(function() {
+        splash.style.display = 'none';
+      }, 600);
+    }
+  }, 2500);
+});
+
 // ============================================ AUTH
 
 function handleLogin() {
@@ -39,6 +55,11 @@ function handleLogin() {
 
 function navigateTo(role) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  
+  // Close sidebar on mobile when navigating
+  if (window.innerWidth <= 768) {
+    closeSidebar(role);
+  }
 
   if (role === 'admin') {
     document.getElementById('admin-screen').classList.add('active');
@@ -174,6 +195,37 @@ function updateFertilizerAmount(fertilizerKey) {
     AgronomistDashboard.showPage('feeding');
   } else if (AFV.currentRole === 'worker') {
     WorkerDashboard.showPage('feeding');
+  }
+}
+
+// ============================================ SIDEBAR TOGGLE (Mobile)
+function toggleSidebar(role) {
+  const screen = document.getElementById(`${role}-screen`);
+  const sidebar = screen.querySelector('.sidebar');
+  const overlay = screen.querySelector('.sidebar-overlay');
+  
+  if (sidebar.classList.contains('open')) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  } else {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+  }
+}
+
+function closeSidebar(role) {
+  const screen = document.getElementById(`${role}-screen`);
+  const sidebar = screen.querySelector('.sidebar');
+  const overlay = screen.querySelector('.sidebar-overlay');
+  
+  sidebar.classList.remove('open');
+  overlay.classList.remove('active');
+}
+
+// Close sidebar when clicking nav items on mobile
+function closeSidebarOnNav(role) {
+  if (window.innerWidth <= 768) {
+    closeSidebar(role);
   }
 }
 
