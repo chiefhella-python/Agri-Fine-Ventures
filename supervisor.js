@@ -648,36 +648,49 @@ const SupervisorDashboard = {
         
         <div class="card">
           <div class="section-title">Pending Tasks - Assign or Verify</div>
-          ${allTasks.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">All tasks completed!</div>' : ''}
-          ${allTasks.map(({gh, task}) => {
-            const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
-            return `
-              <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);margin-bottom:8px;background:${task.assignedTo ? 'rgba(59, 130, 246, 0.05)' : 'white'}">
-                <div style="font-size:1.5rem">${gh.cropEmoji}</div>
-                <div style="flex:1">
-                  <div style="font-weight:600">${task.name}</div>
-                  <div style="font-size:0.75rem;color:var(--text-light)">${gh.name} · ${task.duration}</div>
-                  ${task.comment ? `<div style="font-size:0.75rem;color:var(--blue-water);margin-top:4px">💬 ${task.comment}</div>` : ''}
-                </div>
-                ${assignedTo ? `
-                  <div style="text-align:center">
-                    <div style="font-size:1.2rem">${assignedTo.avatar}</div>
-                    <div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div>
-                  </div>
-                ` : `
-                  <select id="assign-worker-${gh.id}-${task.id}" style="padding:6px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.8rem">
-                    <option value="">Select Worker</option>
-                    ${workers.map(w => `<option value="${w.id}">${w.avatar} ${w.name}</option>`).join('')}
-                  </select>
-                  <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:6px 12px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem">Assign</button>
-                `}
-                ${task.assignedTo && !task.verified ? `
-                  <button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:6px 12px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem">✅ Verify</button>
-                ` : ''}
-                ${task.verified ? '<span class="badge badge-green">✓ Verified</span>' : ''}
-              </div>
-            `;
-          }).join('')}
+          ${allTasks.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">All tasks completed!</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Greenhouse</th>
+                  <th>Duration</th>
+                  <th>Priority</th>
+                  <th>Assigned To</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allTasks.map(({gh, task}) => {
+                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+                  return `
+                    <tr style="background:${task.assignedTo ? 'rgba(59, 130, 246, 0.05)' : 'white'}">
+                      <td><div style="font-weight:600">${task.name}</div><div style="font-size:0.72rem;color:var(--text-light)">${task.desc?.substring(0,40)}...</div></td>
+                      <td>${gh.cropEmoji} ${gh.name}</td>
+                      <td>${task.duration}</td>
+                      <td><span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}">${task.priority}</span></td>
+                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1.2rem">${assignedTo.avatar}</div><div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
+                      <td>${task.verified ? '<span class="badge badge-green">✓ Verified</span>' : task.assignedTo ? '<span class="badge badge-blue">Assigned</span>' : '<span class="badge badge-gray">Unassigned</span>'}</td>
+                      <td>
+                        ${!task.assignedTo ? `
+                          <div style="display:flex;gap:4px">
+                            <select id="assign-worker-${gh.id}-${task.id}" style="padding:4px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.7rem;width:80px">
+                              <option value="">Select</option>
+                              ${workers.map(w => `<option value="${w.id}">${w.avatar} ${w.name}</option>`).join('')}
+                            </select>
+                            <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
+                          </div>
+                        ` : `
+                          ${!task.verified ? `<button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✅ Verify</button>` : ''}
+                        `}
+                      </td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`}
         </div>
         
         <div class="card" style="margin-top:20px">

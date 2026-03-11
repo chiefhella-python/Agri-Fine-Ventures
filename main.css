@@ -1500,6 +1500,7 @@ body {
 .badge-green { background: rgba(106,171,94,0.15); color: var(--green-forest); }
 .badge-red { background: rgba(214,48,49,0.12); color: var(--red-alert); }
 .badge-orange { background: rgba(225,112,85,0.12); color: var(--orange-warn); }
+.badge-gray { background: rgba(128,128,128,0.12); color: #666; }
 .badge-blue { background: rgba(9,132,227,0.12); color: var(--blue-water); }
 .badge-purple { background: rgba(155,89,182,0.12); color: #9b59b6; }
 
