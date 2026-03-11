@@ -36,6 +36,16 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="history" onclick="SupervisorDashboard.showPage('history')">
           <span class="nav-icon">📜</span><span>Task History</span>
         </button>
+        <div class="nav-section-label">Task Management</div>
+        <button class="nav-item" data-page="pending-tasks" onclick="SupervisorDashboard.showPage('pending-tasks')">
+          <span class="nav-icon">⏳</span><span>Pending Tasks</span>
+        </button>
+        <button class="nav-item" data-page="completed-tasks" onclick="SupervisorDashboard.showPage('completed-tasks')">
+          <span class="nav-icon">✅</span><span>Completed Tasks</span>
+        </button>
+        <button class="nav-item" data-page="weekly-reports" onclick="SupervisorDashboard.showPage('weekly-reports')">
+          <span class="nav-icon">📊</span><span>Weekly Reports</span>
+        </button>
         <div class="nav-section-label">Team Management</div>
         <button class="nav-item" data-page="workers" onclick="SupervisorDashboard.showPage('workers')">
           <span class="nav-icon">👥</span><span>My Workers</span>
@@ -73,6 +83,9 @@ const SupervisorDashboard = {
       case 'guide': content.innerHTML = this.renderGuide(); break;
       case 'workers': content.innerHTML = this.renderWorkers(); break;
       case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); break;
+      case 'pending-tasks': content.innerHTML = this.renderPendingTasks(); break;
+      case 'completed-tasks': content.innerHTML = this.renderCompletedTasks(); break;
+      case 'weekly-reports': content.innerHTML = this.renderWeeklyReports(); break;
     }
   },
 
@@ -868,5 +881,292 @@ const SupervisorDashboard = {
         `).join('')}
       </div>
     `;
+  },
+
+  renderPendingTasks() {
+    const workers = AFV.workers || [];
+    const greenhouses = AFV.greenhouses || [];
+    
+    // Get all pending tasks (not completed)
+    const allTasks = [];
+    greenhouses.forEach(gh => {
+      gh.tasks.filter(t => !t.completed).forEach(task => {
+        allTasks.push({ gh, task });
+      });
+    });
+    
+    const pending = allTasks.filter(t => !t.task.verified);
+    const assigned = allTasks.filter(t => t.task.assignedTo && !t.task.verified);
+    const unassigned = allTasks.filter(t => !t.task.assignedTo);
+
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pending Tasks ⏳</div>
+          <div class="page-subtitle">Assign tasks to workers and verify completion</div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">📋</div><div><div class="stat-value">${pending.length}</div><div class="stat-label">Pending Tasks</div></div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-value">${assigned.length}</div><div class="stat-label">Assigned</div></div></div>
+          <div class="stat-card"><div class="stat-icon">⏰</div><div><div class="stat-value">${unassigned.length}</div><div class="stat-label">Unassigned</div></div></div>
+        </div>
+        
+        <div class="card">
+          <div class="section-title">All Pending Tasks</div>
+          ${allTasks.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">All tasks completed!</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Greenhouse</th>
+                  <th>Priority</th>
+                  <th>Assigned To</th>
+                  <th>Status</th>
+                  <th>Comment</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allTasks.map(({gh, task}) => {
+                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+                  return `
+                    <tr>
+                      <td><div style="font-weight:600">${task.name}</div><div style="font-size:0.72rem;color:var(--text-light)">${task.desc?.substring(0,40)}...</div></td>
+                      <td>${gh.cropEmoji} ${gh.name}</td>
+                      <td><span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}">${task.priority}</span></td>
+                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1.2rem">${assignedTo.avatar}</div><div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
+                      <td>${task.verified ? '<span class="badge badge-green">✓ Verified</span>' : task.assignedTo ? '<span class="badge badge-blue">Assigned</span>' : '<span class="badge badge-gray">Unassigned</span>'}</td>
+                      <td>
+                        <input type="text" id="comment-${gh.id}-${task.id}" placeholder="Add comment..." value="${task.supervisorComment || ''}" style="padding:4px 8px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.75rem;width:120px">
+                        <button onclick="SupervisorDashboard.saveTaskComment('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-left:2px">💾</button>
+                      </td>
+                      <td>
+                        ${!task.assignedTo ? `
+                          <div style="display:flex;gap:4px">
+                            <select id="assign-worker-${gh.id}-${task.id}" style="padding:4px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.7rem;width:80px">
+                              <option value="">Select</option>
+                              ${workers.map(w => `<option value="${w.id}">${w.avatar} ${w.name}</option>`).join('')}
+                            </select>
+                            <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
+                          </div>
+                        ` : task.assignedTo && !task.verified ? `
+                          <button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✅ Verify</button>
+                        ` : '<span class="badge badge-green">✓ Done</span>'}
+                      </td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+      </div>
+    `;
+  },
+
+  saveTaskComment(ghId, taskId) {
+    const input = document.getElementById(`comment-${ghId}-${taskId}`);
+    const comment = input.value.trim();
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh?.tasks.find(t => t.id === taskId);
+    
+    if (task) {
+      task.supervisorComment = comment;
+      task.commentAt = new Date();
+      showToast('Comment saved!', 'success');
+      this.showPage('pending-tasks');
+    }
+  },
+
+  renderCompletedTasks() {
+    const greenhouses = AFV.greenhouses || [];
+    
+    // Get all completed/verified tasks
+    const completedTasks = [];
+    greenhouses.forEach(gh => {
+      gh.tasks.filter(t => t.completed || t.verified).forEach(task => {
+        completedTasks.push({ gh, task });
+      });
+    });
+    
+    // Sort by completion date (most recent first)
+    completedTasks.sort((a, b) => {
+      const dateA = a.task.completedAt || a.task.verifiedAt || new Date(0);
+      const dateB = b.task.completedAt || b.task.verifiedAt || new Date(0);
+      return dateB - dateA;
+    });
+
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">Completed Tasks ✅</div>
+          <div class="page-subtitle">Tasks that have been verified as complete</div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${completedTasks.length}</div><div class="stat-label">Total Completed</div></div></div>
+          <div class="stat-card"><div class="stat-icon">📊</div><div><div class="stat-value">${completedTasks.filter(t => t.task.verified).length}</div><div class="stat-label">Verified</div></div></div>
+        </div>
+        
+        <div class="card">
+          <div class="section-title">Completed Task History</div>
+          ${completedTasks.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No completed tasks yet!</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Greenhouse</th>
+                  <th>Assigned To</th>
+                  <th>Verified By</th>
+                  <th>Completed</th>
+                  <th>Comment</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${completedTasks.map(({gh, task}) => {
+                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+                  const completedDate = task.completedAt ? task.completedAt.toLocaleDateString('en-KE') : (task.verifiedAt ? task.verifiedAt.toLocaleDateString('en-KE') : '—');
+                  return `
+                    <tr>
+                      <td style="text-decoration:line-through;opacity:0.7"><div style="font-weight:600">${task.name}</div></td>
+                      <td>${gh.cropEmoji} ${gh.name}</td>
+                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1rem">${assignedTo.avatar}</div><div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
+                      <td>${task.verifiedBy || '—'}</td>
+                      <td>${completedDate}</td>
+                      <td>${task.supervisorComment || task.verificationComment || '—'}</td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+      </div>
+    `;
+  },
+
+  renderWeeklyReports() {
+    const reports = AFV.weeklyReports || [];
+    const userId = AFV.currentUser?.id;
+    const myReports = reports.filter(r => r.supervisorId === userId);
+    
+    // Get current week info
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0,0,0,0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    const weekLabel = `${startOfWeek.toLocaleDateString('en-KE', {month:'short', day:'numeric'})} - ${endOfWeek.toLocaleDateString('en-KE', {month:'short', day:'numeric'})}`;
+    
+    // Check if report exists for current week
+    const currentWeekReport = myReports.find(r => {
+      const reportDate = new Date(r.weekStart);
+      return reportDate.getTime() === startOfWeek.getTime();
+    });
+
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">Weekly Reports 📊</div>
+          <div class="page-subtitle">Write and review weekly progress reports</div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stat-card"><div class="stat-icon">📝</div><div><div class="stat-value">${myReports.length}</div><div class="stat-label">Reports Submitted</div></div></div>
+          <div class="stat-card"><div class="stat-icon">📅</div><div><div class="stat-value">${weekLabel}</div><div class="stat-label">Current Week</div></div></div>
+        </div>
+        
+        <div class="card">
+          <div class="section-title">📅 Submit Weekly Report</div>
+          <div style="padding:16px;background:rgba(59,130,246,0.05);border-radius:var(--radius-sm);margin-bottom:16px">
+            <div style="font-weight:600;margin-bottom:8px">Week of ${weekLabel}</div>
+            ${currentWeekReport ? `
+              <div style="padding:12px;background:var(--green-fresh);color:white;border-radius:6px;margin-bottom:8px">✓ Report already submitted for this week</div>
+              <div style="font-size:0.85rem;margin-bottom:8px"><strong>Summary:</strong> ${currentWeekReport.summary}</div>
+              <div style="font-size:0.85rem;margin-bottom:8px"><strong>Challenges:</strong> ${currentWeekReport.challenges || 'None'}</div>
+              <div style="font-size:0.85rem"><strong>Submitted:</strong> ${new Date(currentWeekReport.submittedAt).toLocaleString('en-KE')}</div>
+            ` : `
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div>
+                  <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:6px">Weekly Summary</label>
+                  <textarea id="report-summary" rows="4" placeholder="Describe what was accomplished this week..." style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.9rem;resize:vertical"></textarea>
+                </div>
+                <div>
+                  <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:6px">Challenges Faced</label>
+                  <textarea id="report-challenges" rows="3" placeholder="Any challenges or issues encountered..." style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.9rem;resize:vertical"></textarea>
+                </div>
+                <div>
+                  <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:6px">Next Week Goals</label>
+                  <textarea id="report-goals" rows="3" placeholder="What are the goals for next week..." style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.9rem;resize:vertical"></textarea>
+                </div>
+                <button onclick="SupervisorDashboard.submitWeeklyReport()" style="padding:12px 24px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600">📤 Submit Report</button>
+              </div>
+            `}
+          </div>
+        </div>
+        
+        ${myReports.length > 0 ? `
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">📜 Previous Reports</div>
+          ${myReports.filter(r => !currentWeekReport || r.weekStart !== currentWeekReport?.weekStart).map(r => {
+            const reportDate = new Date(r.weekStart);
+            const reportWeek = `${reportDate.toLocaleDateString('en-KE', {month:'short', day:'numeric'})}`;
+            return `
+              <div style="padding:16px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <div style="font-weight:600">📅 ${reportWeek}</div>
+                  <div style="font-size:0.75rem;color:var(--text-light)">Submitted ${new Date(r.submittedAt).toLocaleDateString('en-KE')}</div>
+                </div>
+                <div style="font-size:0.85rem;margin-bottom:6px"><strong>Summary:</strong> ${r.summary}</div>
+                ${r.challenges ? `<div style="font-size:0.85rem;margin-bottom:6px"><strong>Challenges:</strong> ${r.challenges}</div>` : ''}
+                ${r.goals ? `<div style="font-size:0.85rem"><strong>Goals:</strong> ${r.goals}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  submitWeeklyReport() {
+    const summary = document.getElementById('report-summary').value.trim();
+    const challenges = document.getElementById('report-challenges').value.trim();
+    const goals = document.getElementById('report-goals').value.trim();
+    
+    if (!summary) {
+      showToast('Please enter a weekly summary', 'error');
+      return;
+    }
+    
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0,0,0,0);
+    
+    if (!AFV.weeklyReports) AFV.weeklyReports = [];
+    
+    const report = {
+      id: 'report_' + Date.now(),
+      supervisorId: AFV.currentUser.id,
+      supervisorName: AFV.currentUser.name,
+      weekStart: startOfWeek.toISOString(),
+      summary,
+      challenges,
+      goals,
+      submittedAt: new Date()
+    };
+    
+    AFV.weeklyReports.push(report);
+    AFV.saveState();
+    showToast('Weekly report submitted successfully!', 'success');
+    this.showPage('weekly-reports');
   }
 };

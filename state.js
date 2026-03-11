@@ -10,6 +10,7 @@ const AFV = {
   currentGHView: null,
   pendingTaskComplete: null,
   activePage: {},
+  weeklyReports: [],
 
   // USERS
   users: {
