@@ -65,6 +65,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="feeding" onclick="AdminDashboard.showPage('feeding')">
           <span class="nav-icon">🧪</span><span>Feeding Program</span>
         </button>
+        <button class="nav-item" data-page="password-resets" onclick="AdminDashboard.showPage('password-resets')">
+          <span class="nav-icon">🔐</span><span>Password Resets</span>
+        </button>
         <button class="nav-item" data-page="settings" onclick="AdminDashboard.showPage('settings')">
           <span class="nav-icon">⚙️</span><span>Settings</span>
         </button>
@@ -94,6 +97,7 @@ const AdminDashboard = {
       case 'schedule': content.innerHTML = this.renderSchedule(); break;
       case 'alerts': content.innerHTML = this.renderAlerts(); break;
       case 'feeding': content.innerHTML = this.renderFeedingProgram(); this.attachFeedingEvents(); break;
+      case 'password-resets': content.innerHTML = this.renderPasswordResets(); break;
       case 'settings': content.innerHTML = this.renderSettings(); break;
     }
     this.attachPageEvents(page);
@@ -1332,6 +1336,109 @@ const AdminDashboard = {
       </div>
       <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
     `;
+  },
+
+  renderPasswordResets() {
+    const requests = AFV.passwordResetRequests || [];
+    const pendingRequests = requests.filter(r => !r.resolved);
+    const resolvedRequests = requests.filter(r => r.resolved);
+
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">🔐 Password Reset Requests</div>
+          <div class="page-subtitle">Manage password reset requests from users</div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stat-card"><div class="stat-icon">⏳</div><div><div class="stat-value">${pendingRequests.length}</div><div class="stat-label">Pending Requests</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${resolvedRequests.length}</div><div class="stat-label">Resolved</div></div></div>
+        </div>
+        
+        ${pendingRequests.length > 0 ? `
+        <div class="card">
+          <div class="section-title">⏳ Pending Requests</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            ${pendingRequests.map(r => `
+              <div style="padding:16px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);background:rgba(225,112,85,0.05)">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+                  <div>
+                    <div style="font-weight:600;font-size:1.1rem">${r.userName}</div>
+                    <div style="font-size:0.85rem;color:var(--text-light)">@${r.username} · ${r.userRole}</div>
+                    <div style="font-size:0.75rem;color:var(--text-light);margin-top:4px">Requested: ${r.requestedAt.toLocaleString('en-KE')}</div>
+                  </div>
+                  <span class="badge badge-orange">Pending</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="text" id="new-password-${r.id}" placeholder="Enter new password" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.9rem">
+                  <button onclick="AdminDashboard.resetUserPassword('${r.id}')" style="padding:8px 16px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem">🔑 Reset Password</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : `
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon">🔐</div>
+            <div class="empty-text">No pending password reset requests</div>
+          </div>
+        </div>
+        `}
+        
+        ${resolvedRequests.length > 0 ? `
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">✅ Resolved Requests</div>
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>New Password</th><th>Resolved By</th><th>Date</th></tr></thead>
+            <tbody>
+              ${resolvedRequests.map(r => `
+                <tr>
+                  <td>${r.userName}</td>
+                  <td>${r.userRole}</td>
+                  <td><code style="background:var(--blue-pale);padding:2px 6px;border-radius:4px">${r.newPassword}</code></td>
+                  <td>${r.resolvedBy}</td>
+                  <td>${r.resolvedAt?.toLocaleDateString('en-KE') || '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  resetUserPassword(requestId) {
+    const newPassword = document.getElementById(`new-password-${requestId}`).value.trim();
+    
+    if (!newPassword || newPassword.length < 4) {
+      showToast('Please enter a valid password (at least 4 characters)', 'error');
+      return;
+    }
+    
+    const request = AFV.passwordResetRequests?.find(r => r.id === requestId);
+    if (!request) {
+      showToast('Request not found', 'error');
+      return;
+    }
+    
+    // Update user password
+    const user = AFV.users[request.username];
+    if (user) {
+      user.password = newPassword;
+      
+      // Mark request as resolved
+      request.resolved = true;
+      request.resolvedAt = new Date();
+      request.newPassword = newPassword;
+      request.resolvedBy = AFV.currentUser.name;
+      
+      AFV.saveState();
+      showToast(`Password reset for ${request.userName}!`, 'success');
+      this.showPage('password-resets');
+    }
   },
 
   renderSettings() {

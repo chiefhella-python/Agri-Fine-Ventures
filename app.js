@@ -41,7 +41,7 @@ function handleLogin() {
 
   const user = AFV.users[username];
   if (!user || user.password !== password) {
-    showToast('Invalid credentials. Try admin/1234', 'error');
+    showToast('Wrong username or password', 'error');
     return;
   }
 
@@ -251,6 +251,63 @@ document.getElementById('ai-modal')?.addEventListener('click', function(e) {
 document.getElementById('task-modal')?.addEventListener('click', function(e) {
   if (e.target === this) closeTaskModal();
 });
+
+document.getElementById('forgot-password-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeForgotPasswordModal();
+});
+
+// ============================================ FORGOT PASSWORD
+function openForgotPasswordModal() {
+  document.getElementById('forgot-password-modal').style.display = 'flex';
+  document.getElementById('forgot-username').value = '';
+}
+
+function closeForgotPasswordModal() {
+  document.getElementById('forgot-password-modal').style.display = 'none';
+}
+
+function submitPasswordResetRequest() {
+  const username = document.getElementById('forgot-username').value.trim();
+  
+  if (!username) {
+    showToast('Please enter your username', 'error');
+    return;
+  }
+  
+  const user = AFV.users[username];
+  if (!user) {
+    showToast('Username not found', 'error');
+    return;
+  }
+  
+  // Check if request already exists
+  const existingRequest = AFV.passwordResetRequests?.find(r => r.username === username && !r.resolved);
+  if (existingRequest) {
+    showToast('A reset request already exists for this user', 'error');
+    return;
+  }
+  
+  // Create new request
+  if (!AFV.passwordResetRequests) AFV.passwordResetRequests = [];
+  
+  const request = {
+    id: 'req_' + Date.now(),
+    username: username,
+    userName: user.name,
+    userRole: user.role,
+    requestedAt: new Date(),
+    resolved: false,
+    resolvedAt: null,
+    newPassword: null,
+    resolvedBy: null
+  };
+  
+  AFV.passwordResetRequests.push(request);
+  AFV.saveState();
+  
+  closeForgotPasswordModal();
+  showToast('Password reset request submitted! Admin will contact you.', 'success');
+}
 
 console.log('🌾 Agri-Fine Ventures Platform initialized successfully');
 console.log('Demo accounts: admin/1234 | worker1/1234 | agronomist/1234');

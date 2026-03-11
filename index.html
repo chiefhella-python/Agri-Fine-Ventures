@@ -72,6 +72,9 @@
           <span>Enter Farm Dashboard</span>
           <span class="btn-arrow">→</span>
         </button>
+        <div style="text-align:center;margin-top:16px">
+          <a href="#" onclick="openForgotPasswordModal(); return false;" style="color:var(--blue-water);text-decoration:none;font-size:0.9rem">Forgot Password?</a>
+        </div>
       </div>
     </div>
   </div>
@@ -109,6 +112,24 @@
     <div id="agronomist-nav" class="sidebar agro-sidebar"></div>
     <div class="main-content">
       <div id="agronomist-content"></div>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgot-password-modal" class="modal-overlay" style="display:none">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header">
+        <h3>🔐 Reset Password</h3>
+        <button onclick="closeForgotPasswordModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom:16px;color:var(--text-light)">Enter your username to request a password reset. The admin will be notified and can reset your password.</p>
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="forgot-username" placeholder="Enter your username">
+        </div>
+        <button onclick="submitPasswordResetRequest()" class="btn-primary" style="width:100%;margin-top:12px">📧 Submit Request</button>
+      </div>
     </div>
   </div>
 

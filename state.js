@@ -11,6 +11,7 @@ const AFV = {
   pendingTaskComplete: null,
   activePage: {},
   weeklyReports: [],
+  passwordResetRequests: [],
 
   // USERS
   users: {
