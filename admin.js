@@ -39,6 +39,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="supervisors" onclick="AdminDashboard.showPage('supervisors')">
           <span class="nav-icon">👥</span><span>Supervisors</span>
         </button>
+        <button class="nav-item" data-page="workers" onclick="AdminDashboard.showPage('workers')">
+          <span class="nav-icon">👷</span><span>Workers</span>
+        </button>
         <div class="nav-section-label">Intelligence</div>
         <button class="nav-item" data-page="agronomists" onclick="AdminDashboard.showPage('agronomists')">
           <span class="nav-icon">🔬</span><span>Agronomists</span>
@@ -83,6 +86,7 @@ const AdminDashboard = {
       case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
       case 'tasks': content.innerHTML = this.renderAllTasks(); break;
       case 'supervisors': content.innerHTML = this.renderSupervisors(); break;
+      case 'workers': content.innerHTML = this.renderSupervisorWorkers(); break;
       case 'agronomists': content.innerHTML = this.renderAgronomists(); this.attachAgronomistEvents(); break;
       case 'agro-reports': content.innerHTML = this.renderAgroReports(); break;
       case 'analytics': content.innerHTML = this.renderAnalytics(); break;
@@ -2107,6 +2111,46 @@ function saveAIFromSettings() {
   if (key) AFV.aiSettings.apiKey = key;
   showToast('AI settings saved!', 'success');
 }
+
+// Workers added by supervisors
+AdminDashboard.renderSupervisorWorkers = function() {
+  const workers = AFV.workers || [];
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Workers Added by Supervisors 👷</div>
+        <div class="page-subtitle">View workers managed by your supervisors</div>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-value">${workers.length}</div><div class="stat-label">Total Workers</div></div></div>
+      </div>
+      ${workers.length === 0 ? '<p style="padding:20px;text-align:center;color:var(--text-light)">No workers added by supervisors yet</p>' : ''}
+      <div class="stats-grid">
+        ${workers.map(w => {
+          const tasks = AFV.getTasksForWorker(w.id);
+          return `
+            <div class="card" style="text-align:center;border:1px solid var(--blue-pale)">
+              <div style="font-size:3rem;margin-bottom:8px">${w.avatar}</div>
+              <div style="font-weight:700;color:var(--blue-deep)">${w.name}</div>
+              <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:10px">Field Worker</div>
+              <div style="margin-bottom:10px">
+                ${w.assignedGH?.map(ghId => {
+                  const gh = AFV.greenhouses.find(g => g.id === ghId);
+                  return gh ? '<span class="badge badge-blue" style="margin:2px">' + gh.cropEmoji + '</span>' : '';
+                }).join('') || '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
+              </div>
+              <div style="background:rgba(59,130,246,0.1);border-radius:8px;padding:10px">
+                <div style="font-size:1.4rem;font-weight:800;color:var(--blue-water)">${tasks.length}</div>
+                <div style="font-size:0.72rem;color:var(--text-light)">Pending Tasks</div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+};
 
 // Inventory Management
 AdminDashboard.openInventoryModal = function(itemId = null) {
