@@ -32,6 +32,13 @@ const AFV = {
     { id: 10, name: 'Vapor Gard (Anti-transpirant)', category: 'Chemicals', qty: 2, unit: 'L', reorder: 5, status: 'critical' },
   ],
 
+  // WORKERS (added by supervisor)
+  workers: [
+    { id: 'worker1', name: 'Peter Kamau', role: 'worker', password: '1234', avatar: '👨‍🌾', assignedGH: [1, 2], addedBy: 'supervisor', imageUrl: '' },
+    { id: 'worker2', name: 'Mary Wanjiku', role: 'worker', password: '1234', avatar: '👩‍🌾', assignedGH: [3, 4], addedBy: 'supervisor', imageUrl: '' },
+    { id: 'worker3', name: 'John Otieno', role: 'worker', password: '1234', avatar: '👨‍🌾', assignedGH: [5], addedBy: 'supervisor', imageUrl: '' },
+  ],
+
   // ACTIVITY LOG
   activityLog: [],
 

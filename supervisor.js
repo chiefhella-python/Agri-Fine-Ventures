@@ -36,6 +36,13 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="history" onclick="SupervisorDashboard.showPage('history')">
           <span class="nav-icon">📜</span><span>Task History</span>
         </button>
+        <div class="nav-section-label">Team Management</div>
+        <button class="nav-item" data-page="workers" onclick="SupervisorDashboard.showPage('workers')">
+          <span class="nav-icon">👥</span><span>My Workers</span>
+        </button>
+        <button class="nav-item" data-page="assign-tasks" onclick="SupervisorDashboard.showPage('assign-tasks')">
+          <span class="nav-icon">📋</span><span>Assign Tasks</span>
+        </button>
         <div class="nav-section-label">Resources</div>
         <button class="nav-item" data-page="guide" onclick="SupervisorDashboard.showPage('guide')">
           <span class="nav-icon">📖</span><span>Task Guide</span>
@@ -55,16 +62,17 @@ const SupervisorDashboard = {
 
   showPage(page) {
     this.currentPage = page;
-    document.querySelectorAll('#worker-nav .nav-item').forEach(b => b.classList.remove('active'));
-    const btn = document.querySelector(`#worker-nav [data-page="${page}"]`);
+    document.querySelectorAll('#supervisor-nav .nav-item').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`#supervisor-nav [data-page="${page}"]`);
     if (btn) btn.classList.add('active');
-    const content = document.getElementById('worker-content');
+    const content = document.getElementById('supervisor-content');
     switch(page) {
       case 'mytasks': content.innerHTML = this.renderMyTasks(); break;
       case 'mygreenhouses': content.innerHTML = this.renderMyGreenhouses(); break;
       case 'history': content.innerHTML = this.renderHistory(); break;
       case 'guide': content.innerHTML = this.renderGuide(); break;
-      case 'feeding': content.innerHTML = this.renderFeeding(); break;
+      case 'workers': content.innerHTML = this.renderWorkers(); break;
+      case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); break;
     }
   },
 
@@ -416,7 +424,341 @@ const SupervisorDashboard = {
     document.getElementById('task-modal').style.display = 'flex';
   },
 
-  // ============================================ FEEDING CALENDAR
+  // ============================================ WORKERS MANAGEMENT
+
+  renderWorkers() {
+    const workers = AFV.workers || [];
+    const avatars = ['👨‍🌾', '👩‍🌾', '👨‍💻', '👩‍💻', '🧑‍🌾'];
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Workers 👥</div>
+          <div class="page-subtitle">Manage your field workers</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-primary" onclick="SupervisorDashboard.openWorkerModal()">➕ Add Worker</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-value">${workers.length}</div><div class="stat-label">Total Workers</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${workers.filter(w => w.assignedGH && w.assignedGH.length > 0).length}</div><div class="stat-label">Assigned</div></div></div>
+          <div class="stat-card"><div class="stat-icon">⏳</div><div><div class="stat-value">${workers.filter(w => !w.assignedGH || w.assignedGH.length === 0).length}</div><div class="stat-label">Unassigned</div></div></div>
+        </div>
+        <div class="stats-grid">
+          ${workers.map(w => {
+            const tasks = AFV.getTasksForWorker(w.id);
+            return `
+              <div class="card" style="text-align:center;border:1px solid var(--blue-pale)">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                  <div style="font-size:3rem;">${w.imageUrl ? `<img src="${w.imageUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid var(--blue-water)">` : w.avatar}</div>
+                  <div style="display:flex;gap:6px">
+                    <button onclick="SupervisorDashboard.openWorkerModal('${w.id}')" class="btn-icon" title="Edit worker" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
+                    <button onclick="SupervisorDashboard.deleteWorker('${w.id}')" class="btn-icon" title="Delete worker" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
+                  </div>
+                </div>
+                <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--blue-deep)">${w.name}</div>
+                <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Field Worker</div>
+                <div style="margin-bottom:10px">
+                  ${w.assignedGH?.map(ghId => {
+                    const gh = AFV.greenhouses.find(g => g.id === ghId);
+                    return gh ? `<span class="badge badge-blue" style="margin:2px">${gh.cropEmoji} ${gh.name}</span>` : '';
+                  }).join('') || '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
+                </div>
+                <div style="background:rgba(59, 130, 246, 0.1);border-radius:var(--radius-sm);padding:10px">
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--blue-water)">${tasks.length}</div>
+                  <div style="font-size:0.72rem;color:var(--text-light)">Pending Tasks</div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div id="supervisor-worker-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+        <div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h2 style="font-family:'Playfair Display',serif;color:var(--blue-deep);margin:0" id="supervisor-worker-modal-title">Add Worker</h2>
+            <button onclick="SupervisorDashboard.closeWorkerModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+          </div>
+          <form id="supervisor-worker-form" onsubmit="SupervisorDashboard.saveWorker(event)">
+            <input type="hidden" id="supervisor-worker-id">
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Username (Login ID)</label>
+              <input type="text" id="supervisor-worker-username" required style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker1">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Full Name</label>
+              <input type="text" id="supervisor-worker-name" required style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Enter worker's full name">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Avatar</label>
+              <div id="supervisor-worker-avatar-options" style="display:flex;gap:8px;flex-wrap:wrap">
+                ${avatars.map(a => `<label style="cursor:pointer"><input type="radio" name="supervisor-worker-avatar" value="${a}" style="display:none"><div class="avatar-option" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:2px solid var(--blue-pale);border-radius:50%;transition:all 0.2s">${a}</div></label>`).join('')}
+              </div>
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
+              <input type="text" id="supervisor-worker-password" required style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assign to Greenhouses</label>
+              <div style="display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto">
+                ${AFV.greenhouses.map(gh => `
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;background:rgba(59, 130, 246, 0.1);border-radius:var(--radius-sm)">
+                    <input type="checkbox" class="supervisor-worker-gh-checkbox" value="${gh.id}" style="width:18px;height:18px">
+                    <span style="font-size:1.2rem">${gh.cropEmoji}</span>
+                    <span style="font-size:0.9rem;font-weight:500">${gh.name}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+              <button type="button" onclick="SupervisorDashboard.closeWorkerModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
+              <button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Worker</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <style>
+        .avatar-option:hover { transform: scale(1.1); }
+        input[name="supervisor-worker-avatar"]:checked + .avatar-option { border-color: var(--blue-water); background: rgba(59, 130, 246, 0.1); }
+      </style>
+    `;
+  },
+
+  openWorkerModal(workerId = null) {
+    const modal = document.getElementById('supervisor-worker-modal');
+    const title = document.getElementById('supervisor-worker-modal-title');
+    const form = document.getElementById('supervisor-worker-form');
+    
+    form.reset();
+    document.querySelectorAll('.avatar-option').forEach(el => el.style.borderColor = 'var(--blue-pale)');
+    
+    if (workerId) {
+      const worker = AFV.workers.find(w => w.id === workerId);
+      if (worker) {
+        title.textContent = 'Edit Worker';
+        document.getElementById('supervisor-worker-id').value = worker.id;
+        document.getElementById('supervisor-worker-username').value = worker.id;
+        document.getElementById('supervisor-worker-name').value = worker.name;
+        document.getElementById('supervisor-worker-password').value = worker.password;
+        
+        // Set avatar
+        const avatarInput = document.querySelector(`input[name="supervisor-worker-avatar"][value="${worker.avatar}"]`);
+        if (avatarInput) {
+          avatarInput.checked = true;
+          avatarInput.nextElementSibling.style.borderColor = 'var(--blue-water)';
+        }
+        
+        // Set greenhouse assignments
+        document.querySelectorAll('.supervisor-worker-gh-checkbox').forEach(cb => {
+          cb.checked = worker.assignedGH?.includes(parseInt(cb.value));
+        });
+      }
+    } else {
+      title.textContent = 'Add Worker';
+      document.getElementById('supervisor-worker-id').value = '';
+      const firstAvatar = document.querySelector('input[name="supervisor-worker-avatar"]');
+      if (firstAvatar) {
+        firstAvatar.checked = true;
+        firstAvatar.nextElementSibling.style.borderColor = 'var(--blue-water)';
+      }
+    }
+    
+    modal.style.display = 'flex';
+  },
+
+  closeWorkerModal() {
+    document.getElementById('supervisor-worker-modal').style.display = 'none';
+  },
+
+  saveWorker(e) {
+    e.preventDefault();
+    const id = document.getElementById('supervisor-worker-id').value;
+    const username = document.getElementById('supervisor-worker-username').value.trim();
+    const name = document.getElementById('supervisor-worker-name').value.trim();
+    const password = document.getElementById('supervisor-worker-password').value.trim();
+    const avatar = document.querySelector('input[name="supervisor-worker-avatar"]:checked')?.value || '👨‍🌾';
+    const assignedGH = Array.from(document.querySelectorAll('.supervisor-worker-gh-checkbox:checked')).map(cb => parseInt(cb.value));
+    
+    if (!username || !name || !password) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+    
+    if (id) {
+      // Edit existing worker
+      const index = AFV.workers.findIndex(w => w.id === id);
+      if (index !== -1) {
+        AFV.workers[index] = { id: username, name, role: 'worker', password, avatar, assignedGH, addedBy: 'supervisor', imageUrl: '' };
+        AFV.logActivity('✏️', `Worker updated: ${name}`);
+        showToast(`Worker "${name}" updated!`, 'success');
+      }
+    } else {
+      // Add new worker
+      AFV.workers.push({ id: username, name, role: 'worker', password, avatar, assignedGH, addedBy: 'supervisor', imageUrl: '' });
+      AFV.logActivity('➕', `New worker added: ${name}`);
+      showToast(`Worker "${name}" added!`, 'success');
+    }
+    
+    this.closeWorkerModal();
+    this.showPage('workers');
+  },
+
+  deleteWorker(workerId) {
+    const worker = AFV.workers.find(w => w.id === workerId);
+    if (!worker) return;
+    
+    if (!confirm(`Are you sure you want to delete "${worker.name}"?`)) {
+      return;
+    }
+    
+    AFV.workers = AFV.workers.filter(w => w.id !== workerId);
+    AFV.logActivity('🗑️', `Worker deleted: ${worker.name}`);
+    showToast(`Worker "${worker.name}" deleted`, 'success');
+    this.showPage('workers');
+  },
+
+  // ============================================ ASSIGN TASKS
+
+  renderAssignTasks() {
+    const workers = AFV.workers || [];
+    const greenhouses = AFV.greenhouses || [];
+    
+    // Get all tasks that can be assigned (not completed)
+    const allTasks = [];
+    greenhouses.forEach(gh => {
+      gh.tasks.filter(t => !t.completed).forEach(task => {
+        allTasks.push({ gh, task });
+      });
+    });
+    
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">Assign Tasks 📋</div>
+          <div class="page-subtitle">Assign tasks to your workers and verify completion</div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-value">${workers.length}</div><div class="stat-label">Workers</div></div></div>
+          <div class="stat-card"><div class="stat-icon">📋</div><div><div class="stat-value">${allTasks.length}</div><div class="stat-label">Pending Tasks</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${greenhouses.reduce((s, gh) => s + gh.tasks.filter(t => t.completed).length, 0)}</div><div class="stat-label">Completed</div></div></div>
+        </div>
+        
+        <div class="card">
+          <div class="section-title">Pending Tasks - Assign or Verify</div>
+          ${allTasks.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">All tasks completed!</div>' : ''}
+          ${allTasks.map(({gh, task}) => {
+            const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+            return `
+              <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);margin-bottom:8px;background:${task.assignedTo ? 'rgba(59, 130, 246, 0.05)' : 'white'}">
+                <div style="font-size:1.5rem">${gh.cropEmoji}</div>
+                <div style="flex:1">
+                  <div style="font-weight:600">${task.name}</div>
+                  <div style="font-size:0.75rem;color:var(--text-light)">${gh.name} · ${task.duration}</div>
+                  ${task.comment ? `<div style="font-size:0.75rem;color:var(--blue-water);margin-top:4px">💬 ${task.comment}</div>` : ''}
+                </div>
+                ${assignedTo ? `
+                  <div style="text-align:center">
+                    <div style="font-size:1.2rem">${assignedTo.avatar}</div>
+                    <div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div>
+                  </div>
+                ` : `
+                  <select id="assign-worker-${gh.id}-${task.id}" style="padding:6px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.8rem">
+                    <option value="">Select Worker</option>
+                    ${workers.map(w => `<option value="${w.id}">${w.avatar} ${w.name}</option>`).join('')}
+                  </select>
+                  <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:6px 12px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem">Assign</button>
+                `}
+                ${task.assignedTo && !task.verified ? `
+                  <button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:6px 12px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem">✅ Verify</button>
+                ` : ''}
+                ${task.verified ? '<span class="badge badge-green">✓ Verified</span>' : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">Add Comment to Task</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <select id="comment-gh" style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);flex:1">
+              <option value="">Select Greenhouse</option>
+              ${greenhouses.map(gh => `<option value="${gh.id}">${gh.cropEmoji} ${gh.name}</option>`).join('')}
+            </select>
+            <select id="comment-task" style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);flex:1">
+              <option value="">Select Task</option>
+            </select>
+            <input type="text" id="comment-text" placeholder="Enter comment..." style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);flex:2">
+            <button onclick="SupervisorDashboard.addComment()" style="padding:10px 20px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer">💬 Add</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  assignTask(ghId, taskId) {
+    const select = document.getElementById(`assign-worker-${ghId}-${taskId}`);
+    const workerId = select.value;
+    if (!workerId) {
+      showToast('Please select a worker', 'error');
+      return;
+    }
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh.tasks.find(t => t.id === taskId);
+    
+    if (gh && task) {
+      task.assignedTo = workerId;
+      task.assignedAt = new Date();
+      task.verified = false;
+      AFV.logActivity('📋', `Task "${task.name}" assigned to worker`);
+      showToast('Task assigned successfully!', 'success');
+      this.showPage('assign-tasks');
+    }
+  },
+
+  verifyTask(ghId, taskId) {
+    const comment = prompt('Add verification comment (optional):');
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh.tasks.find(t => t.id === taskId);
+    
+    if (gh && task) {
+      task.completed = true;
+      task.completedAt = new Date();
+      task.verified = true;
+      task.verifiedBy = AFV.currentUser.name;
+      task.verificationComment = comment || '';
+      AFV.logActivity('✅', `Task "${task.name}" verified by supervisor`);
+      showToast('Task verified and completed!', 'success');
+      this.showPage('assign-tasks');
+    }
+  },
+
+  addComment() {
+    const ghId = document.getElementById('comment-gh').value;
+    const taskId = document.getElementById('comment-task').value;
+    const comment = document.getElementById('comment-text').value.trim();
+    
+    if (!ghId || !taskId || !comment) {
+      showToast('Please fill all fields', 'error');
+      return;
+    }
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh.tasks.find(t => t.id === taskId);
+    
+    if (gh && task) {
+      task.comment = comment;
+      task.commentBy = AFV.currentUser.name;
+      task.commentAt = new Date();
+      AFV.logActivity('💬', `Comment added to "${task.name}": ${comment}`);
+      showToast('Comment added!', 'success');
+      this.showPage('assign-tasks');
+    }
+  },
 
   showFeedingCalendar() {
     const skipWeeks = AFV.feedingProgram.skipWeeks;
@@ -444,7 +786,7 @@ const SupervisorDashboard = {
       }
     }
     
-    const content = document.getElementById('worker-content');
+    const content = document.getElementById('supervisor-content');
     content.innerHTML = `
       <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
         <div>
