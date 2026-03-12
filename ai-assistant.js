@@ -297,13 +297,13 @@ Guidelines:
   async callOpenRouter(apiKey, userMessage, imageData = null) {
     const history = this.messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
     
-    const prompt = this.getSystemPrompt() + '\n\n';
+    let prompt = this.getSystemPrompt() + '\n\n';
     history.forEach(m => {
       prompt += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
     });
     prompt += `User: ${userMessage}\nAssistant:`;
     
-    // Use free NVIDIA vision model
+    // Use free NVIDIA model
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
