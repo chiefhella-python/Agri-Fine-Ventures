@@ -2420,8 +2420,19 @@ AdminDashboard.renderRevenue = function() {
 };
 
 AdminDashboard.openRevenueModal = function() {
-  document.getElementById('revenue-modal').style.display = 'flex';
+  const modal = document.getElementById('revenue-modal');
+  modal.style.display = 'flex';
   document.getElementById('revenue-date').value = new Date().toISOString().split('T')[0];
+  
+  // Dynamically populate source dropdown with greenhouse crops
+  const sourceSelect = document.getElementById('revenue-source');
+  const greenhouses = AFV.greenhouses || [];
+  let options = '<option value="Greenhouse">Greenhouse</option>';
+  greenhouses.forEach(gh => {
+    options += `<option value="${gh.name} - ${gh.crop}">${gh.name} (${gh.crop})</option>`;
+  });
+  options += '<option value="Milk">Milk</option><option value="Eggs">Eggs</option><option value="Vegetables">Vegetables</option><option value="Other">Other</option>';
+  sourceSelect.innerHTML = options;
 };
 
 AdminDashboard.closeRevenueModal = function() {
@@ -2452,7 +2463,11 @@ AdminDashboard.renderHarvest = function() {
   
   greenhouses.forEach(gh => {
     const records = harvest[gh.id] || [];
-    const goodHarvest = records.filter(r => r.quality === 'good').reduce((s,r) => s + r.quantity, 0);
+    const grade1Harvest = records.filter(r => r.quality === 'grade1').reduce((s,r) => s + r.quantity, 0);
+    const grade2Harvest = records.filter(r => r.quality === 'grade2').reduce((s,r) => s + r.quantity, 0);
+    const grade3Harvest = records.filter(r => r.quality === 'grade3').reduce((s,r) => s + r.quantity, 0);
+    const rejectHarvest = records.filter(r => r.quality === 'reject').reduce((s,r) => s + r.quantity, 0);
+    const goodHarvest = grade1Harvest + grade2Harvest;
     const totalValue = records.reduce((s,r) => s + (r.totalValue||0), 0);
     const badHarvest = records.filter(r => r.quality === 'bad').reduce((s,r) => s + r.quantity, 0);
     const total = goodHarvest + badHarvest;
@@ -2465,7 +2480,7 @@ AdminDashboard.renderHarvest = function() {
       html += `<tr><td colspan=\"5\" style=\"text-align:center;color:var(--text-light)\">No harvests recorded</td></tr>`;
     } else {
       records.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
-        html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style=\"color:${r.quality==='good'?'var(--green-fresh)':'var(--red-alert)'}\">${r.quality==='good'?'✅ Good':'❌ Bad'}</span></td><td>${r.notes||'-'}</td><td><button onclick=\"AdminDashboard.deleteHarvest(${gh.id},${r.id})\" style=\"background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer\">🗑️</button></td></tr>`;
+        html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style=\"color:${r.quality==='grade1'?'var(--green-fresh)':r.quality==='grade2'?'var(--blue-water)':r.quality==='grade3'?'var(--orange-warn)':'var(--red-alert)'}\">${r.quality==='grade1'?'⭐ Grade 1':r.quality==='grade2'?'⭐⭐ Grade 2':r.quality==='grade3'?'⭐⭐⭐ Grade 3':'❌ Reject'}</span></td><td>${r.notes||'-'}</td><td><button onclick=\"AdminDashboard.deleteHarvest(${gh.id},${r.id})\" style=\"background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer\">🗑️</button></td></tr>`;
       });
     }
     html += `</tbody></table></div></div>`;
@@ -2492,7 +2507,7 @@ AdminDashboard.openHarvestModal = function(ghId) {
     modal.style.inset = '0';
     modal.style.background = 'rgba(0,0,0,0.5)';
     modal.style.zIndex = '1000';
-    modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="AdminDashboard.saveHarvest(event)"><input type="hidden" id="harvest-gh-id"><input type="hidden" id="harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="harvest-quality" required style="width:100%;padding:10px"><option value="good">✅ Good</option><option value="bad">❌ Bad</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="AdminDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
+    modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="AdminDashboard.saveHarvest(event)"><input type="hidden" id="harvest-gh-id"><input type="hidden" id="harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1 (Premium)</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="AdminDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
     document.body.appendChild(modal);
   }
   
@@ -2503,7 +2518,7 @@ AdminDashboard.openHarvestModal = function(ghId) {
   document.getElementById('harvest-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('harvest-qty').value = '';
   document.getElementById('harvest-notes').value = '';
-  document.getElementById('harvest-quality').value = 'good';
+  document.getElementById('harvest-quality').value = 'grade1';
   document.getElementById('harvest-unit').value = 'kg';
   if(document.getElementById('harvest-estimated-value')) {
     document.getElementById('harvest-estimated-value').textContent = 'KES 0';
@@ -2561,8 +2576,8 @@ AdminDashboard.saveHarvest = function(e) {
     recordedAt: new Date().toISOString()
   });
   
-  // Auto-create revenue entry for good quality harvests
-  if(quality === 'good' && totalValue > 0) {
+  // Auto-create revenue entry for grade 1 & 2 harvests (not for reject)
+  if((quality === 'grade1' || quality === 'grade2') && totalValue > 0) {
     if(!AFV.revenue) AFV.revenue = [];
     AFV.revenue.push({
       id: Date.now(),

@@ -17,7 +17,7 @@ const SupervisorDashboard = {
       modal.style.inset = '0';
       modal.style.background = 'rgba(0,0,0,0.5)';
       modal.style.zIndex = '1000';
-      modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="good">✅ Good</option><option value="bad">❌ Bad</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
+      modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1 (Premium)</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
       document.body.appendChild(modal);
     }
     this.showPage('mytasks');
@@ -273,8 +273,12 @@ const SupervisorDashboard = {
     
     greenhouses.forEach(gh => {
       const records = harvest[gh.id] || [];
-      const goodHarvest = records.filter(r => r.quality === 'good').reduce((s,r) => s + r.quantity, 0);
-      const badHarvest = records.filter(r => r.quality === 'bad').reduce((s,r) => s + r.quantity, 0);
+      const grade1Harvest = records.filter(r => r.quality === 'grade1').reduce((s,r) => s + r.quantity, 0);
+      const grade2Harvest = records.filter(r => r.quality === 'grade2').reduce((s,r) => s + r.quantity, 0);
+      const grade3Harvest = records.filter(r => r.quality === 'grade3').reduce((s,r) => s + r.quantity, 0);
+      const rejectHarvest = records.filter(r => r.quality === 'reject').reduce((s,r) => s + r.quantity, 0);
+      const goodHarvest = grade1Harvest + grade2Harvest;
+      const badHarvest = grade3Harvest + rejectHarvest;
       const total = goodHarvest + badHarvest;
       
       html += `<div class="card" style="margin-bottom:20px"><h3 style="color:var(--green-deep);margin:0 0 12px">${gh.cropEmoji} ${gh.name} - ${gh.crop}</h3>`;
@@ -285,7 +289,7 @@ const SupervisorDashboard = {
         html += `<tr><td colspan="5" style="text-align:center;color:var(--text-light)">No harvests recorded</td></tr>`;
       } else {
         records.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
-          html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style="color:${r.quality==='good'?'var(--green-fresh)':'var(--red-alert)'}">${r.quality==='good'?'✅ Good':'❌ Bad'}</span></td><td>${r.notes||'-'}</td><td><button onclick="SupervisorDashboard.deleteHarvest(${gh.id},${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`;
+          html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style="color:${r.quality==='grade1'?'var(--green-fresh)':r.quality==='grade2'?'var(--blue-water)':r.quality==='grade3'?'var(--orange-warn)':'var(--red-alert)'}">${r.quality==='grade1'?'⭐ Grade 1':r.quality==='grade2'?'⭐⭐ Grade 2':r.quality==='grade3'?'⭐⭐⭐ Grade 3':'❌ Reject'}</span></td><td>${r.notes||'-'}</td><td><button onclick="SupervisorDashboard.deleteHarvest(${gh.id},${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`;
         });
       }
       html += `</tbody></table></div></div>`;
@@ -306,7 +310,7 @@ const SupervisorDashboard = {
     document.getElementById('supervisor-harvest-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('supervisor-harvest-qty').value = '';
     document.getElementById('supervisor-harvest-notes').value = '';
-    document.getElementById('supervisor-harvest-quality').value = 'good';
+    document.getElementById('supervisor-harvest-quality').value = 'grade1';
     document.getElementById('supervisor-harvest-unit').value = 'kg';
     if(document.getElementById('supervisor-harvest-estimated-value')) {
       document.getElementById('supervisor-harvest-estimated-value').textContent = 'KES 0';
@@ -363,8 +367,8 @@ const SupervisorDashboard = {
       recordedAt: new Date().toISOString()
     });
     
-    // Auto-create revenue entry for good quality harvests
-    if(quality === 'good' && totalValue > 0) {
+    // Auto-create revenue entry for grade 1 & 2 harvests (not for reject)
+    if((quality === 'grade1' || quality === 'grade2') && totalValue > 0) {
       if(!AFV.revenue) AFV.revenue = [];
       AFV.revenue.push({
         id: Date.now(),
