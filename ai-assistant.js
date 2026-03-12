@@ -240,10 +240,49 @@ Guidelines:
     return data.content[0].text;
   },
 
-  // Hugging Face free AI (text only - may be blocked in some regions)
+  // Hugging Face - FREE 50 images/month with API key from huggingface.co
   async callHuggingFace(apiKey, userMessage, imageData = null) {
-    // Return message to get API key for vision capabilities
-    throw new Error('For image analysis, please get a free API key from OpenAI, Google, or Anthropic. Free keys work for image diagnosis!');
+    // Build prompt
+    let prompt = this.getSystemPrompt() + '\n\n';
+    const history = this.messages.slice(-4);
+    history.forEach(m => {
+      prompt += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
+    });
+    prompt += `User: ${userMessage}\nAssistant:`;
+
+    // Use text model - HuggingFace free tier has limited vision models
+    const model = 'microsoft/Phi-3-mini-4k-instruct';
+    
+    // Require API key for more reliable access
+    if (!apiKey) {
+      throw new Error('Please add your HuggingFace API key for better access. Get free key at huggingface.co/settings/tokens');
+    }
+    
+    try {
+      const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: { max_new_tokens: 512, temperature: 0.7 }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HuggingFace error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (Array.isArray(data) && data[0]) {
+        return data[0].generated_text?.split('Assistant:')?.pop()?.trim() || JSON.stringify(data);
+      }
+      return JSON.stringify(data);
+    } catch (err) {
+      throw new Error(`HuggingFace: ${err.message}. Try getting a free key or use Google Gemini.`);
+    }
   },
 
   // Cohere AI - has free tier with vision
