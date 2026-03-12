@@ -2453,6 +2453,7 @@ AdminDashboard.renderHarvest = function() {
   greenhouses.forEach(gh => {
     const records = harvest[gh.id] || [];
     const goodHarvest = records.filter(r => r.quality === 'good').reduce((s,r) => s + r.quantity, 0);
+    const totalValue = records.reduce((s,r) => s + (r.totalValue||0), 0);
     const badHarvest = records.filter(r => r.quality === 'bad').reduce((s,r) => s + r.quantity, 0);
     const total = goodHarvest + badHarvest;
     
@@ -2476,13 +2477,54 @@ AdminDashboard.renderHarvest = function() {
 };
 
 AdminDashboard.openHarvestModal = function(ghId) {
-  document.getElementById('harvest-modal').style.display = 'flex';
+  const gh = AFV.greenhouses.find(g => g.id === ghId);
+  const pricePerKg = gh?.pricePerKg || 100;
+  
+  // Get or create the modal elements
+  let modal = document.getElementById('harvest-modal');
+  if(!modal) {
+    // Create modal if it doesn't exist
+    modal = document.createElement('div');
+    modal.id = 'harvest-modal';
+    modal.className = 'modal';
+    modal.style.display = 'none';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.5)';
+    modal.style.zIndex = '1000';
+    modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="AdminDashboard.saveHarvest(event)"><input type="hidden" id="harvest-gh-id"><input type="hidden" id="harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="harvest-quality" required style="width:100%;padding:10px"><option value="good">✅ Good</option><option value="bad">❌ Bad</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="AdminDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
+    document.body.appendChild(modal);
+  }
+  
+  modal.style.display = 'flex';
   document.getElementById('harvest-gh-id').value = ghId;
+  document.getElementById('harvest-price').value = pricePerKg;
+  document.getElementById('harvest-price-input').value = pricePerKg;
   document.getElementById('harvest-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('harvest-qty').value = '';
   document.getElementById('harvest-notes').value = '';
   document.getElementById('harvest-quality').value = 'good';
   document.getElementById('harvest-unit').value = 'kg';
+  if(document.getElementById('harvest-estimated-value')) {
+    document.getElementById('harvest-estimated-value').textContent = 'KES 0';
+  }
+  
+  // Add event listener for real-time price calculation
+  const qtyInput = document.getElementById('harvest-qty');
+  const priceInput = document.getElementById('harvest-price-input');
+  const estValue = document.getElementById('harvest-estimated-value');
+  
+  const updateValue = function() {
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    if(estValue) estValue.textContent = 'KES ' + (qty * price).toLocaleString();
+  };
+  
+  qtyInput.oninput = updateValue;
+  priceInput.oninput = function() {
+    document.getElementById('harvest-price').value = this.value;
+    updateValue();
+  };
 };
 
 AdminDashboard.closeHarvestModal = function() {
@@ -2497,19 +2539,41 @@ AdminDashboard.saveHarvest = function(e) {
   const quality = document.getElementById('harvest-quality').value;
   const date = document.getElementById('harvest-date').value;
   const notes = document.getElementById('harvest-notes').value;
+  const pricePerKg = parseFloat(document.getElementById('harvest-price-input').value) || 0;
+  const gh = AFV.greenhouses.find(g => g.id === ghId);
   
   if(!AFV.harvest[ghId]) AFV.harvest[ghId] = [];
+  
+  // Calculate total value (convert grams to kg if needed)
+  const qtyInKg = unit === 'g' ? quantity / 1000 : quantity;
+  const totalValue = qtyInKg * pricePerKg;
   
   AFV.harvest[ghId].push({
     id: Date.now(),
     date: date,
     quantity: quantity,
     unit: unit,
+    pricePerKg: pricePerKg,
+    totalValue: totalValue,
     quality: quality,
     notes: notes,
     recordedBy: AFV.currentUser?.name || 'Admin',
     recordedAt: new Date().toISOString()
   });
+  
+  // Auto-create revenue entry for good quality harvests
+  if(quality === 'good' && totalValue > 0) {
+    if(!AFV.revenue) AFV.revenue = [];
+    AFV.revenue.push({
+      id: Date.now(),
+      date: date,
+      source: 'Greenhouse',
+      product: (gh?.name || 'Greenhouse') + ' - ' + (gh?.crop || ''),
+      amount: totalValue,
+      recordedBy: AFV.currentUser?.name || 'Admin',
+      recordedAt: new Date().toISOString()
+    });
+  }
   
   AFV.saveState();
   this.closeHarvestModal();
