@@ -35,13 +35,20 @@ function handleLogin() {
   const selectedRole = roleBtn?.dataset?.role;
 
   if (!username || !password) {
-    showToast('Please enter username and password', 'error');
+    showToast('Please enter email and password', 'error');
     return;
   }
 
-  const user = AFV.users[username];
+  // For admin, check by email; for others, check by id/username
+  let user;
+  if (selectedRole === 'admin') {
+    user = Object.values(AFV.users).find(u => (u.email === username || u.id === username) && u.role === 'admin');
+  } else {
+    user = AFV.users[username];
+  }
+  
   if (!user || user.password !== password) {
-    showToast('Wrong username or password', 'error');
+    showToast('Wrong email or password', 'error');
     return;
   }
 
@@ -292,18 +299,27 @@ function submitPasswordResetRequest() {
   const username = document.getElementById('forgot-username').value.trim();
   
   if (!username) {
-    showToast('Please enter your username', 'error');
+    showToast('Please enter your email', 'error');
     return;
   }
   
-  const user = AFV.users[username];
+  // For admin, check by email; for others check by username
+  let user = Object.values(AFV.users).find(u => u.email === username);
   if (!user) {
-    showToast('Username not found', 'error');
+    // Try username for other roles
+    user = AFV.users[username];
+  }
+  
+  if (!user) {
+    showToast('Email not found', 'error');
     return;
   }
+  
+  // Store the email for password reset
+  const userEmail = user.email || username;
   
   // Check if request already exists
-  const existingRequest = AFV.passwordResetRequests?.find(r => r.username === username && !r.resolved);
+  const existingRequest = AFV.passwordResetRequests?.find(r => r.username === user.id && !r.resolved);
   if (existingRequest) {
     showToast('A reset request already exists for this user', 'error');
     return;
@@ -314,8 +330,9 @@ function submitPasswordResetRequest() {
   
   const request = {
     id: 'req_' + Date.now(),
-    username: username,
+    username: user.id,
     userName: user.name,
+    userEmail: userEmail,
     userRole: user.role,
     requestedAt: new Date(),
     resolved: false,
@@ -328,7 +345,7 @@ function submitPasswordResetRequest() {
   AFV.saveState();
   
   closeForgotPasswordModal();
-  showToast('Password reset request submitted! Admin will contact you.', 'success');
+  showToast(`Password reset link will be sent to ${userEmail}`, 'success');
 }
 
 console.log('🌾 Agri-Fine Ventures Platform initialized successfully');

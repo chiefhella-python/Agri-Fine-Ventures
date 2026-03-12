@@ -1366,6 +1366,7 @@ const AdminDashboard = {
                   <div>
                     <div style="font-weight:600;font-size:1.1rem">${r.userName}</div>
                     <div style="font-size:0.85rem;color:var(--text-light)">@${r.username} · ${r.userRole}</div>
+                    ${r.userEmail ? `<div style="font-size:0.75rem;color:var(--blue-water)">📧 ${r.userEmail}</div>` : ''}
                     <div style="font-size:0.75rem;color:var(--text-light);margin-top:4px">Requested: ${r.requestedAt.toLocaleString('en-KE')}</div>
                   </div>
                   <span class="badge badge-orange">Pending</span>
@@ -1441,7 +1442,55 @@ const AdminDashboard = {
     }
   },
 
+  updateAccountSettings() {
+    const email = document.getElementById('admin-email')?.value?.trim();
+    const currentPassword = document.getElementById('admin-current-password')?.value;
+    const newPassword = document.getElementById('admin-new-password')?.value;
+    const confirmPassword = document.getElementById('admin-confirm-password')?.value;
+
+    if (!email) {
+      showToast('Please enter your email', 'error');
+      return;
+    }
+
+    // If changing password, validate
+    if (newPassword || confirmPassword) {
+      if (!currentPassword) {
+        showToast('Please enter your current password', 'error');
+        return;
+      }
+
+      const adminUser = AFV.users.admin || AFV.currentUser;
+      if (adminUser.password !== currentPassword) {
+        showToast('Current password is incorrect', 'error');
+        return;
+      }
+
+      if (newPassword.length < 4) {
+        showToast('New password must be at least 4 characters', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+      }
+    }
+
+    // Update admin user
+    const adminUser = AFV.users.admin;
+    if (adminUser) {
+      adminUser.email = email;
+      if (newPassword) {
+        adminUser.password = newPassword;
+      }
+      AFV.saveState();
+      showToast('Account settings updated successfully!', 'success');
+    }
+  },
+
   renderSettings() {
+    const adminUser = AFV.users.admin || AFV.currentUser;
     return `
       <div class="page-header">
         <div>
@@ -1451,6 +1500,16 @@ const AdminDashboard = {
       </div>
       <div class="page-body">
         <div class="two-col">
+          <div class="card">
+            <div class="section-title">🔐 Account Settings</div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div class="input-group"><label>Email</label><input type="email" id="admin-email" value="${adminUser?.email || ''}" placeholder="your@email.com"></div>
+              <div class="input-group"><label>Current Password</label><input type="password" id="admin-current-password" placeholder="Enter current password"></div>
+              <div class="input-group"><label>New Password</label><input type="password" id="admin-new-password" placeholder="Enter new password"></div>
+              <div class="input-group"><label>Confirm New Password</label><input type="password" id="admin-confirm-password" placeholder="Confirm new password"></div>
+              <button class="btn-primary" onclick="AdminDashboard.updateAccountSettings()">Update Account</button>
+            </div>
+          </div>
           <div class="card">
             <div class="section-title">🌾 Farm Profile</div>
             <div style="display:flex;flex-direction:column;gap:14px">

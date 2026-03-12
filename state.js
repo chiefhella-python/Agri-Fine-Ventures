@@ -15,7 +15,7 @@ const AFV = {
 
   // USERS
   users: {
-    admin: { id: 'admin', name: 'Admin', role: 'admin', password: '1234', avatar: '👑', imageUrl: '' },
+    admin: { id: 'admin', email: 'chiefhella@gmail.com', name: 'Admin', role: 'admin', password: '1234', avatar: '👑', imageUrl: '' },
     supervisor: { id: 'supervisor', name: 'James Kariuki', role: 'supervisor', password: '1234', avatar: '👨‍🌾', assignedGH: [1, 2, 3], imageUrl: '' },
     agronomist: { id: 'agronomist', name: 'Dr. Grace Njeri', role: 'agronomist', password: '1234', avatar: '🔬', imageUrl: '' },
   },
