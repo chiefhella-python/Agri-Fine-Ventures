@@ -208,35 +208,61 @@ Guidelines:
     });
     prompt += `User: ${userMessage}\nAssistant:`;
 
-    // Use a free model from Hugging Face
+    // Try free HuggingFace Inference API - works without API key
+    // Using a lightweight model that works in browser
     const model = 'microsoft/Phi-3-mini-4k-instruct';
     
-    const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
-      },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 512,
-          temperature: 0.7,
-          top_p: 0.9
-        }
-      })
-    });
+    try {
+      const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: 512,
+            temperature: 0.7,
+            top_p: 0.9
+          }
+        })
+      });
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`HuggingFace error: ${err}`);
+      if (!response.ok) {
+        // If free API fails, try another model
+        const altModel = 'meta-llama/Llama-3.2-1B-Instruct';
+        const altResponse = await fetch(`https://api-inference.huggingface.co/models/${altModel}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
+          },
+          body: JSON.stringify({
+            inputs: prompt,
+            parameters: { max_new_tokens: 512, temperature: 0.7 }
+          })
+        });
+        
+        if (!altResponse.ok) {
+          throw new Error(`HuggingFace API unavailable (${altResponse.status})`);
+        }
+        
+        const altData = await altResponse.json();
+        if (Array.isArray(altData) && altData[0]) {
+          return altData[0].generated_text.split('Assistant:').pop().trim();
+        }
+        return JSON.stringify(altData);
+      }
+      
+      const data = await response.json();
+      if (Array.isArray(data) && data[0]) {
+        return data[0].generated_text.split('Assistant:').pop().trim();
+      }
+      return JSON.stringify(data);
+    } catch (err) {
+      throw new Error(`HuggingFace: ${err.message}. Try using OpenAI, Anthropic, or Gemini instead.`);
     }
-    
-    const data = await response.json();
-    if (Array.isArray(data) && data[0]) {
-      return data[0].generated_text.split('Assistant:').pop().trim();
-    }
-    return JSON.stringify(data);
   },
 
   async callOpenAI(apiKey, userMessage, imageData = null) {
