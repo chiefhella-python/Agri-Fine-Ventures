@@ -240,11 +240,39 @@ Guidelines:
     return data.content[0].text;
   },
 
-  // Hugging Face free AI
+  // Hugging Face free AI (text only - may be blocked in some regions)
   async callHuggingFace(apiKey, userMessage, imageData = null) {
-    // HuggingFace API may be blocked in some regions due to CORS
-    // Return helpful message to get API key from other providers
-    throw new Error('HuggingFace API is not accessible from your network. Please use OpenAI, Anthropic, or Gemini instead. Get free API keys from their websites.');
+    // Return message to get API key for vision capabilities
+    throw new Error('For image analysis, please get a free API key from OpenAI, Google, or Anthropic. Free keys work for image diagnosis!');
+  },
+
+  // Cohere AI - has free tier with vision
+  async callCohere(apiKey, userMessage, imageData = null) {
+    const history = this.messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'CHATBOT' : 'USER', message: m.content }));
+    
+    const prompt = this.getSystemPrompt() + '\n\nUser: ' + userMessage + '\nAssistant:';
+    
+    const response = await fetch('https://api.cohere.ai/v1/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'command-r-plus-08-2024',
+        message: prompt,
+        chat_history: history,
+        max_tokens: 512
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Cohere error: ${err}`);
+    }
+    
+    const data = await response.json();
+    return data.text || data.message;
   },
 
   async callOpenAI(apiKey, userMessage, imageData = null) {
