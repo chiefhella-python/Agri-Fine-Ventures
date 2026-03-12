@@ -7,10 +7,22 @@ const AIAssistant = {
   isLoading: false,
   pendingImage: null,
 
+  // Local knowledge base for offline use
+  localKnowledge: {
+    'tomato': 'Tomatoes need 24-26°C day temp, 70-80% humidity. Water 2L/plant/day. Watch for early blight, tomato hornworm. Feed with NPK 19:19:19 during growth, 15:5:30 during fruiting.',
+    'capsicum': 'Capsicum (bell pepper) needs 25-28°C, high humidity. Susceptible to aphids and blossom end rot. Use calcium nitrate, avoid overwatering.',
+    'cucumber': 'Cucumbers need 24-30°C, high humidity (80%). Train vines vertically. Harvest when 15-20cm for best quality. Watch for powdery mildew.',
+    'irrigation': 'Drip irrigation is best. Water early morning. Avoid wetting leaves to prevent disease. 2-3L/plant/day for tomatoes.',
+    'pest': 'Common pests: Whitefly, spider mites, aphids, thrips. Use IPM: sticky traps, neem oil, beneficial insects. Rotate pesticides to prevent resistance.',
+    'disease': 'Common diseases: Early/late blight, powdery mildew, bacterial wilt. Prevention: good airflow, avoid overhead irrigation, crop rotation, resistant varieties.',
+    'fertilizer': 'NPK ratios: vegetative (high N), flowering (high P), fruiting (high K). Add calcium for tomatoes/capsicum. EC should be 2.0-3.0 for most crops.',
+    'default': 'I can help with tomatoes, capsicum, cucumbers - pests, diseases, irrigation, nutrition and more. For detailed answers, please configure an AI API key in Settings (try OpenAI, Anthropic, or Gemini).'
+  },
+
   init() {
     this.messages = [{
       role: 'assistant',
-      content: 'Hello! I\'m your Agri-Fine AI Assistant 🌾. I specialize in greenhouse horticulture — tomatoes, capsicum, cucumber, pest management, irrigation, nutrients, and crop scheduling. You can also upload images of plant leaves, fruits, or produce for disease diagnosis! How can I help you today?'
+      content: 'Hello! I\'m your Agri-Fine AI Assistant 🌾. I specialize in greenhouse horticulture — tomatoes, capsicum, cucumber, pest management, irrigation, nutrients, and crop scheduling. Configure an AI API key in Settings for detailed answers, or ask me about basic crop care!'
     }];
   },
 
@@ -51,6 +63,22 @@ const AIAssistant = {
     }
     const input = document.getElementById('ai-image-input');
     if (input) input.value = '';
+  },
+
+  // Local knowledge base for offline use
+  getLocalAnswer(question) {
+    const q = question.toLowerCase();
+    
+    if (q.includes('tomato')) return this.localKnowledge['tomato'];
+    if (q.includes('capsicum') || q.includes('pepper') || q.includes('bell pepper')) return this.localKnowledge['capsicum'];
+    if (q.includes('cucumber')) return this.localKnowledge['cucumber'];
+    if (q.includes('water') || q.includes('irrigation') || q.includes('drip')) return this.localKnowledge['irrigation'];
+    if (q.includes('pest') || q.includes('insect') || q.includes('whitefly') || q.includes('aphid')) return this.localKnowledge['pest'];
+    if (q.includes('disease') || q.includes('blight') || q.includes('mildew') || q.includes('fungus')) return this.localKnowledge['disease'];
+    if (q.includes('fertilizer') || q.includes('nutrient') || q.includes('npk') || q.includes('feed')) return this.localKnowledge['fertilizer'];
+    if (q.includes('task') || q.includes('what can you do')) return 'I can help with: tomatoes, capsicum, cucumbers - growth tips, pest identification, disease diagnosis, irrigation scheduling, fertilizer recommendations, and general crop management.';
+    
+    return null;
   },
 
   getSystemPrompt() {
@@ -104,13 +132,34 @@ Guidelines:
       const provider = AFV.aiSettings.provider;
       const apiKey = AFV.aiSettings.apiKey;
 
-      // For HuggingFace, API key is optional (free tier works without it)
-      if (!apiKey && provider !== 'huggingface') {
+      // If no API key, try local knowledge base first
+      if (!apiKey) {
+        const localAnswer = this.getLocalAnswer(userMessage);
+        if (localAnswer) {
+          this.hideThinking();
+          this.addMessage('assistant', localAnswer);
+          this.isLoading = false;
+          this.clearImage();
+          return;
+        }
+        
         this.hideThinking();
-        this.addMessage('assistant', '⚙️ **No API key configured!**\n\nTo use the AI Assistant:\n1. Click the "API Settings" button above\n2. Select your AI provider (HuggingFace is FREE, or Anthropic, OpenAI, Google)\n3. Enter your API key (optional for HuggingFace)\n4. Click Save\n\nHuggingFace is free and works without an API key! Once configured, I can answer all your agricultural questions and analyze plant images!');
+        this.addMessage('assistant', '⚙️ **API Key Required for AI**\n\nFor full AI answers, please configure an API key:\n\n1. Click "API Settings"\n2. Select a provider:\n   - **OpenAI** - get free key from openai.com\n   - **Google Gemini** - get free key from aistudio.google.com\n   - **Anthropic Claude** - get free key from anthropic.com\n3. Enter key and Save\n\n💡 I can answer basic questions about tomatoes, capsicum, cucumbers, irrigation, pests, diseases, and fertilizers without an API!');
         this.isLoading = false;
         this.clearImage();
         return;
+      }
+
+      // If using HuggingFace (which may be blocked), try local first
+      if (provider === 'huggingface') {
+        const localAnswer = this.getLocalAnswer(userMessage);
+        if (localAnswer) {
+          this.hideThinking();
+          this.addMessage('assistant', localAnswer + '\n\n\n_💡 Note: External AI is temporarily unavailable, but I can help with these basic topics!_');
+          this.isLoading = false;
+          this.clearImage();
+          return;
+        }
       }
 
       let response;
@@ -193,76 +242,9 @@ Guidelines:
 
   // Hugging Face free AI
   async callHuggingFace(apiKey, userMessage, imageData = null) {
-    const history = this.messages.slice(-6).map(m => ({ role: m.role, content: m.content })).filter(m => m.content);
-    
-    // Build messages for chat
-    let prompt = this.getSystemPrompt() + '\n\n';
-    
-    // Add conversation history
-    history.forEach(m => {
-      if (m.role === 'user') {
-        prompt += `User: ${m.content}\n`;
-      } else {
-        prompt += `Assistant: ${m.content}\n`;
-      }
-    });
-    prompt += `User: ${userMessage}\nAssistant:`;
-
-    // Try free HuggingFace Inference API - works without API key
-    // Using a lightweight model that works in browser
-    const model = 'microsoft/Phi-3-mini-4k-instruct';
-    
-    try {
-      const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 512,
-            temperature: 0.7,
-            top_p: 0.9
-          }
-        })
-      });
-
-      if (!response.ok) {
-        // If free API fails, try another model
-        const altModel = 'meta-llama/Llama-3.2-1B-Instruct';
-        const altResponse = await fetch(`https://api-inference.huggingface.co/models/${altModel}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
-          },
-          body: JSON.stringify({
-            inputs: prompt,
-            parameters: { max_new_tokens: 512, temperature: 0.7 }
-          })
-        });
-        
-        if (!altResponse.ok) {
-          throw new Error(`HuggingFace API unavailable (${altResponse.status})`);
-        }
-        
-        const altData = await altResponse.json();
-        if (Array.isArray(altData) && altData[0]) {
-          return altData[0].generated_text.split('Assistant:').pop().trim();
-        }
-        return JSON.stringify(altData);
-      }
-      
-      const data = await response.json();
-      if (Array.isArray(data) && data[0]) {
-        return data[0].generated_text.split('Assistant:').pop().trim();
-      }
-      return JSON.stringify(data);
-    } catch (err) {
-      throw new Error(`HuggingFace: ${err.message}. Try using OpenAI, Anthropic, or Gemini instead.`);
-    }
+    // HuggingFace API may be blocked in some regions due to CORS
+    // Return helpful message to get API key from other providers
+    throw new Error('HuggingFace API is not accessible from your network. Please use OpenAI, Anthropic, or Gemini instead. Get free API keys from their websites.');
   },
 
   async callOpenAI(apiKey, userMessage, imageData = null) {
