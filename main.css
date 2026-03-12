@@ -2,6 +2,73 @@
    AGRI-FINE VENTURES — MAIN STYLES
    ============================================ */
 
+/* Base responsive sizing */
+html {
+  font-size: clamp(12px, 2.5vw, 18px);
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Scale content based on screen width */
+.dashboard-screen .main-content,
+.screen .main-content {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.page-body {
+  padding: clamp(8px, 2vw, 24px);
+}
+
+.page-title {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+}
+
+.page-subtitle {
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+}
+
+.card {
+  padding: clamp(12px, 3vw, 24px);
+  margin-bottom: clamp(12px, 3vw, 24px);
+}
+
+.stat-card {
+  padding: clamp(10px, 2vw, 22px);
+}
+
+.stat-value {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+}
+
+.stat-label {
+  font-size: clamp(0.6rem, 1.2vw, 0.85rem);
+}
+
+/* Table responsive */
+table {
+  font-size: clamp(0.7rem, 1.5vw, 0.95rem);
+}
+
+th, td {
+  padding: clamp(6px, 1.5vw, 12px);
+}
+
+/* Button responsive */
+.btn-primary, .btn-secondary {
+  padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px);
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+/* Input responsive */
+input, select, textarea {
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  padding: clamp(8px, 2vw, 12px);
+}
+
 /* ============================================ PRE-LOGIN SPLASH ANIMATION */
 .splash-screen {
   position: fixed;
