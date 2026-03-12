@@ -103,6 +103,8 @@ const SupervisorDashboard = {
       case 'pending-tasks': content.innerHTML = this.renderPendingTasks(); break;
       case 'completed-tasks': content.innerHTML = this.renderCompletedTasks(); break;
       case 'weekly-reports': content.innerHTML = this.renderWeeklyReports(); break;
+      case 'feeding': content.innerHTML = this.renderFeeding(); break;
+      case 'tasks': content.innerHTML = this.renderTasks(); break;
     }
   },
 
@@ -1301,6 +1303,199 @@ const SupervisorDashboard = {
         ` : ''}
       </div>
     `;
+  },
+
+  renderFeeding() {
+    const program = AFV.feedingProgram;
+    const skipWeeks = program.skipWeeks;
+    const hasCalendar = !!program.calendarStartDate;
+    const currentWeek = AFV.getCalendarCurrentWeek();
+    const currentCycle = AFV.getCurrentCalendarCycle();
+    const weekDates = AFV.getCalendarWeekDates(currentWeek);
+    
+    // Get today's date info
+    const today = new Date();
+    const dayName = today.toLocaleDateString('en-KE', { weekday: 'long' });
+    const dateStr = today.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    return `
+      <div class="page-header" style="background:linear-gradient(135deg,#1a3a1a,#2d5a2d);color:white;border-bottom:none">
+        <div>
+          <div class="page-title" style="color:white">🧪 Feeding Program</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">${hasCalendar ? `Cycle ${currentCycle} · Week ${currentWeek} of 34-week schedule` : '34-week fertilizer schedule for all greenhouses'}</div>
+        </div>
+        <div class="header-actions">
+          <div style="background:rgba(255,255,255,0.15);padding:8px 14px;border-radius:8px;text-align:center">
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.7)">${dayName}</div>
+            <div style="font-size:0.9rem;font-weight:700">${dateStr}</div>
+          </div>
+        </div>
+      </div>
+      ${hasCalendar ? `
+      <div class="page-body">
+        <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(46,204,113,0.1),rgba(46,204,113,0.05));border:2px solid var(--green-deep)">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+            <div>
+              <div class="section-title" style="color:var(--green-deep)">📅 Current Week: ${currentWeek}</div>
+              <div style="font-size:0.9rem;color:var(--text-mid)">${weekDates ? `${weekDates.startStr} - ${weekDates.endStr}` : ''}</div>
+              <div style="font-size:0.8rem;color:var(--text-light)">Cycle ${currentCycle} · ${currentWeek === 34 ? 'Final week - cycle will restart' : `${34 - currentWeek} weeks remaining`}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:2.5rem;font-weight:900;color:var(--green-deep)">${currentWeek}</div>
+              <div style="font-size:0.7rem;color:var(--text-light)">of 34</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+      <div class="page-body">
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-title">📋 Program Overview</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px">
+            <div style="background:var(--green-ultra-pale);padding:14px;border-radius:var(--radius-sm);text-align:center">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--green-deep)">34</div>
+              <div style="font-size:0.7rem;color:var(--text-light)">TOTAL WEEKS</div>
+            </div>
+            <div style="background:var(--green-ultra-pale);padding:14px;border-radius:var(--radius-sm);text-align:center">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--green-deep)">30</div>
+              <div style="font-size:0.7rem;color:var(--text-light)">WEEKS WITH FERTILIZER</div>
+            </div>
+            <div style="background:rgba(214,48,49,0.08);padding:14px;border-radius:var(--radius-sm);text-align:center">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--red-alert)">4</div>
+              <div style="font-size:0.7rem;color:var(--text-light)">SKIP WEEKS</div>
+            </div>
+            <div style="background:var(--green-ultra-pale);padding:14px;border-radius:var(--radius-sm);text-align:center">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--blue-water)">4</div>
+              <div style="font-size:0.7rem;color:var(--text-light)">FERTILIZER TYPES</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;padding:12px;background:rgba(9,132,227,0.06);border-radius:var(--radius-sm);border-left:3px solid var(--blue-water)">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--blue-water);margin-bottom:4px">ℹ️ SCHEDULE INFO</div>
+            <div style="font-size:0.85rem;color:var(--text-mid)">
+              <strong>N.P.K</strong> and <strong>Magnesium Sulphate</strong> are applied every week (weeks 1-34).<br>
+              <strong>Calcium Carbonate</strong> and <strong>Potassium Sulphate</strong> are skipped in weeks: <strong>${skipWeeks.join(', ')}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-title">⚗️ Fertilizer Schedule</div>
+          <div style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px">Weekly fertilizer applications for all greenhouses</div>
+          
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+            <div style="background:var(--green-ultra-pale);padding:16px;border-radius:var(--radius-sm)">
+              <div style="font-weight:700;color:var(--green-deep);margin-bottom:4px">🌱 N.P.K</div>
+              <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:10px">Applied every week (Weeks 1-34)</div>
+              <div style="font-size:1.1rem;font-weight:600">${program.configuredAmounts.npk || program.weeklyFertilizers.npk.defaultAmount} ${program.configuredAmounts.npk ? 'kg' : 'kg'}</div>
+            </div>
+            
+            <div style="background:var(--green-ultra-pale);padding:16px;border-radius:var(--radius-sm)">
+              <div style="font-weight:700;color:var(--green-deep);margin-bottom:4px">🌿 Magnesium Sulphate</div>
+              <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:10px">Applied every week (Weeks 1-34)</div>
+              <div style="font-size:1.1rem;font-weight:600">${program.configuredAmounts.mg || program.weeklyFertilizers.mg.defaultAmount} ${program.configuredAmounts.mg ? 'kg' : 'kg'}</div>
+            </div>
+            
+            <div style="background:var(--green-ultra-pale);padding:16px;border-radius:var(--radius-sm)">
+              <div style="font-weight:700;color:var(--green-deep);margin-bottom:4px">🪨 Calcium Carbonate</div>
+              <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:10px">Skipped weeks: ${skipWeeks.join(', ')}</div>
+              <div style="font-size:1.1rem;font-weight:600">${program.configuredAmounts.ca || program.weeklyFertilizers.ca.defaultAmount} ${program.configuredAmounts.ca ? 'kg' : 'kg'}</div>
+            </div>
+            
+            <div style="background:var(--green-ultra-pale);padding:16px;border-radius:var(--radius-sm)">
+              <div style="font-weight:700;color:var(--green-deep);margin-bottom:4px">🧂 Potassium Sulphate</div>
+              <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:10px">Skipped weeks: ${skipWeeks.join(', ')}</div>
+              <div style="font-size:1.1rem;font-weight:600">${program.configuredAmounts.k || program.weeklyFertilizers.k.defaultAmount} ${program.configuredAmounts.k ? 'kg' : 'kg'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderTasks() {
+    const tasks = AFV.tasks || [];
+    const userId = AFV.currentUser?.id;
+    const myTasks = tasks.filter(t => t.assignedTo === userId && t.status !== 'completed');
+    
+    // Get pending and completed counts
+    const pendingTasks = myTasks.filter(t => t.status === 'pending');
+    const inProgressTasks = myTasks.filter(t => t.status === 'in-progress');
+    
+    return `
+      <div class="page-header">
+        <div>
+          <div class="page-title">📋 My Tasks</div>
+          <div class="page-subtitle">View and manage your assigned tasks</div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">📥</div><div><div class="stat-value">${pendingTasks.length}</div><div class="stat-label">Pending</div></div></div>
+          <div class="stat-card"><div class="stat-icon">🔄</div><div><div class="stat-value">${inProgressTasks.length}</div><div class="stat-label">In Progress</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${myTasks.filter(t => t.status === 'completed').length}</div><div class="stat-label">Completed</div></div></div>
+        </div>
+        
+        ${myTasks.length === 0 ? `
+          <div class="card">
+            <div style="text-align:center;padding:40px;color:var(--text-light)">
+              <div style="font-size:3rem;margin-bottom:16px">📋</div>
+              <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px">No Tasks Assigned</div>
+              <div style="font-size:0.9rem">You don't have any tasks assigned yet.</div>
+            </div>
+          </div>
+        ` : `
+          ${['pending', 'in-progress'].map(status => {
+            const statusTasks = myTasks.filter(t => t.status === status);
+            if (statusTasks.length === 0) return '';
+            const statusLabel = status === 'pending' ? '📥 Pending Tasks' : '🔄 In Progress';
+            return `
+              <div class="card" style="margin-top:20px">
+                <div class="section-title">${statusLabel}</div>
+                ${statusTasks.map(task => `
+                  <div style="padding:16px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+                      <div style="font-weight:600">${task.title}</div>
+                      <span style="padding:4px 10px;background:${status === 'pending' ? 'rgba(241,196,15,0.15)' : 'rgba(52,152,219,0.15)'};color:${status === 'pending' ? '#f39c12' : '#3498db'};border-radius:12px;font-size:0.75rem;font-weight:600">${status === 'pending' ? 'Pending' : 'In Progress'}</span>
+                    </div>
+                    <div style="font-size:0.85rem;color:var(--text-mid);margin-bottom:8px">${task.description}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div style="font-size:0.75rem;color:var(--text-light)">Due: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-KE') : 'No due date'}</div>
+                      ${status === 'pending' ? `
+                        <button onclick="SupervisorDashboard.startTask('${task.id}')" style="padding:6px 12px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">Start Task</button>
+                      ` : `
+                        <button onclick="SupervisorDashboard.completeTask('${task.id}')" style="padding:6px 12px;background:var(--green-deep);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">Mark Complete</button>
+                      `}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }).join('')}
+        `}
+      </div>
+    `;
+  },
+
+  startTask(taskId) {
+    const task = AFV.tasks.find(t => t.id === taskId);
+    if (task) {
+      task.status = 'in-progress';
+      task.startedAt = new Date().toISOString();
+      AFV.saveState();
+      showToast('Task started!', 'success');
+      this.navigate('tasks');
+    }
+  },
+
+  completeTask(taskId) {
+    const task = AFV.tasks.find(t => t.id === taskId);
+    if (task) {
+      task.status = 'completed';
+      task.completedAt = new Date().toISOString();
+      AFV.saveState();
+      showToast('Task completed!', 'success');
+      this.navigate('tasks');
+    }
   },
 
   submitWeeklyReport() {
