@@ -345,7 +345,7 @@ function submitPasswordResetRequest() {
   AFV.saveState();
   
   closeForgotPasswordModal();
-  showToast(`Password reset link will be sent to ${userEmail}`, 'success');
+  showToast('Password reset link sent to your email', 'success');
 }
 
 console.log('🌾 Agri-Fine Ventures Platform initialized successfully');
