@@ -46,6 +46,10 @@ const AFV = {
   // REVENUE RECORDS
   revenue: [],
 
+  // HARVEST RECORDS (per greenhouse)
+  // Structure: { greenhouseId: [ { id, date, quantity, unit, quality, notes, recordedBy, recordedAt } ] }
+  harvest: {},
+
   // IMAGE ANALYSIS REQUESTS
   imageAnalysisRequests: [],
 

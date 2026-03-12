@@ -33,6 +33,9 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="mygreenhouses" onclick="SupervisorDashboard.showPage('mygreenhouses')">
           <span class="nav-icon">🏡</span><span>My Greenhouses</span>
         </button>
+        <button class="nav-item" data-page="harvest" onclick="SupervisorDashboard.showPage('harvest')">
+          <span class="nav-icon">🌾</span><span>Harvest</span>
+        </button>
         <button class="nav-item" data-page="history" onclick="SupervisorDashboard.showPage('history')">
           <span class="nav-icon">📜</span><span>Task History</span>
         </button>
@@ -79,6 +82,7 @@ const SupervisorDashboard = {
     switch(page) {
       case 'mytasks': content.innerHTML = this.renderMyTasks(); break;
       case 'mygreenhouses': content.innerHTML = this.renderMyGreenhouses(); break;
+      case 'harvest': content.innerHTML = this.renderHarvest(); break;
       case 'history': content.innerHTML = this.renderHistory(); break;
       case 'guide': content.innerHTML = this.renderGuide(); break;
       case 'workers': content.innerHTML = this.renderWorkers(); break;
@@ -244,6 +248,89 @@ const SupervisorDashboard = {
       </div>
       
     `;
+  },
+
+  renderHarvest() {
+    const user = AFV.currentUser;
+    const assignedGH = user.assignedGH || [];
+    const greenhouses = AFV.greenhouses.filter(g => assignedGH.includes(g.id));
+    const harvest = AFV.harvest || {};
+    
+    let html = `<div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none"><div><div class="page-title" style="color:white">Harvest 🌾</div><div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Track yields for your greenhouses</div></div></div><div class="page-body">`;
+    
+    greenhouses.forEach(gh => {
+      const records = harvest[gh.id] || [];
+      const goodHarvest = records.filter(r => r.quality === 'good').reduce((s,r) => s + r.quantity, 0);
+      const badHarvest = records.filter(r => r.quality === 'bad').reduce((s,r) => s + r.quantity, 0);
+      const total = goodHarvest + badHarvest;
+      
+      html += `<div class="card" style="margin-bottom:20px"><h3 style="color:var(--green-deep);margin:0 0 12px">${gh.cropEmoji} ${gh.name} - ${gh.crop}</h3>`;
+      html += `<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"><div class="stat-card"><div class="stat-value">${total.toFixed(2)} ${records[0]?.unit||'kg'}</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-value" style="color:var(--green-fresh)">${goodHarvest.toFixed(2)} ${records[0]?.unit||'kg'}</div><div class="stat-label">Good</div></div><div class="stat-card"><div class="stat-value" style="color:var(--red-alert)">${badHarvest.toFixed(2)} ${records[0]?.unit||'kg'}</div><div class="stat-label">Bad</div></div></div>`;
+      html += `<button class="btn-primary" onclick="SupervisorDashboard.openHarvestModal(${gh.id})">+ Record Harvest</button>`;
+      html += `<div class="scroll-x" style="margin-top:12px"><table><thead><tr><th>Date</th><th>Qty</th><th>Quality</th><th>Notes</th><th></th></tr></thead><tbody>`;
+      if(records.length === 0) {
+        html += `<tr><td colspan="5" style="text-align:center;color:var(--text-light)">No harvests recorded</td></tr>`;
+      } else {
+        records.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+          html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style="color:${r.quality==='good'?'var(--green-fresh)':'var(--red-alert)'}">${r.quality==='good'?'✅ Good':'❌ Bad'}</span></td><td>${r.notes||'-'}</td><td><button onclick="SupervisorDashboard.deleteHarvest(${gh.id},${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`;
+        });
+      }
+      html += `</tbody></table></div></div>`;
+    });
+    
+    html += `</div><div id="harvest-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000"><div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="harvest-gh-id"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="harvest-quality" required style="width:100%;padding:10px"><option value="good">✅ Good</option><option value="bad">❌ Bad</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div></div>`;
+    
+    return html;
+  },
+
+  openHarvestModal(ghId) {
+    document.getElementById('harvest-modal').style.display = 'flex';
+    document.getElementById('harvest-gh-id').value = ghId;
+    document.getElementById('harvest-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('harvest-qty').value = '';
+    document.getElementById('harvest-notes').value = '';
+    document.getElementById('harvest-quality').value = 'good';
+    document.getElementById('harvest-unit').value = 'kg';
+  },
+
+  closeHarvestModal() {
+    document.getElementById('harvest-modal').style.display = 'none';
+  },
+
+  saveHarvest(e) {
+    e.preventDefault();
+    const ghId = parseInt(document.getElementById('harvest-gh-id').value);
+    const quantity = parseFloat(document.getElementById('harvest-qty').value);
+    const unit = document.getElementById('harvest-unit').value;
+    const quality = document.getElementById('harvest-quality').value;
+    const date = document.getElementById('harvest-date').value;
+    const notes = document.getElementById('harvest-notes').value;
+    
+    if(!AFV.harvest[ghId]) AFV.harvest[ghId] = [];
+    
+    AFV.harvest[ghId].push({
+      id: Date.now(),
+      date: date,
+      quantity: quantity,
+      unit: unit,
+      quality: quality,
+      notes: notes,
+      recordedBy: AFV.currentUser?.name || 'Supervisor',
+      recordedAt: new Date().toISOString()
+    });
+    
+    AFV.saveState();
+    this.closeHarvestModal();
+    this.showPage('harvest');
+  },
+
+  deleteHarvest(ghId, recordId) {
+    if(!confirm('Delete this harvest record?')) return;
+    if(AFV.harvest[ghId]) {
+      AFV.harvest[ghId] = AFV.harvest[ghId].filter(r => r.id !== recordId);
+      AFV.saveState();
+      this.showPage('harvest');
+    }
   },
 
   renderHistory() {
