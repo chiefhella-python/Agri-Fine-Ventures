@@ -1526,6 +1526,7 @@ const AdminDashboard = {
               <div class="input-group">
                 <label>AI Provider</label>
                 <select id="settings-provider">
+                  <option value="openrouter">🎮 OpenRouter (NVIDIA - FREE)</option>
                   <option value="huggingface">🤗 HuggingFace (needs free API key)</option>
                   <option value="anthropic">Anthropic (Claude Sonnet)</option>
                   <option value="openai">OpenAI (GPT-4o)</option>

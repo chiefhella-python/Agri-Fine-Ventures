@@ -174,6 +174,8 @@ Guidelines:
         response = await this.callOpenAI(apiKey, messageContent, this.pendingImage);
       } else if (provider === 'gemini') {
         response = await this.callGemini(apiKey, messageContent, this.pendingImage);
+      } else if (provider === 'openrouter') {
+        response = await this.callOpenRouter(apiKey, messageContent, this.pendingImage);
       } else if (provider === 'huggingface') {
         response = await this.callHuggingFace(apiKey, messageContent, this.pendingImage);
       } else {
@@ -291,33 +293,39 @@ Guidelines:
     }
   },
 
-  // Cohere AI - has free tier with vision
-  async callCohere(apiKey, userMessage, imageData = null) {
-    const history = this.messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'CHATBOT' : 'USER', message: m.content }));
+  // OpenRouter - FREE NVIDIA models
+  async callOpenRouter(apiKey, userMessage, imageData = null) {
+    const history = this.messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
     
-    const prompt = this.getSystemPrompt() + '\n\nUser: ' + userMessage + '\nAssistant:';
+    const prompt = this.getSystemPrompt() + '\n\n';
+    history.forEach(m => {
+      prompt += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
+    });
+    prompt += `User: ${userMessage}\nAssistant:`;
     
-    const response = await fetch('https://api.cohere.ai/v1/chat', {
+    // Use free NVIDIA vision model
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Agri-Fine Ventures'
       },
       body: JSON.stringify({
-        model: 'command-r-plus-08-2024',
-        message: prompt,
-        chat_history: history,
+        model: 'nvidia/nemotron-nano-4b-instruct',
+        messages: [{ role: 'user', content: prompt }],
         max_tokens: 512
       })
     });
 
     if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`Cohere error: ${err}`);
+      const err = await response.json();
+      throw new Error(err.error?.message || `OpenRouter error: ${response.status}`);
     }
     
     const data = await response.json();
-    return data.text || data.message;
+    return data.choices[0].message.content;
   },
 
   async callOpenAI(apiKey, userMessage, imageData = null) {

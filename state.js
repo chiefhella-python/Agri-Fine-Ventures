@@ -5,7 +5,7 @@
 const AFV = {
   currentUser: null,
   currentRole: 'admin',
-  aiSettings: { provider: 'huggingface', apiKey: '' },
+  aiSettings: { provider: 'openrouter', apiKey: '' },
   notifications: [],
   currentGHView: null,
   pendingTaskComplete: null,
