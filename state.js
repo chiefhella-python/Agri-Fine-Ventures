@@ -43,6 +43,9 @@ const AFV = {
     { id: 5, name: 'Spinach', category: 'Vegetables', quantity: 0, unit: 'bunches', price: 25, emoji: '🥬' },
   ],
 
+  // REVENUE RECORDS
+  revenue: [],
+
   // IMAGE ANALYSIS REQUESTS
   imageAnalysisRequests: [],
 
