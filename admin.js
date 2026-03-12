@@ -2468,6 +2468,7 @@ AdminDashboard.renderHarvest = function() {
     const grade3Harvest = records.filter(r => r.quality === 'grade3').reduce((s,r) => s + r.quantity, 0);
     const rejectHarvest = records.filter(r => r.quality === 'reject').reduce((s,r) => s + r.quantity, 0);
     const goodHarvest = grade1Harvest + grade2Harvest;
+    const badHarvest = grade3Harvest + rejectHarvest;
     const totalValue = records.reduce((s,r) => s + (r.totalValue||0), 0);
     const total = grade1Harvest + grade2Harvest + grade3Harvest + rejectHarvest;
     
