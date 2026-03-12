@@ -60,8 +60,8 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="feeding" onclick="SupervisorDashboard.showPage('feeding')">
           <span class="nav-icon">🧪</span><span>Feeding Program</span>
         </button>
-        <button class="nav-item" data-page="ai" onclick="openAIModal()">
-          <span class="nav-icon">🤖</span><span>Ask AI</span>
+        <button class="nav-item" data-page="tasks">
+          <span class="nav-icon">📋</span><span>Tasks</span>
         </button>
       </nav>
       <div class="sidebar-footer">
@@ -109,7 +109,7 @@ const SupervisorDashboard = {
           <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">${new Date().toLocaleDateString('en-KE', {weekday:'long',day:'numeric',month:'long'})}</div>
         </div>
         <div class="header-actions">
-          <button class="btn-secondary" onclick="openAIModal()" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:white">🤖 Ask AI</button>
+          
         </div>
       </div>
       <div class="page-body">
@@ -189,7 +189,7 @@ const SupervisorDashboard = {
             </div>`;
         }).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#1a2e4a,#3d6b9e)">🤖</button>
+      
     `;
   },
 
@@ -242,7 +242,7 @@ const SupervisorDashboard = {
             </div>`;
         }).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#1a2e4a,#3d6b9e)">🤖</button>
+      
     `;
   },
 
@@ -273,7 +273,7 @@ const SupervisorDashboard = {
               </div>`).join('')}
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#1a2e4a,#3d6b9e)">🤖</button>
+      
     `;
   },
 
@@ -302,13 +302,9 @@ const SupervisorDashboard = {
               <div style="font-size:0.85rem;color:var(--text-mid);line-height:1.6">${t.body}</div>
             </div>`).join('')}
         </div>
-        <div class="card" style="background:linear-gradient(135deg,var(--green-ultra-pale),white)">
-          <div class="section-title">🤖 Need More Help?</div>
-          <div style="font-size:0.9rem;color:var(--text-mid);margin-bottom:14px">Our AI assistant can answer specific questions about crop diseases, pest treatment, irrigation schedules, and more.</div>
-          <button class="btn-primary" onclick="openAIModal()">🤖 Open AI Assistant</button>
-        </div>
+        
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#1a2e4a,#3d6b9e)">🤖</button>
+      
     `;
   },
 
@@ -431,7 +427,7 @@ const SupervisorDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#1a2e4a,#3d6b9e)">🤖</button>
+      
     `;
   },
 

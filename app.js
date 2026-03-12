@@ -2,8 +2,7 @@
 // AGRI-FINE VENTURES — MAIN APP
 // ============================================
 
-// Initialize AI Assistant
-AIAssistant.init();
+
 
 // ============================================ SPLASH SCREEN
 document.addEventListener('DOMContentLoaded', function() {
@@ -253,10 +252,7 @@ setInterval(() => {
   }
 }, 60000);
 
-// Close modal on overlay click
-document.getElementById('ai-modal')?.addEventListener('click', function(e) {
-  if (e.target === this) closeAIModal();
-});
+
 
 document.getElementById('task-modal')?.addEventListener('click', function(e) {
   if (e.target === this) closeTaskModal();

@@ -140,65 +140,7 @@
     </div>
   </div>
 
-  <!-- AI Assistant Modal -->
-  <div id="ai-modal" class="modal-overlay" style="display:none">
-    <div class="ai-modal">
-      <div class="ai-modal-header">
-        <div class="ai-title">
-          <div class="ai-avatar">🤖</div>
-          <div>
-            <h3>Agri-Fine Assistant</h3>
-            <span class="ai-status">Powered by AI</span>
-          </div>
-        </div>
-        <div class="ai-header-actions">
-          <button id="ai-settings-btn" class="ai-settings-btn" onclick="toggleAISettings()">⚙️ API Settings</button>
-          <button class="ai-close-btn" onclick="closeAIModal()">✕</button>
-        </div>
-      </div>
-      <div id="ai-settings-panel" class="ai-settings" style="display:none">
-        <div class="settings-row">
-          <select id="ai-provider">
-            <option value="openrouter">🎮 OpenRouter (NVIDIA - FREE)</option>
-            <option value="huggingface">🤗 HuggingFace (needs free API key)</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-            <option value="openai">OpenAI (GPT)</option>
-            <option value="gemini">Google (Gemini)</option>
-          </select>
-          <input type="password" id="ai-api-key" placeholder="API key (optional for HuggingFace)">
-          <button onclick="saveAISettings()">Save</button>
-        </div>
-        <div style="padding:8px 12px;background:rgba(0,200,100,0.1);border-radius:6px;font-size:0.75rem;color:var(--green-forest)">
-          💡 <strong>HuggingFace is FREE!</strong> Works without API key. Optional key for higher limits.
-        </div>
-      </div>
-      <div class="ai-messages" id="ai-messages">
-        <div class="ai-message assistant">
-          <div class="msg-avatar">🌾</div>
-          <div class="msg-bubble">
-            Hello! I'm your Agri-Fine Assistant. I can help you with crop management, pest identification, irrigation scheduling, greenhouse optimization, and more. What can I help you with today?
-          </div>
-        </div>
-      </div>
-      <div class="ai-input-area">
-        <div class="ai-suggestions">
-          <button onclick="sendQuickMsg('What tasks are urgent today?')">🚨 Urgent tasks</button>
-          <button onclick="sendQuickMsg('Best practices for tomato growth in greenhouses?')">🍅 Tomato tips</button>
-          <button onclick="sendQuickMsg('Signs of nutrient deficiency in capsicum plants?')">🌶️ Capsicum care</button>
-          <button onclick="sendQuickMsg('Optimal greenhouse temperature and humidity?')">🌡️ Environment</button>
-        </div>
-        <div class="ai-input-row">
-          <input type="file" id="ai-image-input" accept="image/*" style="display:none" onchange="AIAssistant.handleImageUpload(this)">
-          <button type="button" onclick="document.getElementById('ai-image-input').click()" style="padding:8px 12px;background:var(--green-pale);border:none;border-radius:8px;cursor:pointer;font-size:18px" title="Upload image for analysis">📷</button>
-          <textarea id="ai-input" placeholder="Ask about crops, tasks, pests, or upload an image for disease diagnosis..." rows="2" onkeydown="handleAIKeydown(event)"></textarea>
-          <button class="ai-send-btn" onclick="sendAIMessage()">
-            <span>Send</span> ➤
-          </button>
-        </div>
-        <div id="image-preview" style="display:none;align-items:center;gap:10px;padding:8px;background:var(--green-ultra-pale);border-radius:8px;margin-top:8px;"></div>
-      </div>
-    </div>
-  </div>
+  
 
   <!-- Task Complete Modal -->
   <div id="task-modal" class="modal-overlay" style="display:none">
@@ -222,7 +164,6 @@
 <script src="admin.js"></script>
 <script src="supervisor.js"></script>
 <script src="agronomist.js"></script>
-<script src="ai-assistant.js"></script>
 <script src="app.js"></script>
 <script>
   // PWA Install Prompt Handler

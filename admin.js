@@ -118,7 +118,6 @@ const AdminDashboard = {
         </div>
         <div class="header-actions">
           ${unreadReports > 0 ? `<button class="btn-secondary" onclick="AdminDashboard.showPage('agronomist')">🔬 ${unreadReports} New Agro Report${unreadReports>1?'s':''}</button>` : ''}
-          <button class="btn-primary" onclick="openAIModal()">🤖 Ask AI Assistant</button>
         </div>
       </div>
       <div class="page-body">
@@ -269,7 +268,7 @@ const AdminDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" title="Open AI Assistant">🤖</button>
+      
     `;
   },
 
@@ -281,13 +280,13 @@ const AdminDashboard = {
           <div class="page-subtitle">Detailed view of all 5 production units</div>
         </div>
         <div class="header-actions">
-          <button class="btn-primary" onclick="openAIModal()">🤖 AI Advice</button>
+          
         </div>
       </div>
       <div class="page-body">
         ${AFV.greenhouses.map(gh => this.renderGHDetail(gh)).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -479,7 +478,7 @@ const AdminDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -607,7 +606,7 @@ const AdminDashboard = {
         .avatar-option:hover { transform: scale(1.1); }
         input[name="worker-avatar"]:checked + .avatar-option { border-color: var(--green-fresh); background: var(--green-ultra-pale); }
       </style>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -1085,12 +1084,12 @@ const AdminDashboard = {
                 ${!r.acknowledged ? `
                   <div style="border-top:1px solid var(--green-pale);padding-top:12px;display:flex;gap:10px">
                     <button onclick="AdminDashboard.acknowledgeReport(${r.id})" class="btn-primary" style="font-size:0.82rem;padding:8px 16px">✅ Mark as Reviewed</button>
-                    <button onclick="openAIModal()" class="btn-secondary" style="font-size:0.82rem;padding:8px 16px">🤖 Ask AI About This</button>
+                    
                   </div>` : `<div style="font-size:0.75rem;color:var(--green-fresh)">✅ Reviewed by admin</div>`}
               </div>`;
           }).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -1165,7 +1164,7 @@ const AdminDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -1255,7 +1254,7 @@ const AdminDashboard = {
           </form>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -1302,7 +1301,7 @@ const AdminDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -1334,7 +1333,7 @@ const AdminDashboard = {
             <button style="align-self:flex-start;font-size:0.75rem;padding:4px 12px;background:transparent;border:1px solid var(--green-pale);border-radius:6px;cursor:pointer;color:var(--text-light)">Dismiss</button>
           </div>`).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -1520,26 +1519,7 @@ const AdminDashboard = {
               <button class="btn-primary">Save Farm Profile</button>
             </div>
           </div>
-          <div class="card">
-            <div class="section-title">🤖 AI Assistant Settings</div>
-            <div style="display:flex;flex-direction:column;gap:14px">
-              <div class="input-group">
-                <label>AI Provider</label>
-                <select id="settings-provider">
-                  <option value="openrouter">🎮 OpenRouter (NVIDIA - FREE)</option>
-                  <option value="huggingface">🤗 HuggingFace (needs free API key)</option>
-                  <option value="anthropic">Anthropic (Claude Sonnet)</option>
-                  <option value="openai">OpenAI (GPT-4o)</option>
-                  <option value="gemini">Google (Gemini Pro)</option>
-                </select>
-              </div>
-              <div class="input-group"><label>API Key</label><input type="password" placeholder="Optional for HuggingFace" id="settings-apikey"></div>
-              <div style="background:var(--green-ultra-pale);padding:12px;border-radius:var(--radius-sm);font-size:0.8rem;color:var(--text-mid)">
-                🔒 HuggingFace is FREE and works without API key! Your API key is stored locally and never sent to our servers.
-              </div>
-              <button class="btn-primary" onclick="saveAIFromSettings()">Save AI Settings</button>
-            </div>
-          </div>
+          
         </div>
         <div class="card" style="margin-top:20px">
           <div class="section-title">👥 Worker Management</div>
@@ -1557,7 +1537,7 @@ const AdminDashboard = {
           </table>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()">🤖</button>
+      
     `;
   },
 
@@ -2300,13 +2280,7 @@ const AdminDashboard = {
   }
 };
 
-function saveAIFromSettings() {
-  const provider = document.getElementById('settings-provider')?.value;
-  const key = document.getElementById('settings-apikey')?.value;
-  if (provider) AFV.aiSettings.provider = provider;
-  if (key) AFV.aiSettings.apiKey = key;
-  showToast('AI settings saved!', 'success');
-}
+
 
 // Workers added by supervisors
 AdminDashboard.renderSupervisorWorkers = function() {

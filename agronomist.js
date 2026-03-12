@@ -49,8 +49,8 @@ const AgronomistDashboard = {
         <button class="nav-item" data-page="feeding" onclick="AgronomistDashboard.showPage('feeding')">
           <span class="nav-icon">🧪</span><span>Feeding Program</span>
         </button>
-        <button class="nav-item" data-page="ai" onclick="openAIModal()">
-          <span class="nav-icon">🤖</span><span>AI Research</span>
+        <button class="nav-item" data-page="reports">
+          <span class="nav-icon">📊</span><span>Reports</span>
         </button>
       </nav>
       <div class="sidebar-footer">
@@ -90,7 +90,7 @@ const AgronomistDashboard = {
         </div>
         <div class="header-actions">
           <button class="btn-primary" style="background:rgba(155,89,182,0.8)" onclick="AgronomistDashboard.showPage('add-report')">✍️ New Report</button>
-          <button class="btn-secondary" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:white" onclick="openAIModal()">🤖 AI Research</button>
+          
         </div>
       </div>
       <div class="page-body">
@@ -185,7 +185,7 @@ const AgronomistDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -255,7 +255,7 @@ const AgronomistDashboard = {
             </div>`;
         }).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -295,7 +295,7 @@ const AgronomistDashboard = {
               </div>`;
           }).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -354,7 +354,7 @@ const AgronomistDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -459,7 +459,7 @@ const AgronomistDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -558,7 +558,7 @@ const AgronomistDashboard = {
             </div>`;
         }).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -607,7 +607,7 @@ const AgronomistDashboard = {
             </div>
           </div>`).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -750,7 +750,7 @@ const AgronomistDashboard = {
           </div>
         </div>
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   },
 
@@ -864,7 +864,7 @@ const AgronomistDashboard = {
           </div>
         `).join('')}
       </div>
-      <button class="ai-float-btn" onclick="openAIModal()" style="background:linear-gradient(135deg,#6c3483,#9b59b6)">🤖</button>
+      
     `;
   }
 };
