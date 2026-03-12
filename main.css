@@ -19,6 +19,40 @@ body {
   overflow-x: hidden;
 }
 
+/* Scrollable containers */
+.page-body {
+  padding: clamp(8px, 2vw, 24px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.scroll-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.scroll-xy {
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Horizontal scroll indicator */
+.scroll-x::after,
+.scroll-xy::after {
+  content: '';
+  display: block;
+  height: 20px;
+}
+
 .page-body {
   padding: clamp(8px, 2vw, 24px);
 }
