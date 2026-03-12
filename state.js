@@ -34,6 +34,18 @@ const AFV = {
     { id: 10, name: 'Vapor Gard (Anti-transpirant)', category: 'Chemicals', qty: 2, unit: 'L', reorder: 5, status: 'critical' },
   ],
 
+  // FARM PRODUCE (other than greenhouses)
+  farmProduce: [
+    { id: 1, name: 'Fresh Milk', category: 'Dairy', quantity: 45, unit: 'liters/day', price: 60, emoji: '🥛' },
+    { id: 2, name: ' Eggs', category: 'Poultry', quantity: 120, unit: 'pieces/day', price: 15, emoji: '🥚' },
+    { id: 3, name: 'Cabbages', category: 'Vegetables', quantity: 0, unit: 'heads', price: 50, emoji: '🥬' },
+    { id: 4, name: 'Kale (Sukuma Wiki)', category: 'Vegetables', quantity: 0, unit: 'bunches', price: 30, emoji: '🥬' },
+    { id: 5, name: 'Spinach', category: 'Vegetables', quantity: 0, unit: 'bunches', price: 25, emoji: '🥬' },
+  ],
+
+  // IMAGE ANALYSIS REQUESTS
+  imageAnalysisRequests: [],
+
   // WORKERS (added by supervisor)
   workers: [
     { id: 'worker1', name: 'Peter Kamau', role: 'worker', password: '1234', avatar: '👨‍🌾', assignedGH: [1, 2], addedBy: 'supervisor', imageUrl: '' },

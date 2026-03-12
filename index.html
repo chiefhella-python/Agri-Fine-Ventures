@@ -183,11 +183,14 @@
           <button onclick="sendQuickMsg('Optimal greenhouse temperature and humidity?')">🌡️ Environment</button>
         </div>
         <div class="ai-input-row">
-          <textarea id="ai-input" placeholder="Ask about crops, tasks, pests, irrigation..." rows="2" onkeydown="handleAIKeydown(event)"></textarea>
+          <input type="file" id="ai-image-input" accept="image/*" style="display:none" onchange="AIAssistant.handleImageUpload(this)">
+          <button type="button" onclick="document.getElementById('ai-image-input').click()" style="padding:8px 12px;background:var(--green-pale);border:none;border-radius:8px;cursor:pointer;font-size:18px" title="Upload image for analysis">📷</button>
+          <textarea id="ai-input" placeholder="Ask about crops, tasks, pests, or upload an image for disease diagnosis..." rows="2" onkeydown="handleAIKeydown(event)"></textarea>
           <button class="ai-send-btn" onclick="sendAIMessage()">
             <span>Send</span> ➤
           </button>
         </div>
+        <div id="image-preview" style="display:none;align-items:center;gap:10px;padding:8px;background:var(--green-ultra-pale);border-radius:8px;margin-top:8px;"></div>
       </div>
     </div>
   </div>
