@@ -104,9 +104,10 @@ Guidelines:
       const provider = AFV.aiSettings.provider;
       const apiKey = AFV.aiSettings.apiKey;
 
-      if (!apiKey) {
+      // For HuggingFace, API key is optional (free tier works without it)
+      if (!apiKey && provider !== 'huggingface') {
         this.hideThinking();
-        this.addMessage('assistant', '⚙️ **No API key configured!**\n\nTo use the AI Assistant:\n1. Click the "API Settings" button above\n2. Select your AI provider (Anthropic, OpenAI, or Google)\n3. Enter your API key\n4. Click Save\n\nYour key is stored locally and used directly to call the AI service. Once configured, I can answer all your agricultural questions and analyze plant images!');
+        this.addMessage('assistant', '⚙️ **No API key configured!**\n\nTo use the AI Assistant:\n1. Click the "API Settings" button above\n2. Select your AI provider (HuggingFace is FREE, or Anthropic, OpenAI, Google)\n3. Enter your API key (optional for HuggingFace)\n4. Click Save\n\nHuggingFace is free and works without an API key! Once configured, I can answer all your agricultural questions and analyze plant images!');
         this.isLoading = false;
         this.clearImage();
         return;
@@ -118,6 +119,8 @@ Guidelines:
         response = await this.callOpenAI(apiKey, messageContent, this.pendingImage);
       } else if (provider === 'gemini') {
         response = await this.callGemini(apiKey, messageContent, this.pendingImage);
+      } else if (provider === 'huggingface') {
+        response = await this.callHuggingFace(apiKey, messageContent, this.pendingImage);
       } else {
         response = await this.callAnthropic(apiKey, messageContent, this.pendingImage);
       }
@@ -186,6 +189,54 @@ Guidelines:
     }
     const data = await response.json();
     return data.content[0].text;
+  },
+
+  // Hugging Face free AI
+  async callHuggingFace(apiKey, userMessage, imageData = null) {
+    const history = this.messages.slice(-6).map(m => ({ role: m.role, content: m.content })).filter(m => m.content);
+    
+    // Build messages for chat
+    let prompt = this.getSystemPrompt() + '\n\n';
+    
+    // Add conversation history
+    history.forEach(m => {
+      if (m.role === 'user') {
+        prompt += `User: ${m.content}\n`;
+      } else {
+        prompt += `Assistant: ${m.content}\n`;
+      }
+    });
+    prompt += `User: ${userMessage}\nAssistant:`;
+
+    // Use a free model from Hugging Face
+    const model = 'microsoft/Phi-3-mini-4k-instruct';
+    
+    const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 512,
+          temperature: 0.7,
+          top_p: 0.9
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`HuggingFace error: ${err}`);
+    }
+    
+    const data = await response.json();
+    if (Array.isArray(data) && data[0]) {
+      return data[0].generated_text.split('Assistant:').pop().trim();
+    }
+    return JSON.stringify(data);
   },
 
   async callOpenAI(apiKey, userMessage, imageData = null) {

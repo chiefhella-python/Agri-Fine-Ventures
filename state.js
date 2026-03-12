@@ -5,7 +5,7 @@
 const AFV = {
   currentUser: null,
   currentRole: 'admin',
-  aiSettings: { provider: 'anthropic', apiKey: '' },
+  aiSettings: { provider: 'huggingface', apiKey: '' },
   notifications: [],
   currentGHView: null,
   pendingTaskComplete: null,
