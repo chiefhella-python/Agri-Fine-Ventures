@@ -2463,9 +2463,9 @@ AdminDashboard.renderHarvest = function() {
   
   greenhouses.forEach(gh => {
     const records = harvest[gh.id] || [];
-    const grade1Harvest = records.filter(r => r.quality === 'grade1').reduce((s,r) => s + r.quantity, 0);
+    const grade1Harvest = records.filter(r => r.quality === 'grade1' || r.quality === 'good').reduce((s,r) => s + r.quantity, 0);
     const grade2Harvest = records.filter(r => r.quality === 'grade2').reduce((s,r) => s + r.quantity, 0);
-    const grade3Harvest = records.filter(r => r.quality === 'grade3').reduce((s,r) => s + r.quantity, 0);
+    const grade3Harvest = records.filter(r => r.quality === 'grade3' || r.quality === 'bad').reduce((s,r) => s + r.quantity, 0);
     const rejectHarvest = records.filter(r => r.quality === 'reject').reduce((s,r) => s + r.quantity, 0);
     const goodHarvest = grade1Harvest + grade2Harvest;
     const badHarvest = grade3Harvest + rejectHarvest;
@@ -2480,7 +2480,7 @@ AdminDashboard.renderHarvest = function() {
       html += `<tr><td colspan=\"5\" style=\"text-align:center;color:var(--text-light)\">No harvests recorded</td></tr>`;
     } else {
       records.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
-        html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style=\"color:${r.quality==='grade1'?'var(--green-fresh)':r.quality==='grade2'?'var(--blue-water)':r.quality==='grade3'?'var(--orange-warn)':'var(--red-alert)'}\">${r.quality==='grade1'?'⭐ Grade 1':r.quality==='grade2'?'⭐⭐ Grade 2':r.quality==='grade3'?'⭐⭐⭐ Grade 3':'❌ Reject'}</span></td><td>${r.notes||'-'}</td><td><button onclick=\"AdminDashboard.deleteHarvest(${gh.id},${r.id})\" style=\"background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer\">🗑️</button></td></tr>`;
+        html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style=\"color:${r.quality==='grade1'||r.quality==='good'?'var(--green-fresh)':r.quality==='grade2'?'var(--blue-water)':r.quality==='grade3'||r.quality==='bad'?'var(--orange-warn)':'var(--red-alert)'}\">${r.quality==='grade1'?'⭐ Grade 1':r.quality==='good'?'✅ Good':r.quality==='grade2'?'⭐⭐ Grade 2':r.quality==='grade3'?'⭐⭐⭐ Grade 3':r.quality==='good'?'✅ Good':r.quality==='bad'?'❌ Bad':'❌ Reject'}</span></td><td>${r.notes||'-'}</td><td><button onclick=\"AdminDashboard.deleteHarvest(${gh.id},${r.id})\" style=\"background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer\">🗑️</button></td></tr>`;
       });
     }
     html += `</tbody></table></div></div>`;
