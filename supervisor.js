@@ -302,19 +302,28 @@ const SupervisorDashboard = {
 
   openHarvestModal(ghId) {
     const gh = AFV.greenhouses.find(g => g.id === ghId);
-    const pricePerKg = gh?.pricePerKg || 100;
-    document.getElementById('supervisor-harvest-modal').style.display = 'flex';
+    const gradePrices = gh?.gradePrices || { grade1: 150, grade2: 120, grade3: 80, reject: 0 };
+    const modal = document.getElementById('supervisor-harvest-modal');
+    
+    // Update the quality dropdown with grade prices
+    const qualitySelect = document.getElementById('supervisor-harvest-quality');
+    qualitySelect.innerHTML = `<option value="grade1">⭐ Grade 1 (KES ${gradePrices.grade1}/kg)</option><option value="grade2">⭐⭐ Grade 2 (KES ${gradePrices.grade2}/kg)</option><option value="grade3">⭐⭐⭐ Grade 3 (KES ${gradePrices.grade3}/kg)</option><option value="reject">❌ Reject (No value)</option>`;
+    
+    modal.style.display = 'flex';
     document.getElementById('supervisor-harvest-gh-id').value = ghId;
-    document.getElementById('supervisor-harvest-price').value = pricePerKg;
-    document.getElementById('supervisor-harvest-price-input').value = pricePerKg;
+    document.getElementById('supervisor-harvest-quality').value = 'grade1';
+    document.getElementById('supervisor-harvest-price').value = gradePrices.grade1;
+    document.getElementById('supervisor-harvest-price-input').value = gradePrices.grade1;
     document.getElementById('supervisor-harvest-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('supervisor-harvest-qty').value = '';
     document.getElementById('supervisor-harvest-notes').value = '';
-    document.getElementById('supervisor-harvest-quality').value = 'grade1';
     document.getElementById('supervisor-harvest-unit').value = 'kg';
     if(document.getElementById('supervisor-harvest-estimated-value')) {
       document.getElementById('supervisor-harvest-estimated-value').textContent = 'KES 0';
     }
+    
+    // Store grade prices for this greenhouse
+    modal.dataset.gradePrices = JSON.stringify(gradePrices);
     
     const qtyInput = document.getElementById('supervisor-harvest-qty');
     const priceInput = document.getElementById('supervisor-harvest-price-input');
@@ -329,6 +338,15 @@ const SupervisorDashboard = {
     qtyInput.oninput = updateValue;
     priceInput.oninput = function() {
       document.getElementById('supervisor-harvest-price').value = this.value;
+      updateValue();
+    };
+    
+    // Update price when grade changes
+    qualitySelect.onchange = function() {
+      const prices = JSON.parse(modal.dataset.gradePrices);
+      const newPrice = prices[this.value] || 0;
+      document.getElementById('supervisor-harvest-price').value = newPrice;
+      document.getElementById('supervisor-harvest-price-input').value = newPrice;
       updateValue();
     };
   },

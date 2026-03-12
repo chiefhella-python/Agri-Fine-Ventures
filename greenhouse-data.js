@@ -22,6 +22,7 @@ AFV.greenhouses = [
     plants: 2400,
     worker: 'worker1',
     pricePerKg: 120,
+    gradePrices: { grade1: 150, grade2: 120, grade3: 80, reject: 0 },
     environment: { temp: '24°C', humidity: '72%', ph: '6.2', ec: '3.4' },
     notes: 'Plants showing excellent development. First truss already set.',
     tasks: [
@@ -48,6 +49,7 @@ AFV.greenhouses = [
     plants: 1800,
     worker: 'worker1',
     pricePerKg: 150,
+    gradePrices: { grade1: 180, grade2: 150, grade3: 100, reject: 0 },
     environment: { temp: '26°C', humidity: '68%', ph: '6.0', ec: '3.1' },
     notes: 'Vegetative stage progressing well. Slight yellowing on lower leaves — likely magnesium deficiency.',
     tasks: [
@@ -73,6 +75,7 @@ AFV.greenhouses = [
     plants: 1800,
     worker: 'worker2',
     pricePerKg: 80,
+    gradePrices: { grade1: 100, grade2: 80, grade3: 50, reject: 0 },
     environment: { temp: '26°C', humidity: '75%', ph: '6.2', ec: '2.5' },
     notes: 'Vegetative growth stage. Vines showing vigorous development.',
     tasks: [
