@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agri-fine-v1';
+const CACHE_NAME = 'agri-fine-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -10,7 +10,6 @@ const STATIC_ASSETS = [
   '/admin.js',
   '/supervisor.js',
   '/agronomist.js',
-  '/ai-assistant.js',
   '/icon-192.svg',
   '/icon-512.svg'
 ];
