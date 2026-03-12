@@ -2469,8 +2469,7 @@ AdminDashboard.renderHarvest = function() {
     const rejectHarvest = records.filter(r => r.quality === 'reject').reduce((s,r) => s + r.quantity, 0);
     const goodHarvest = grade1Harvest + grade2Harvest;
     const totalValue = records.reduce((s,r) => s + (r.totalValue||0), 0);
-    const badHarvest = records.filter(r => r.quality === 'bad').reduce((s,r) => s + r.quantity, 0);
-    const total = goodHarvest + badHarvest;
+    const total = grade1Harvest + grade2Harvest + grade3Harvest + rejectHarvest;
     
     html += `<div class=\"card\" style=\"margin-bottom:20px\"><h3 style=\"color:var(--green-deep);margin:0 0 12px\">${gh.cropEmoji} ${gh.name} - ${gh.crop}</h3>`;
     html += `<div class=\"stats-grid\" style=\"grid-template-columns:repeat(3,1fr);margin-bottom:12px\"><div class=\"stat-card\"><div class=\"stat-value\">${total.toFixed(2)} ${records[0]?.unit||'kg'}</div><div class=\"stat-label\">Total</div></div><div class=\"stat-card\"><div class=\"stat-value\" style=\"color:var(--green-fresh)\">${goodHarvest.toFixed(2)} ${records[0]?.unit||'kg'}</div><div class=\"stat-label\">Good</div></div><div class=\"stat-card\"><div class=\"stat-value\" style=\"color:var(--red-alert)\">${badHarvest.toFixed(2)} ${records[0]?.unit||'kg'}</div><div class=\"stat-label\">Bad</div></div></div>`;
