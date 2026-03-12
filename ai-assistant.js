@@ -20,6 +20,12 @@ const AIAssistant = {
   },
 
   init() {
+    // Load saved AI settings from localStorage
+    const savedProvider = localStorage.getItem('afv_ai_provider');
+    const savedKey = localStorage.getItem('afv_ai_key');
+    if (savedProvider) AFV.aiSettings.provider = savedProvider;
+    if (savedKey) AFV.aiSettings.apiKey = savedKey;
+    
     this.messages = [{
       role: 'assistant',
       content: 'Hello! I\'m your Agri-Fine AI Assistant 🌾. I specialize in greenhouse horticulture — tomatoes, capsicum, cucumber, pest management, irrigation, nutrients, and crop scheduling. Configure an AI API key in Settings for detailed answers, or ask me about basic crop care!'
@@ -475,8 +481,14 @@ function toggleAISettings() {
 function saveAISettings() {
   const provider = document.getElementById('ai-provider')?.value;
   const key = document.getElementById('ai-api-key')?.value;
-  if (provider) AFV.aiSettings.provider = provider;
-  if (key) AFV.aiSettings.apiKey = key;
+  if (provider) {
+    AFV.aiSettings.provider = provider;
+    localStorage.setItem('afv_ai_provider', provider);
+  }
+  if (key) {
+    AFV.aiSettings.apiKey = key;
+    localStorage.setItem('afv_ai_key', key);
+  }
   showToast('AI settings saved! ✓', 'success');
   toggleAISettings();
 }
