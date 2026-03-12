@@ -58,6 +58,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="revenue" onclick="AdminDashboard.showPage('revenue')">
           <span class="nav-icon">💰</span><span>Revenue</span>
         </button>
+        <button class="nav-item" data-page="revenue" onclick="AdminDashboard.showPage('revenue')">
+          <span class="nav-icon">💰</span><span>Revenue</span>
+        </button>
         <div class="nav-section-label">Farm</div>
         <button class="nav-item" data-page="schedule" onclick="AdminDashboard.showPage('schedule')">
           <span class="nav-icon">📅</span><span>Schedule</span>
@@ -97,6 +100,7 @@ const AdminDashboard = {
       case 'agro-reports': content.innerHTML = this.renderAgroReports(); break;
       case 'analytics': content.innerHTML = this.renderAnalytics(); break;
       case 'inventory': content.innerHTML = this.renderInventory(); break;
+      case 'revenue': content.innerHTML = this.renderRevenue(); break;
       case 'revenue': content.innerHTML = this.renderRevenue(); break;
       case 'schedule': content.innerHTML = this.renderSchedule(); break;
       case 'alerts': content.innerHTML = this.renderAlerts(); break;
@@ -2407,6 +2411,37 @@ AdminDashboard.deleteInventory = function(itemId) {
   AFV.saveState();
   showToast(`"${item.name}" has been deleted`, 'success');
   this.showPage('inventory');
+};
+
+AdminDashboard.renderRevenue = function() {
+  const records = AFV.revenue || [];
+  const total = records.reduce((s,r) => s + (r.amount||0), 0);
+  return '<div class="page-header"><div><div class="page-title">Revenue 💰</div><div class="page-subtitle">Track income from sales</div></div><div class="header-actions"><button class="btn-primary" onclick="AdminDashboard.openRevenueModal()">+ Add Sale</button></div></div><div class="page-body"><div class="stats-grid"><div class="stat-card"><div class="stat-value">KES ' + total.toLocaleString() + '</div><div class="stat-label">Total Revenue</div></div></div><div class="card"><div class="scroll-x"><table><thead><tr><th>Date</th><th>Source</th><th>Amount</th><th></th></tr></thead><tbody>' + (records.length===0 ? '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No sales recorded</td></tr>' : records.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => '<tr><td>' + new Date(r.date).toLocaleDateString() + '</td><td>' + (r.source||'-') + '</td><td style="font-weight:600;color:var(--green-fresh)">KES ' + r.amount.toLocaleString() + '</td><td><button onclick="AdminDashboard.deleteRevenue(' + r.id + ')" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>').join('') + '</tbody></table></div></div></div><div id="revenue-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000"><div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Sale</h2><form onsubmit="AdminDashboard.saveRevenue(event)"><select id="revenue-source" required style="width:100%;padding:10px;margin-bottom:12px"><option value="Greenhouse">Greenhouse</option><option value="Milk">Milk</option><option value="Eggs">Eggs</option><option value="Vegetables">Vegetables</option><option value="Other">Other</option></select><input type="text" id="revenue-product" required placeholder="Product" style="width:100%;padding:10px;margin-bottom:12px"><input type="number" id="revenue-amount" required placeholder="Amount (KES)" style="width:100%;padding:10px;margin-bottom:12px"><input type="date" id="revenue-date" required style="width:100%;padding:10px;margin-bottom:16px"><div style="display:flex;gap:10px"><button type="button" onclick="AdminDashboard.closeRevenueModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div></div>';
+};
+
+AdminDashboard.openRevenueModal = function() {
+  document.getElementById('revenue-modal').style.display = 'flex';
+  document.getElementById('revenue-date').value = new Date().toISOString().split('T')[0];
+};
+
+AdminDashboard.closeRevenueModal = function() {
+  document.getElementById('revenue-modal').style.display = 'none';
+};
+
+AdminDashboard.saveRevenue = function(e) {
+  e.preventDefault();
+  if(!AFV.revenue) AFV.revenue = [];
+  AFV.revenue.push({ id: Date.now(), source: document.getElementById('revenue-source').value, product: document.getElementById('revenue-product').value, amount: parseFloat(document.getElementById('revenue-amount').value), date: new Date(document.getElementById('revenue-date').value) });
+  AFV.saveState();
+  this.closeRevenueModal();
+  this.showPage('revenue');
+};
+
+AdminDashboard.deleteRevenue = function(id) {
+  if(!confirm('Delete this record?')) return;
+  AFV.revenue = (AFV.revenue||[]).filter(r => r.id !== id);
+  AFV.saveState();
+  this.showPage('revenue');
 };
   
 "AdminDashboard.renderRevenue = function() { const records = AFV.revenue || []; const total = records.reduce((s,r) => s + (r.amount||0), 0); const today = records.filter(r => new Date(r.date).toDateString() === new Date().toDateString()).reduce((s,r) => s + (r.amount||0), 0); return '<div class=\"page-header\"><div><div class=\"page-title\">Revenue ??</div></div><div class=\"header-actions\"><button class=\"btn-primary\" onclick=\"AdminDashboard.openRevenueModal()\">+ Add Sale</button></div></div><div class=\"page-body\"><div class=\"stats-grid\"><div class=\"stat-card\"><div class=\"stat-value\">KES ' + total.toLocaleString() + '</div><div class=\"stat-label\">Total</div></div><div class=\"stat-card\"><div class=\"stat-value\">KES ' + today.toLocaleString() + '</div><div class=\"stat-label\">Today</div></div></div><div class=\"card\"><div class=\"scroll-x\"><table><thead><tr><th>Date</th><th>Source</th><th>Amount</th><th></th></tr></thead><tbody>' + (records.length === 0 ? '<tr><td colspan=\"4\">No sales yet</td></tr>' : records.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => '<tr><td>' + new Date(r.date).toLocaleDateString() + '</td><td>' + (r.source||'-') + '</td><td>KES ' + r.amount.toLocaleString() + '</td><td><button onclick=\"AdminDashboard.deleteRevenue(' + r.id + ')\" style=\"background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer\">???</button></td></tr>').join('') + '</tbody></table></div></div></div><div id=\"revenue-modal\" class=\"modal\" style=\"display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000\"><div style=\"background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto\"><h2 style=\"color:var(--green-deep);margin:0 0 16px\">Record Sale</h2><form onsubmit=\"AdminDashboard.saveRevenue(event)\"><select id=\"revenue-source\" required style=\"width:100%;padding:10px;margin-bottom:12px\"><option value=\"Greenhouse\">Greenhouse</option><option value=\"Milk\">Milk</option><option value=\"Eggs\">Eggs</option><option value=\"Vegetables\">Vegetables</option><option value=\"Other\">Other</option></select><input type=\"text\" id=\"revenue-product\" required placeholder=\"Product\" style=\"width:100%;padding:10px;margin-bottom:12px\"><input type=\"number\" id=\"revenue-amount\" required placeholder=\"Amount (KES)\" style=\"width:100%;padding:10px;margin-bottom:12px\"><input type=\"date\" id=\"revenue-date\" required style=\"width:100%;padding:10px;margin-bottom:16px\"><div style=\"display:flex;gap:10px\"><button type=\"button\" onclick=\"AdminDashboard.closeRevenueModal()\" class=\"btn-secondary\" style=\"flex:1\">Cancel</button><button type=\"submit\" class=\"btn-primary\" style=\"flex:1\">Save</button></div></form></div></div>'; };" 
