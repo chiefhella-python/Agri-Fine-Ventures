@@ -293,17 +293,20 @@ Guidelines:
     }
   },
 
-  // OpenRouter - FREE NVIDIA models
+  // OpenRouter - FREE NVIDIA models with vision
   async callOpenRouter(apiKey, userMessage, imageData = null) {
     const history = this.messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
     
-    let prompt = this.getSystemPrompt() + '\n\n';
+    let promptText = this.getSystemPrompt() + '\n\n';
     history.forEach(m => {
-      prompt += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
+      promptText += `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}\n`;
     });
-    prompt += `User: ${userMessage}\nAssistant:`;
+    promptText += `User: ${userMessage}\nAssistant:`;
     
-    // Use free NVIDIA model
+    // Build messages
+    let messages = [{ role: 'user', content: promptText }];
+    
+    // Use free NVIDIA vision model
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -313,8 +316,9 @@ Guidelines:
         'X-Title': 'Agri-Fine Ventures'
       },
       body: JSON.stringify({
-        model: 'nvidia/nemotron-nano-4b-instruct',
-        messages: [{ role: 'user', content: prompt }],
+        model: 'nvidia/nemotron-nano-12b-v2-vl:free',
+        messages: messages,
+        reasoning: { enabled: true },
         max_tokens: 512
       })
     });
