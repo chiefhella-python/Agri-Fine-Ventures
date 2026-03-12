@@ -1526,14 +1526,15 @@ const AdminDashboard = {
               <div class="input-group">
                 <label>AI Provider</label>
                 <select id="settings-provider">
+                  <option value="huggingface">🤗 HuggingFace (FREE)</option>
                   <option value="anthropic">Anthropic (Claude Sonnet)</option>
                   <option value="openai">OpenAI (GPT-4o)</option>
                   <option value="gemini">Google (Gemini Pro)</option>
                 </select>
               </div>
-              <div class="input-group"><label>API Key</label><input type="password" placeholder="sk-..." id="settings-apikey"></div>
+              <div class="input-group"><label>API Key</label><input type="password" placeholder="Optional for HuggingFace" id="settings-apikey"></div>
               <div style="background:var(--green-ultra-pale);padding:12px;border-radius:var(--radius-sm);font-size:0.8rem;color:var(--text-mid)">
-                🔒 Your API key is stored locally and never sent to our servers. It is used directly to communicate with the AI provider.
+                🔒 HuggingFace is FREE and works without API key! Your API key is stored locally and never sent to our servers.
               </div>
               <button class="btn-primary" onclick="saveAIFromSettings()">Save AI Settings</button>
             </div>
