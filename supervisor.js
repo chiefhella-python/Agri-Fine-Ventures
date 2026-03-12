@@ -7,6 +7,19 @@ const SupervisorDashboard = {
 
   init() {
     this.renderNav();
+    // Add harvest modal to body
+    if(!document.getElementById('supervisor-harvest-modal')) {
+      const modal = document.createElement('div');
+      modal.id = 'supervisor-harvest-modal';
+      modal.className = 'modal';
+      modal.style.display = 'none';
+      modal.style.position = 'fixed';
+      modal.style.inset = '0';
+      modal.style.background = 'rgba(0,0,0,0.5)';
+      modal.style.zIndex = '1000';
+      modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="good">✅ Good</option><option value="bad">❌ Bad</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
+      document.body.appendChild(modal);
+    }
     this.showPage('mytasks');
   },
 
@@ -278,33 +291,33 @@ const SupervisorDashboard = {
       html += `</tbody></table></div></div>`;
     });
     
-    html += `</div><div id="harvest-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000"><div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="harvest-gh-id"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="harvest-quality" required style="width:100%;padding:10px"><option value="good">✅ Good</option><option value="bad">❌ Bad</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div></div>`;
+    html += `</div>`;
     
     return html;
   },
 
   openHarvestModal(ghId) {
-    document.getElementById('harvest-modal').style.display = 'flex';
-    document.getElementById('harvest-gh-id').value = ghId;
-    document.getElementById('harvest-date').value = new Date().toISOString().split('T')[0];
-    document.getElementById('harvest-qty').value = '';
-    document.getElementById('harvest-notes').value = '';
-    document.getElementById('harvest-quality').value = 'good';
-    document.getElementById('harvest-unit').value = 'kg';
+    document.getElementById('supervisor-harvest-modal').style.display = 'flex';
+    document.getElementById('supervisor-harvest-gh-id').value = ghId;
+    document.getElementById('supervisor-harvest-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('supervisor-harvest-qty').value = '';
+    document.getElementById('supervisor-harvest-notes').value = '';
+    document.getElementById('supervisor-harvest-quality').value = 'good';
+    document.getElementById('supervisor-harvest-unit').value = 'kg';
   },
 
   closeHarvestModal() {
-    document.getElementById('harvest-modal').style.display = 'none';
+    document.getElementById('supervisor-harvest-modal').style.display = 'none';
   },
 
   saveHarvest(e) {
     e.preventDefault();
-    const ghId = parseInt(document.getElementById('harvest-gh-id').value);
-    const quantity = parseFloat(document.getElementById('harvest-qty').value);
-    const unit = document.getElementById('harvest-unit').value;
-    const quality = document.getElementById('harvest-quality').value;
-    const date = document.getElementById('harvest-date').value;
-    const notes = document.getElementById('harvest-notes').value;
+    const ghId = parseInt(document.getElementById('supervisor-harvest-gh-id').value);
+    const quantity = parseFloat(document.getElementById('supervisor-harvest-qty').value);
+    const unit = document.getElementById('supervisor-harvest-unit').value;
+    const quality = document.getElementById('supervisor-harvest-quality').value;
+    const date = document.getElementById('supervisor-harvest-date').value;
+    const notes = document.getElementById('supervisor-harvest-notes').value;
     
     if(!AFV.harvest[ghId]) AFV.harvest[ghId] = [];
     
