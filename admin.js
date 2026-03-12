@@ -1181,7 +1181,7 @@ const AdminDashboard = {
         </div>
       </div>
       <div class="page-body">
-        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stats-grid">
           <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${items.filter(i=>i.status==='good').length}</div><div class="stat-label">Well Stocked</div></div></div>
           <div class="stat-card"><div class="stat-icon">⚠️</div><div><div class="stat-value" style="color:var(--orange-warn)">${items.filter(i=>i.status==='low').length}</div><div class="stat-label">Running Low</div></div></div>
           <div class="stat-card"><div class="stat-icon">🔴</div><div><div class="stat-value" style="color:var(--red-alert)">${items.filter(i=>i.status==='critical').length}</div><div class="stat-label">Critical — Reorder Now</div></div></div>
