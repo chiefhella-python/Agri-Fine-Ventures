@@ -14,7 +14,7 @@ const AgronomistDashboard = {
     const nav = document.getElementById('agronomist-nav');
     nav.innerHTML = `
       <div class="sidebar-logo">
-        <div style="font-size:1.8rem;margin-bottom:6px">🌾</div>
+        <img src="/logo.png" alt="Agri-Fine" style="width:50px;height:50px;object-fit:contain;margin-bottom:6px">
         <div class="sidebar-logo-title">Agri-Fine</div>
         <div class="sidebar-logo-sub">Agronomist Portal</div>
       </div>
