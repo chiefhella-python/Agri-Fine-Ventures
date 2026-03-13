@@ -214,9 +214,21 @@ function updateFertilizerAmount(fertilizerKey) {
 
 // ============================================ SIDEBAR TOGGLE (Mobile)
 function toggleSidebar(role) {
+  console.log('toggleSidebar called with role:', role);
   const screen = document.getElementById(`${role}-screen`);
+  console.log('screen element:', screen);
+  if (!screen) {
+    console.error('Screen not found:', `${role}-screen`);
+    return;
+  }
   const sidebar = screen.querySelector('.sidebar');
   const overlay = screen.querySelector('.sidebar-overlay');
+  console.log('sidebar:', sidebar, 'overlay:', overlay);
+  
+  if (!sidebar || !overlay) {
+    console.error('Sidebar or overlay not found');
+    return;
+  }
   
   if (sidebar.classList.contains('open')) {
     sidebar.classList.remove('open');
