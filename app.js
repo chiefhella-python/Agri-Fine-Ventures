@@ -77,6 +77,21 @@ function navigateTo(role) {
     AdminDashboard.init();
   } else if (role === 'supervisor') {
     document.getElementById('supervisor-screen').classList.add('active');
+    // Add click handler for sidebar toggle
+    const supervisorToggle = document.getElementById('supervisor-toggle');
+    if (supervisorToggle) {
+      supervisorToggle.onclick = function() {
+        const sidebar = document.getElementById('supervisor-nav');
+        const overlay = document.querySelector('#supervisor-screen .sidebar-overlay');
+        if (sidebar.classList.contains('open')) {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('active');
+        } else {
+          sidebar.classList.add('open');
+          overlay.classList.add('active');
+        }
+      };
+    }
     SupervisorDashboard.init();
   } else if (role === 'agronomist') {
     document.getElementById('agronomist-screen').classList.add('active');
@@ -216,19 +231,13 @@ function updateFertilizerAmount(fertilizerKey) {
 function toggleSidebar(role) {
   console.log('toggleSidebar called with role:', role);
   const screen = document.getElementById(`${role}-screen`);
-  console.log('screen element:', screen);
   if (!screen) {
-    console.error('Screen not found:', `${role}-screen`);
-    alert('Screen not found: ' + role + '-screen');
     return;
   }
   const sidebar = screen.querySelector('.sidebar');
   const overlay = screen.querySelector('.sidebar-overlay');
-  console.log('sidebar:', sidebar, 'overlay:', overlay);
   
   if (!sidebar || !overlay) {
-    console.error('Sidebar or overlay not found');
-    alert('Sidebar or overlay not found for role: ' + role);
     return;
   }
   
