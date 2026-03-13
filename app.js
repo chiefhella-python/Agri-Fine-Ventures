@@ -77,21 +77,6 @@ function navigateTo(role) {
     AdminDashboard.init();
   } else if (role === 'supervisor') {
     document.getElementById('supervisor-screen').classList.add('active');
-    // Add click handler for sidebar toggle
-    const supervisorToggle = document.getElementById('supervisor-toggle');
-    if (supervisorToggle) {
-      supervisorToggle.onclick = function() {
-        const sidebar = document.getElementById('supervisor-nav');
-        const overlay = document.querySelector('#supervisor-screen .sidebar-overlay');
-        if (sidebar.classList.contains('open')) {
-          sidebar.classList.remove('open');
-          overlay.classList.remove('active');
-        } else {
-          sidebar.classList.add('open');
-          overlay.classList.add('active');
-        }
-      };
-    }
     SupervisorDashboard.init();
   } else if (role === 'agronomist') {
     document.getElementById('agronomist-screen').classList.add('active');
