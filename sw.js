@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agri-fine-v3';
+const CACHE_NAME = 'agri-fine-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
