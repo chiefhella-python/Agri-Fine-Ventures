@@ -219,6 +219,7 @@ function toggleSidebar(role) {
   console.log('screen element:', screen);
   if (!screen) {
     console.error('Screen not found:', `${role}-screen`);
+    alert('Screen not found: ' + role + '-screen');
     return;
   }
   const sidebar = screen.querySelector('.sidebar');
@@ -227,6 +228,7 @@ function toggleSidebar(role) {
   
   if (!sidebar || !overlay) {
     console.error('Sidebar or overlay not found');
+    alert('Sidebar or overlay not found for role: ' + role);
     return;
   }
   
