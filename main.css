@@ -374,6 +374,11 @@ input, select, textarea {
     width: var(--sidebar-w);
   }
   
+  /* Supervisor hamburger menu - ensure visible on mobile */
+  #supervisor-screen .sidebar-toggle {
+    display: flex !important;
+  }
+  
   .agro-sidebar {
     width: var(--sidebar-w);
   }
