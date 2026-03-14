@@ -314,6 +314,97 @@ input, select, textarea {
   transition: var(--transition);
 }
 
+/* Sidebar overlay - hidden by default */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 998;
+  display: none;
+  cursor: pointer;
+}
+
+/* Sidebar overlay when active */
+.sidebar-overlay.active {
+  display: block;
+}
+
+/* Sidebar when open */
+.sidebar.open {
+  transform: translateX(0);
+}
+
+/* Sidebar overlay when sidebar is open */
+.sidebar-overlay.active {
+  display: block;
+}
+
+/* Responsive: Show mobile menu button on small screens */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex;
+  }
+  
+  .sidebar-overlay {
+    display: none;
+  }
+  
+  .sidebar-overlay.active {
+    display: block;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--off-white);
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: var(--transition);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .supervisor-sidebar {
+    width: var(--sidebar-w);
+  }
+  
+  .agro-sidebar {
+    width: var(--sidebar-w);
+  }
+}
+
+/* Desktop sidebar styling */
+@media (min-width: 769px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--off-white);
+    z-index: 1;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .main-content {
+    margin-left: var(--sidebar-w);
+  }
+  
+  .sidebar-toggle {
+    display: none;
+  }
+  
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 16px; scroll-behavior: smooth; }

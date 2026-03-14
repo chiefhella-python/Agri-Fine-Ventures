@@ -251,6 +251,13 @@ function closeSidebarOnNav(role) {
   }
 }
 
+// Close sidebar when clicking nav items on mobile
+function closeSidebarOnNav(role) {
+  if (window.innerWidth <= 768) {
+    closeSidebar(role);
+  }
+}
+
 // ============================================ INIT
 
 // Auto-refresh dashboard data every 60 seconds
