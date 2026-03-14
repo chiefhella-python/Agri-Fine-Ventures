@@ -309,6 +309,19 @@ const AdminDashboard = {
     const daysToHarvest = Math.ceil((gh.expectedHarvest - new Date()) / (1000*60*60*24));
     const pendingTasks = gh.tasks.filter(t => !t.completed);
     const doneTasks = gh.tasks.filter(t => t.completed);
+    
+    // Calculate growth stage based on days planted
+    const totalCycle = Math.ceil((gh.expectedHarvest - gh.plantedDate) / (1000*60*60*24));
+    const cycleProgress = Math.min(100, Math.round((daysPlanted / totalCycle) * 100));
+    
+    let stage = '🌱 Seedling';
+    let stageColor = '#6b8e23';
+    if (daysPlanted > 20) { stage = '🌿 Vegetative'; stageColor = '#228b22'; }
+    if (daysPlanted > 35) { stage = '🌸 Flowering'; stageColor = '#da70d6'; }
+    if (daysPlanted > 50) { stage = '🍅 Fruiting'; stageColor = '#ff6347'; }
+    if (daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
+    
+    const expectedMonth = gh.expectedHarvest.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
 
     return `
       <div class="card" style="margin-bottom:24px">
@@ -341,6 +354,10 @@ const AdminDashboard = {
                 <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Harvest in</div>
                 <div style="font-size:0.9rem;font-weight:600;color:${daysToHarvest < 30 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${daysToHarvest} days</div>
               </div>
+              <div style="background:${stageColor}15;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid ${stageColor}30">
+                <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Current Stage</div>
+                <div style="font-size:0.9rem;font-weight:600;color:${stageColor}">${stage}</div>
+              </div>
               <div style="background:rgba(9,132,227,0.08);padding:8px 14px;border-radius:var(--radius-sm)">
                 <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Temp</div>
                 <div style="font-size:0.9rem;font-weight:600;color:var(--blue-water)">${gh.environment.temp}</div>
@@ -358,6 +375,22 @@ const AdminDashboard = {
               <div class="gh-progress-bar">
                 <div class="gh-progress-fill" style="width:${progress}%"></div>
               </div>
+            </div>
+            <div style="margin-top:14px">
+              <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-light);margin-bottom:6px">
+                <span>Growth Cycle Progress (${totalCycle} days total)</span>
+                <span>${cycleProgress}% complete</span>
+              </div>
+              <div style="background:linear-gradient(90deg,#6b8e23,#228b22,#da70d6,#ff6347,#ffd700);height:8px;border-radius:4px;position:relative;overflow:hidden">
+                <div style="position:absolute;left:${cycleProgress}%;top:-2px;width:12px;height:12px;background:white;border-radius:50%;border:2px solid ${stageColor};transform:translateX(-50%)"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-light);margin-top:4px">
+                <span>🌱</span><span>🌿</span><span>🌸</span><span>🍅</span><span>🎯</span>
+              </div>
+            </div>
+            <div style="margin-top:14px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,165,0,0.1));padding:10px 14px;border-radius:var(--radius-sm);border-left:3px solid #ffd700">
+              <div style="font-size:0.72rem;color:var(--text-light);text-transform:uppercase">🌾 Expected Harvest</div>
+              <div style="font-size:1rem;font-weight:700;color:var(--green-deep)">${expectedMonth}</div>
             </div>
           </div>
         </div>

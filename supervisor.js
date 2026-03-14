@@ -231,6 +231,20 @@ const SupervisorDashboard = {
           if (!gh) return '';
           const daysPlanted = Math.floor((new Date() - gh.plantedDate)/(1000*60*60*24));
           const daysToHarvest = Math.ceil((gh.expectedHarvest - new Date())/(1000*60*60*24));
+          
+          // Calculate growth stage
+          const totalCycle = Math.ceil((gh.expectedHarvest - gh.plantedDate) / (1000*60*60*24));
+          const cycleProgress = Math.min(100, Math.round((daysPlanted / totalCycle) * 100));
+          
+          let stage = '🌱 Seedling';
+          let stageColor = '#6b8e23';
+          if (daysPlanted > 20) { stage = '🌿 Vegetative'; stageColor = '#228b22'; }
+          if (daysPlanted > 35) { stage = '🌸 Flowering'; stageColor = '#da70d6'; }
+          if (daysPlanted > 50) { stage = '🍅 Fruiting'; stageColor = '#ff6347'; }
+          if (daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
+          
+          const expectedMonth = gh.expectedHarvest.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
+          
           return `
             <div class="card" style="margin-bottom:20px">
               <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -247,16 +261,28 @@ const SupervisorDashboard = {
                       <div style="font-weight:700;color:${daysToHarvest<40?'var(--orange-warn)':'var(--green-deep)'}">${daysToHarvest}d</div>
                       <div style="font-size:0.68rem;color:var(--text-light)">To Harvest</div>
                     </div>
-                    <div style="background:rgba(9,132,227,0.08);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:var(--blue-water)">${gh.environment.temp}</div>
-                      <div style="font-size:0.68rem;color:var(--text-light)">Temp</div>
-                    </div>
-                    <div style="background:rgba(9,132,227,0.08);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:var(--blue-water)">${gh.environment.humidity}</div>
-                      <div style="font-size:0.68rem;color:var(--text-light)">Humidity</div>
+                    <div style="background:${stageColor}15;padding:8px 12px;border-radius:var(--radius-sm);text-align:center;border:1px solid ${stageColor}30">
+                      <div style="font-weight:700;color:${stageColor};font-size:0.85rem">${stage}</div>
+                      <div style="font-size:0.68rem;color:var(--text-light)">Stage</div>
                     </div>
                   </div>
                 </div>
+              </div>
+              <div style="margin-top:14px">
+                <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-light);margin-bottom:4px">
+                  <span>Growth Cycle (${totalCycle} days)</span>
+                  <span>${cycleProgress}%</span>
+                </div>
+                <div style="background:linear-gradient(90deg,#6b8e23,#228b22,#da70d6,#ff6347,#ffd700);height:6px;border-radius:3px;position:relative">
+                  <div style="position:absolute;left:${cycleProgress}%;top:-2px;width:10px;height:10px;background:white;border-radius:50%;border:2px solid ${stageColor};transform:translateX(-50%)"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-light);margin-top:2px">
+                  <span>🌱</span><span>🌿</span><span>🌸</span><span>🍅</span><span>🎯</span>
+                </div>
+              </div>
+              <div style="margin-top:10px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,165,0,0.1));padding:8px 12px;border-radius:var(--radius-sm);border-left:3px solid #ffd700;display:inline-block">
+                <span style="font-size:0.7rem;color:var(--text-light)">🌾 Expected Harvest:</span>
+                <span style="font-weight:700;color:var(--green-deep);margin-left:6px">${expectedMonth}</span>
               </div>
               <div style="margin-top:14px;background:rgba(9,132,227,0.05);border-radius:var(--radius-sm);padding:12px;border-left:3px solid var(--blue-water)">
                 <div style="font-size:0.72rem;font-weight:700;color:var(--blue-water);margin-bottom:3px">NOTES FROM MANAGER</div>
