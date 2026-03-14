@@ -272,13 +272,22 @@ const SupervisorDashboard = {
           
           const expectedMonth = gh.expectedHarvest.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
           
+          // Performance score
+          const perfScore = AFV.getPerformanceScore(gh);
+          const gradeInfo = AFV.getPerformanceGrade(perfScore);
+          
           return `
             <div class="card" style="margin-bottom:20px">
               <div style="display:flex;gap:16px;flex-wrap:wrap">
                 <div class="${gh.bgClass}" style="width:120px;height:90px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:3rem;flex-shrink:0;background-size:cover;background-position:center">${gh.imageUrl ? `<img src="${gh.imageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-md)">` : gh.cropEmoji}</div>
                 <div style="flex:1">
-                  <h3 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin-bottom:6px">${gh.name} — ${gh.crop}</h3>
-                  <div style="font-size:0.8rem;color:var(--text-light);margin-bottom:10px">${gh.variety} · ${gh.area} · ${gh.plants.toLocaleString()} plants</div>
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                    <div>
+                      <h3 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin-bottom:6px">${gh.name} — ${gh.crop}</h3>
+                      <div style="font-size:0.8rem;color:var(--text-light);margin-bottom:10px">${gh.variety} · ${gh.area} · ${gh.plants.toLocaleString()} plants</div>
+                    </div>
+                    <div style="background:${gradeInfo.color}20;color:${gradeInfo.color};padding:6px 14px;border-radius:20px;font-size:0.85rem;font-weight:700">🏆 ${perfScore} (${gradeInfo.grade})</div>
+                  </div>
                   <div style="display:flex;gap:10px;flex-wrap:wrap">
                     <div style="background:var(--green-ultra-pale);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
                       <div style="font-weight:700;color:var(--green-deep)">${daysPlanted}d</div>

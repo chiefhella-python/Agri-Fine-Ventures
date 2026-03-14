@@ -158,6 +158,81 @@ const AFV = {
     return Math.round((done / gh.tasks.length) * 100);
   },
 
+  // PERFORMANCE SCORE CALCULATION (0-100)
+  getPerformanceScore(gh) {
+    if (!gh) return 0;
+    
+    const today = new Date();
+    let score = 0;
+    
+    // 1. TASK COMPLETION RATE (40% weight)
+    const taskCompletion = this.getOverallProgress(gh);
+    const taskScore = taskCompletion * 0.4;
+    
+    // 2. GROWTH PROGRESS (30% weight)
+    // Calculate based on days planted vs expected harvest
+    let growthScore = 0;
+    if (gh.plantedDate && gh.expectedHarvest) {
+      const plantedDate = new Date(gh.plantedDate);
+      const expectedHarvest = new Date(gh.expectedHarvest);
+      const totalDays = Math.ceil((expectedHarvest - plantedDate) / (1000 * 60 * 60 * 24));
+      const daysElapsed = Math.ceil((today - plantedDate) / (1000 * 60 * 60 * 24));
+      const progressPct = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
+      growthScore = progressPct * 0.3;
+    }
+    
+    // 3. HARVEST TIMELINE BONUS (20% weight)
+    // Bonus for being on track or ahead of schedule
+    let timelineScore = 0;
+    if (gh.expectedHarvest) {
+      const expectedHarvest = new Date(gh.expectedHarvest);
+      const daysToHarvest = Math.ceil((expectedHarvest - today) / (1000 * 60 * 60 * 24));
+      
+      if (daysToHarvest < 0) {
+        // Overdue - penalty
+        timelineScore = -10;
+      } else if (daysToHarvest <= 7) {
+        // Ready for harvest - full score
+        timelineScore = 20;
+      } else if (daysToHarvest <= 30) {
+        // Near harvest - good score
+        timelineScore = 15;
+      } else {
+        // More than 30 days - base score
+        timelineScore = 10;
+      }
+    }
+    
+    // 4. CRITICAL TASKS HANDLING (10% weight)
+    // Check if high priority tasks are completed
+    let criticalScore = 0;
+    if (gh.tasks && gh.tasks.length > 0) {
+      const highPriorityTasks = gh.tasks.filter(t => t.priority === 'high');
+      if (highPriorityTasks.length > 0) {
+        const completedHighPriority = highPriorityTasks.filter(t => t.completed).length;
+        criticalScore = (completedHighPriority / highPriorityTasks.length) * 10;
+      } else {
+        // No high priority tasks = full score
+        criticalScore = 10;
+      }
+    }
+    
+    // Calculate total score (0-100 range)
+    score = taskScore + growthScore + timelineScore + criticalScore;
+    
+    // Clamp between 0 and 100
+    return Math.max(0, Math.min(100, Math.round(score)));
+  },
+
+  // Get performance grade letter
+  getPerformanceGrade(score) {
+    if (score >= 90) return { grade: 'A', color: '#22c55e', label: 'Excellent' };
+    if (score >= 80) return { grade: 'B', color: '#84cc16', label: 'Good' };
+    if (score >= 70) return { grade: 'C', color: '#eab308', label: 'Average' };
+    if (score >= 60) return { grade: 'D', color: '#f97316', label: 'Below Average' };
+    return { grade: 'F', color: '#ef4444', label: 'Poor' };
+  },
+
   getGHStatus(gh) {
     const pending = gh.tasks.filter(t => !t.completed);
 

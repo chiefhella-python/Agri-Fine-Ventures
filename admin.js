@@ -326,6 +326,10 @@ const AdminDashboard = {
     if (daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
     
     const expectedMonth = gh.expectedHarvest.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
+    
+    // Performance score
+    const perfScore = AFV.getPerformanceScore(gh);
+    const gradeInfo = AFV.getPerformanceGrade(perfScore);
 
     return `
       <div class="card" style="margin-bottom:24px">
@@ -343,7 +347,10 @@ const AdminDashboard = {
                 <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--green-deep);margin-bottom:4px">${gh.name} — ${gh.crop}</h2>
                 <div style="color:var(--text-light);font-size:0.82rem">${gh.variety} · ${gh.area} · ${gh.plants.toLocaleString()} plants</div>
               </div>
-              <span class="gh-status-badge ${status.cls}">${status.label}</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="gh-status-badge ${status.cls}">${status.label}</span>
+                <span style="background:${gradeInfo.color}20;color:${gradeInfo.color};padding:6px 12px;border-radius:20px;font-size:0.78rem;font-weight:700">🏆 ${perfScore}</span>
+              </div>
             </div>
             <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
               <div style="background:var(--green-ultra-pale);padding:8px 14px;border-radius:var(--radius-sm)">
@@ -1250,6 +1257,13 @@ const AdminDashboard = {
       return tasksTotal[i] > 0 ? Math.round((tasksCompleted[i] / tasksTotal[i]) * 100) : 0;
     });
     
+    // Performance scores
+    const performanceScores = greenhouses.map(gh => AFV.getPerformanceScore(gh));
+    const gradeColors = performanceScores.map(score => {
+      const g = AFV.getPerformanceGrade(score);
+      return g.color;
+    });
+    
     return `
       <div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none">
         <div>
@@ -1294,6 +1308,37 @@ const AdminDashboard = {
           </div>
         </div>
         
+        <!-- Greenhouse Performance Scores Chart -->
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">🏆 Greenhouse Performance Scores (Bar Chart)</div>
+          <div style="height:250px;position:relative">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Greenhouse Performance Scores -->
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">🏆 Greenhouse Performance Scores</div>
+          <p style="color:var(--text-light);font-size:0.85rem;margin-bottom:16px">
+            Performance scores calculated from: Task Completion (40%), Growth Progress (30%), Harvest Timeline (20%), Critical Tasks (10%)
+          </p>
+          <div class="performance-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px">
+            ${greenhouses.map(gh => {
+              const score = AFV.getPerformanceScore(gh);
+              const gradeInfo = AFV.getPerformanceGrade(score);
+              return `
+                <div style="background:linear-gradient(135deg,${gradeInfo.color}15,${gradeInfo.color}05);border:2px solid ${gradeInfo.color};border-radius:var(--radius-md);padding:16px;text-align:center">
+                  <div style="font-size:1.8rem;font-weight:800;color:${gradeInfo.color};margin-bottom:4px">${score}</div>
+                  <div style="font-size:1.4rem;font-weight:700;color:var(--text-dark)">${gradeInfo.grade}</div>
+                  <div style="font-size:0.8rem;color:${gradeInfo.color};font-weight:600;margin-bottom:8px">${gradeInfo.label}</div>
+                  <div style="font-size:0.85rem;color:var(--text-dark);font-weight:600">${gh.cropEmoji} ${gh.name}</div>
+                  <div style="font-size:0.75rem;color:var(--text-light)">${gh.crop}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        
         <!-- Summary Stats -->
         <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:20px">
           <div class="stat-card">
@@ -1323,7 +1368,7 @@ const AdminDashboard = {
           .stats-grid .stat-value { font-size: 1rem !important; }
           .stats-grid .stat-label { font-size: 0.6rem !important; }
           .stats-grid .stat-icon { font-size: 1.2rem !important; margin-bottom: 4px !important; }
-          #growthChart, #tasksChart, #yieldChart, #productivityChart { max-height: 180px !important; }
+          #growthChart, #tasksChart, #yieldChart, #productivityChart, #performanceChart { max-height: 180px !important; }
         }
       </style>
       <script>
@@ -1406,6 +1451,28 @@ const AdminDashboard = {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+          }
+        });
+        
+        // Performance Scores Chart (Bar)
+        new Chart(document.getElementById('performanceChart'), {
+          type: 'bar',
+          data: {
+            labels: ${JSON.stringify(ghNames)},
+            datasets: [{
+              label: 'Performance Score',
+              data: ${JSON.stringify(performanceScores)},
+              backgroundColor: ${JSON.stringify(gradeColors)},
+              borderColor: ${JSON.stringify(gradeColors)},
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v } } }
           }
         });
       </script>
