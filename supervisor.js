@@ -151,6 +151,33 @@ const SupervisorDashboard = {
           </div>
         </div>
 
+        ${AFV.weather ? `
+        <div style="background:linear-gradient(135deg,#1e3c72,#2a5298);border-radius:16px;padding:16px;color:white;margin-bottom:16px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-10px;right:-10px;font-size:4rem;opacity:0.15">${AFV.getWeatherEmoji(AFV.weather.current.code)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:0.7rem;opacity:0.7;text-transform:uppercase">Nairobi Weather</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:2.5rem;font-weight:700">${AFV.weather.current.temp}°</span>
+                <div>
+                  <div style="font-size:0.9rem;font-weight:600">${AFV.getWeatherDesc(AFV.weather.current.code)}</div>
+                  <div style="font-size:0.7rem;opacity:0.8">Feels ${AFV.weather.current.feelsLike}° · Humidity ${AFV.weather.current.humidity}%</div>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:2rem">${AFV.getWeatherEmoji(AFV.weather.current.code)}</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2)">
+            ${AFV.weather.daily.slice(1, 5).map(d => {
+              const day = new Date(d.date).toLocaleDateString('en-KE', { weekday: 'short' });
+              return `<div style="text-align:center;flex:1"><div style="font-size:1rem">${AFV.getWeatherEmoji(d.code)}</div><div style="font-size:0.6rem;opacity:0.8">${day}</div><div style="font-size:0.7rem;font-weight:600">${d.max}°</div></div>`;
+            }).join('')}
+          </div>
+        </div>
+        ` : ''}
+
         ${tasks.length === 0 ? `
           <div class="worker-task-hero">
             <div class="hero-label">Task Status</div>

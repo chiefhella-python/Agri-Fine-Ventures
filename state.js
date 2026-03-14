@@ -62,6 +62,62 @@ const AFV = {
 
   // ACTIVITY LOG
   activityLog: [],
+  
+  // WEATHER DATA (Open-Meteo - Nairobi, Kenya)
+  weather: null,
+  
+  async fetchWeather() {
+    try {
+      // Nairobi coordinates
+      const lat = -1.2921;
+      const lon = 36.8219;
+      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,apparent_temperature&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=7`);
+      const data = await response.json();
+      
+      this.weather = {
+        current: {
+          temp: Math.round(data.current.temperature_2m),
+          humidity: data.current.relative_humidity_2m,
+          wind: Math.round(data.current.wind_speed_10m),
+          feelsLike: Math.round(data.current.apparent_temperature),
+          code: data.current.weather_code
+        },
+        daily: data.daily.time.map((date, i) => ({
+          date,
+          code: data.daily.weather_code[i],
+          max: Math.round(data.daily.temperature_2m_max[i]),
+          min: Math.round(data.daily.temperature_2m_min[i]),
+          precip: data.daily.precipitation_sum[i]
+        }))
+      };
+      return this.weather;
+    } catch (e) {
+      console.error('Weather fetch error:', e);
+      return null;
+    }
+  },
+  
+  getWeatherEmoji(code) {
+    if (code === 0) return '☀️';
+    if (code <= 3) return '⛅';
+    if (code <= 49) return '🌫️';
+    if (code <= 59) return '🌧️';
+    if (code <= 69) return '🌧️';
+    if (code <= 79) return '❄️';
+    if (code <= 99) return '⛈️';
+    return '🌤️';
+  },
+  
+  getWeatherDesc(code) {
+    if (code === 0) return 'Clear';
+    if (code <= 3) return 'Partly Cloudy';
+    if (code <= 49) return 'Foggy';
+    if (code <= 59) return 'Drizzle';
+    if (code <= 69) return 'Rain';
+    if (code <= 79) return 'Snow';
+    if (code <= 99) return 'Thunderstorm';
+    return 'Unknown';
+  },
 
   logActivity(icon, text) {
     this.activityLog.unshift({ icon, text, time: new Date() });

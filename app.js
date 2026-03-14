@@ -71,7 +71,10 @@ function navigateTo(role) {
   if (window.innerWidth <= 768) {
     closeSidebar(role);
   }
-
+  
+  // Fetch weather data
+  AFV.fetchWeather();
+  
   if (role === 'admin') {
     document.getElementById('admin-screen').classList.add('active');
     AdminDashboard.init();
@@ -140,6 +143,51 @@ function confirmTaskComplete() {
 }
 
 // ============================================ TOAST
+
+// Weather Widget - Open-Meteo
+function renderWeatherWidget() {
+  if (!AFV.weather) {
+    return `<div style="background:linear-gradient(135deg,#1e3c72,#2a5298);border-radius:16px;padding:16px;color:white;text-align:center"><div style="font-size:2rem;margin-bottom:8px">🌤️</div><div style="opacity:0.8">Loading weather...</div></div>`;
+  }
+  
+  const w = AFV.weather;
+  const today = w.daily[0];
+  const emoji = AFV.getWeatherEmoji(w.current.code);
+  const desc = AFV.getWeatherDesc(w.current.code);
+  
+  let forecastHTML = w.daily.slice(1, 6).map(d => {
+    const day = new Date(d.date).toLocaleDateString('en-KE', { weekday: 'short' });
+    return `<div style="text-align:center;flex:1;min-width:45px"><div style="font-size:1.2rem">${AFV.getWeatherEmoji(d.code)}</div><div style="font-size:0.65rem;opacity:0.8">${day}</div><div style="font-size:0.75rem;font-weight:600">${d.max}°</div></div>`;
+  }).join('');
+  
+  return `
+    <div style="background:linear-gradient(135deg,#1e3c72,#2a5298);border-radius:16px;padding:16px;color:white;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-10px;right:-10px;font-size:5rem;opacity:0.15">${emoji}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:0.7rem;opacity:0.7;text-transform:uppercase;margin-bottom:2px">Nairobi, Kenya</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:3rem;font-weight:700">${w.current.temp}°</span>
+            <div>
+              <div style="font-size:1rem;font-weight:600">${desc}</div>
+              <div style="font-size:0.75rem;opacity:0.8">Feels like ${w.current.feelsLike}°</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:2.5rem">${emoji}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2)">
+        <div style="flex:1;text-align:center"><span style="font-size:1.2rem">💧</span><div style="font-size:0.7rem;opacity:0.8">${w.current.humidity}%</div></div>
+        <div style="flex:1;text-align:center"><span style="font-size:1.2rem">💨</span><div style="font-size:0.7rem;opacity:0.8">${w.current.wind} km/h</div></div>
+        <div style="flex:1;text-align:center"><span style="font-size:1.2rem">🌡️</span><div style="font-size:0.7rem;opacity:0.8">${today.min}°/${today.max}°</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2)">
+        ${forecastHTML}
+      </div>
+    </div>`;
+}
 
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');

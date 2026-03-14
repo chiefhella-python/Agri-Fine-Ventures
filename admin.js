@@ -138,15 +138,15 @@ const AdminDashboard = {
       </div>
       <div class="page-body">
         <div class="weather-bar">
-          <div class="weather-item"><span class="weather-icon">🌡️</span><div><div class="weather-val">24°C</div><div class="weather-lbl">Temperature</div></div></div>
+          <div class="weather-item"><span class="weather-icon">🌡️</span><div><div class="weather-val">${AFV.weather ? AFV.weather.current.temp + '°C' : '24°C'}</div><div class="weather-lbl">Temperature</div></div></div>
           <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">💧</span><div><div class="weather-val">68%</div><div class="weather-lbl">Humidity</div></div></div>
+          <div class="weather-item"><span class="weather-icon">💧</span><div><div class="weather-val">${AFV.weather ? AFV.weather.current.humidity + '%' : '68%'}</div><div class="weather-lbl">Humidity</div></div></div>
           <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">☀️</span><div><div class="weather-val">8.2 hrs</div><div class="weather-lbl">Sunlight Today</div></div></div>
+          <div class="weather-item"><span class="weather-icon">☀️</span><div><div class="weather-val">${AFV.weather ? (AFV.weather.daily[0].max - AFV.weather.daily[0].min) + '°' : '8.2 hrs'}</div><div class="weather-lbl">Day Range</div></div></div>
           <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">💨</span><div><div class="weather-val">12 km/h</div><div class="weather-lbl">Wind Speed</div></div></div>
+          <div class="weather-item"><span class="weather-icon">💨</span><div><div class="weather-val">${AFV.weather ? AFV.weather.current.wind + ' km/h' : '12 km/h'}</div><div class="weather-lbl">Wind</div></div></div>
           <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">🌧️</span><div><div class="weather-val">0mm</div><div class="weather-lbl">Rainfall</div></div></div>
+          <div class="weather-item"><span class="weather-icon">🌧️</span><div><div class="weather-val">${AFV.weather ? AFV.weather.daily[0].precip + ' mm' : '0mm'}</div><div class="weather-lbl">Rain Today</div></div></div>
         </div>
 
         <div class="stats-grid">
