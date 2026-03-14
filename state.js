@@ -5,7 +5,7 @@
 const AFV = {
   currentUser: null,
   currentRole: 'admin',
-  aiSettings: { provider: 'openrouter', apiKey: '' },
+  aiSettings: { provider: 'openrouter', apiKey: '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', model: 'nvidia/nemotron-3-super-120b-a12b:free' },
   notifications: [],
   currentGHView: null,
   pendingTaskComplete: null,
@@ -122,6 +122,58 @@ const AFV = {
   logActivity(icon, text) {
     this.activityLog.unshift({ icon, text, time: new Date() });
     if (this.activityLog.length > 50) this.activityLog.pop();
+  },
+
+  // AI HELPER - NVIDIA NEMOTRON VIA OPENROUTER
+  async askAI(prompt, context = '') {
+    const settings = this.aiSettings;
+    if (!settings.apiKey) {
+      return { error: 'AI not configured. Please add API key in Settings.' };
+    }
+
+    // Build system prompt with farm context
+    const systemPrompt = `You are AgriBot, an expert agricultural AI assistant for Agri-Fine Ventures, a greenhouse farm in Kenya. 
+
+Farm Context:
+- Growing tomatoes, capsicum, and cucumbers in 4 greenhouses
+- Location: Kenya (climate: 20-28°C, moderate humidity)
+- Current date: ${new Date().toLocaleDateString('en-KE')}
+
+Greenhouse Details:
+${this.greenhouses.map(gh => `- ${gh.name}: ${gh.crop} (${gh.variety}), planted ${gh.plantedDate.toLocaleDateString()}, expected harvest ${gh.expectedHarvest.toLocaleDateString()}, ${gh.plants} plants`).join('\n')}
+
+${context ? `Additional Context: ${context}` : ''}
+
+Provide helpful, accurate agricultural advice. Be concise but informative.`,    
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Agri-Fine Ventures'
+        },
+        body: JSON.stringify({
+          model: settings.model || 'nvidia/nemotron-3-super-120b-a12b:free',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 500
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        return { error: data.error.message };
+      }
+
+      return { response: data.choices[0].message.content };
+    } catch (err) {
+      return { error: 'Failed to connect to AI service. Please try again.' };
+    }
   },
 
   // TASK UTILITIES

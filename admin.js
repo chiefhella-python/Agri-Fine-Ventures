@@ -8,6 +8,10 @@ const AdminDashboard = {
   init() {
     this.renderNav();
     this.showPage('overview');
+    
+    // Render AI Helper widget
+    document.getElementById('ai-widget-container').innerHTML = '';
+    document.getElementById('ai-widget-container').innerHTML = this.renderAIHelper();
   },
 
   renderNav() {
@@ -3017,4 +3021,86 @@ AdminDashboard.deleteHarvest = function(ghId, recordId) {
     AFV.saveState();
     this.showPage('harvest');
   }
-}
+};
+
+// ============================================
+// AI HELPER FOR ADMIN
+// ============================================
+AdminDashboard.renderAIHelper = function() {
+  return `
+    <div id="ai-helper-widget" style="position:fixed;bottom:20px;right:20px;z-index:9999">
+      <button onclick="AdminDashboard.toggleAIChat()" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1a472a,#2d6a4f);border:none;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);font-size:1.8rem">🤖</button>
+    </div>
+    <div id="ai-chat-modal" style="display:none;position:fixed;bottom:90px;right:20px;width:380px;max-width:90vw;background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.2);z-index:9999;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;font-size:0.95rem">🤖 AgriBot AI Helper</div>
+        <button onclick="AdminDashboard.toggleAIChat()" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;padding:0;line-height:1">×</button>
+      </div>
+      <div id="ai-chat-messages" style="height:300px;overflow-y:auto;padding:14px;background:#f8faf9">
+        <div style="background:white;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+          <div style="font-size:0.8rem;color:#1a472a;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
+          <div style="font-size:0.9rem;color:#333">Hello! I'm your AI assistant powered by NVIDIA Nemotron. Ask me anything about your greenhouses, crops, tasks, or general farming advice!</div>
+        </div>
+      </div>
+      <div style="padding:12px;border-top:1px solid #eee;display:flex;gap:8px">
+        <input id="ai-chat-input" type="text" placeholder="Ask about your farm..." style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9rem" onkeypress="if(event.key==='Enter')AdminDashboard.sendAIChat()">
+        <button onclick="AdminDashboard.sendAIChat()" style="background:#1a472a;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600">Send</button>
+      </div>
+    </div>
+  `;
+};
+
+AdminDashboard.toggleAIChat = function() {
+  const modal = document.getElementById('ai-chat-modal');
+  modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+};
+
+AdminDashboard.sendAIChat = async function() {
+  const input = document.getElementById('ai-chat-input');
+  const messages = document.getElementById('ai-chat-messages');
+  const question = input.value.trim();
+  if (!question) return;
+
+  // Add user message
+  messages.innerHTML += `
+    <div style="background:#1a472a;color:white;padding:10px 14px;border-radius:12px;margin-bottom:10px;margin-left:40px;box-shadow:0 1px 3px rgba(0,0,0,0.15)">
+      <div style="font-size:0.75rem;opacity:0.8;margin-bottom:2px">You</div>
+      <div style="font-size:0.9rem">${question}</div>
+    </div>
+  `;
+
+  input.value = '';
+  messages.scrollTop = messages.scrollHeight;
+
+  // Show loading
+  messages.innerHTML += `
+    <div id="ai-loading" style="background:white;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+      <div style="font-size:0.8rem;color:#1a472a;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
+      <div style="font-size:0.9rem;color:#666">Thinking...</div>
+    </div>
+  `;
+  messages.scrollTop = messages.scrollHeight;
+
+  // Call AI
+  const result = await AFV.askAI(question, 'Admin user asking about farm management');
+
+  // Remove loading and show response
+  document.getElementById('ai-loading').remove();
+  
+  if (result.error) {
+    messages.innerHTML += `
+      <div style="background:#fee2e2;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+        <div style="font-size:0.8rem;color:#dc2626;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
+        <div style="font-size:0.9rem;color:#333">${result.error}</div>
+      </div>
+    `;
+  } else {
+    messages.innerHTML += `
+      <div style="background:white;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+        <div style="font-size:0.8rem;color:#1a472a;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
+        <div style="font-size:0.9rem;color:#333;white-space:pre-wrap">${result.response}</div>
+      </div>
+    `;
+  }
+  messages.scrollTop = messages.scrollHeight;
+};
