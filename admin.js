@@ -1268,7 +1268,7 @@ const AdminDashboard = {
         </div>
         
         <!-- Two Column Layout -->
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px">
+        <div class="charts-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px">
           <!-- Tasks Completed -->
           <div class="card">
             <div class="section-title">✅ Tasks Completed</div>
@@ -1315,6 +1315,17 @@ const AdminDashboard = {
         </div>
         
       </div>
+      <style>
+        @media (max-width: 768px) {
+          .charts-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .stats-grid .stat-card { padding: 12px 8px !important; }
+          .stats-grid .stat-value { font-size: 1rem !important; }
+          .stats-grid .stat-label { font-size: 0.6rem !important; }
+          .stats-grid .stat-icon { font-size: 1.2rem !important; margin-bottom: 4px !important; }
+          #growthChart, #tasksChart, #yieldChart, #productivityChart { max-height: 180px !important; }
+        }
+      </style>
       <script>
         // Crop Growth Progress Chart
         new Chart(document.getElementById('growthChart'), {
