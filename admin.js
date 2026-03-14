@@ -59,7 +59,7 @@ const AdminDashboard = {
           <span class="nav-icon">💰</span><span>Revenue</span>
         </button>
         <button class="nav-item" data-page="receipts" onclick="AdminDashboard.showPage('receipts')">
-          <span class="nav-icon">🧾</span><span>Supervisor Receipts</span>
+          <span class="nav-icon">🧾</span><span>Receipts</span>
         </button>
         <button class="nav-item" data-page="harvest" onclick="AdminDashboard.showPage('harvest')">
           <span class="nav-icon">🌾</span><span>Harvest</span>
@@ -2461,10 +2461,101 @@ AdminDashboard.deleteRevenue = function(id) {
 
 AdminDashboard.renderReceipts = function() {
   const receipts = AFV.receipts || [];
-  const supervisorReceipts = receipts.filter(r => r.role === 'supervisor' && !r.isAdmin);
-  const totalSales = supervisorReceipts.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  const totalSales = receipts.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
   
-  return `<div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none"><div><div class="page-title" style="color:white">🧾 Supervisor Receipts</div><div class="page-subtitle" style="color:rgba(255,255,255,0.65)">View all sales receipts uploaded by supervisors</div></div><div class="header-actions"><div style="background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:20px;font-size:0.85rem"><span style="opacity:0.7">Total:</span> <strong>KES ${totalSales.toLocaleString()}</strong></div></div></div><div class="page-body"><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📋 Receipts from Supervisors <span style="font-size:0.8rem;font-weight:400;color:var(--text-light)">(${supervisorReceipts.length} receipts)</span></div>${supervisorReceipts.length===0 ? '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No receipts uploaded by supervisors yet.</div></div>' : supervisorReceipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--green-ultra-pale)"><div style="width:48px;height:48px;background:linear-gradient(135deg,var(--green-fresh),var(--green-forest));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div><div style="flex:1"><div style="font-weight:600;font-size:0.95rem">${r.product}</div><div style="font-size:0.75rem;color:var(--text-light)">${r.customer ? '👤 ' + r.customer + ' · ' : ''}${r.date} · Recorded by Supervisor</div></div><div style="text-align:right"><div style="font-weight:700;font-size:1.1rem;color:var(--green-forest);font-family:'JetBrains Mono',monospace">KES ${parseFloat(r.amount).toLocaleString()}</div><div style="font-size:0.7rem;color:var(--text-light)">${r.recordedAt}</div></div></div>`).join('')}</div></div>`;
+  return `<div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none"><div><div class="page-title" style="color:white">🧾 Receipts</div><div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Manage all sales receipts</div></div><div class="header-actions"><button class="btn-primary" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3)" onclick="AdminDashboard.openReceiptModal()">+ Add Receipt</button><div style="background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:20px;font-size:0.85rem;margin-left:10px"><span style="opacity:0.7">Total:</span> <strong>KES ${totalSales.toLocaleString()}</strong></div></div></div><div class="page-body"><div class="card" id="add-receipt-form" style="margin-bottom:20px;background:linear-gradient(135deg,#f8fff8,#e8f5e9);border:2px solid var(--green-fresh);display:none"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📝 Add New Receipt</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Product/Item Sold</label><input type="text" id="receipt-product" placeholder="e.g., Tomatoes, Milk, Eggs..." style="background:white;border:1px solid var(--green-pale)"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Amount (KES)</label><input type="number" id="receipt-amount" placeholder="0.00" min="0" step="0.01" style="background:white;border:1px solid var(--green-pale)"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Date of Sale</label><input type="date" id="receipt-date" value="${new Date().toISOString().split('T')[0]}" style="background:white;border:1px solid var(--green-pale)"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Customer (Optional)</label><input type="text" id="receipt-customer" placeholder="Customer name" style="background:white;border:1px solid var(--green-pale)"></div></div><div style="display:flex;gap:10px;margin-top:16px"><button onclick="AdminDashboard.saveReceipt()" class="btn-primary" style="flex:1;background:linear-gradient(135deg,var(--green-forest),var(--green-fresh))">💾 Save Receipt</button><button onclick="AdminDashboard.closeReceiptModal()" class="btn-secondary" style="flex:1">Cancel</button></div></div><div class="card" id="edit-receipt-form" style="margin-bottom:20px;background:linear-gradient(135deg,#fff8e8,#fff3cd);border:2px solid #f0ad4e;display:none"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:#8a6d3b">✏️ Edit Receipt</div><input type="hidden" id="edit-receipt-id"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Product/Item Sold</label><input type="text" id="edit-receipt-product" placeholder="Product" style="background:white;border:1px solid #ddd"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Amount (KES)</label><input type="number" id="edit-receipt-amount" placeholder="0.00" min="0" step="0.01" style="background:white;border:1px solid #ddd"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Date of Sale</label><input type="date" id="edit-receipt-date" style="background:white;border:1px solid #ddd"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Customer (Optional)</label><input type="text" id="edit-receipt-customer" placeholder="Customer name" style="background:white;border:1px solid #ddd"></div></div><div style="display:flex;gap:10px;margin-top:16px"><button onclick="AdminDashboard.updateReceipt()" class="btn-primary" style="flex:1;background:linear-gradient(135deg,#f0ad4e,#ec971f)">💾 Update Receipt</button><button onclick="AdminDashboard.closeEditReceiptModal()" class="btn-secondary" style="flex:1">Cancel</button></div></div><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📋 All Receipts <span style="font-size:0.8rem;font-weight:400;color:var(--text-light)">(${receipts.length} receipts)</span></div>${receipts.length===0 ? '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No receipts recorded yet. Click "Add Receipt" to record your first sale!</div></div>' : receipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--green-ultra-pale);background:${r.isAdmin || r.role==='admin' ? 'linear-gradient(90deg,rgba(155,89,182,0.08),transparent)' : 'white'}"><div style="width:48px;height:48px;background:linear-gradient(135deg,${r.isAdmin || r.role==='admin' ? '#9b59b6' : 'var(--green-fresh)'},${r.isAdmin || r.role==='admin' ? '#8e44ad' : 'var(--green-forest)'});border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div><div style="flex:1"><div style="font-weight:600;font-size:0.95rem">${r.product}</div><div style="font-size:0.75rem;color:var(--text-light)">${r.customer ? '👤 ' + r.customer + ' · ' : ''}${r.date} · Recorded by ${r.isAdmin || r.role==='admin' ? 'Admin' : 'Supervisor'}</div></div><div style="text-align:right"><div style="font-weight:700;font-size:1.1rem;color:var(--green-forest);font-family:'JetBrains Mono',monospace">KES ${parseFloat(r.amount).toLocaleString()}</div><div style="font-size:0.7rem;color:var(--text-light)">${r.recordedAt}</div></div><button onclick="AdminDashboard.editReceipt(${r.id})" style="background:var(--blue-water);color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️ Edit</button></div>`).join('')}</div></div>`;
+};
+
+AdminDashboard.openReceiptModal = function() {
+  document.getElementById('add-receipt-form').style.display = 'block';
+  document.getElementById('edit-receipt-form').style.display = 'none';
+  document.getElementById('receipt-date').value = new Date().toISOString().split('T')[0];
+};
+
+AdminDashboard.closeReceiptModal = function() {
+  document.getElementById('add-receipt-form').style.display = 'none';
+  document.getElementById('receipt-product').value = '';
+  document.getElementById('receipt-amount').value = '';
+  document.getElementById('receipt-customer').value = '';
+};
+
+AdminDashboard.saveReceipt = function() {
+  const product = document.getElementById('receipt-product')?.value?.trim();
+  const amount = document.getElementById('receipt-amount')?.value?.trim();
+  const date = document.getElementById('receipt-date')?.value;
+  const customer = document.getElementById('receipt-customer')?.value?.trim();
+  
+  if (!product || !amount || !date) {
+    showToast('Please fill in product, amount, and date', 'error');
+    return;
+  }
+  
+  if (!AFV.receipts) AFV.receipts = [];
+  
+  const receipt = {
+    id: Date.now(),
+    product,
+    amount: parseFloat(amount),
+    date,
+    customer: customer || 'Walk-in Customer',
+    recordedBy: 'admin',
+    isAdmin: true,
+    role: 'admin',
+    recordedAt: new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  };
+  
+  AFV.receipts.push(receipt);
+  AFV.saveState();
+  AFV.logActivity('🧾', `Admin recorded receipt: ${product} - KES ${parseFloat(amount).toLocaleString()}`);
+  
+  showToast('Receipt saved successfully!', 'success');
+  this.closeReceiptModal();
+  this.showPage('receipts');
+};
+
+AdminDashboard.editReceipt = function(id) {
+  const receipt = AFV.receipts?.find(r => r.id === id);
+  if (!receipt) return;
+  
+  document.getElementById('add-receipt-form').style.display = 'none';
+  document.getElementById('edit-receipt-form').style.display = 'block';
+  document.getElementById('edit-receipt-id').value = id;
+  document.getElementById('edit-receipt-product').value = receipt.product;
+  document.getElementById('edit-receipt-amount').value = receipt.amount;
+  document.getElementById('edit-receipt-date').value = receipt.date;
+  document.getElementById('edit-receipt-customer').value = receipt.customer || '';
+};
+
+AdminDashboard.closeEditReceiptModal = function() {
+  document.getElementById('edit-receipt-form').style.display = 'none';
+  document.getElementById('edit-receipt-id').value = '';
+};
+
+AdminDashboard.updateReceipt = function() {
+  const id = parseInt(document.getElementById('edit-receipt-id').value);
+  const product = document.getElementById('edit-receipt-product')?.value?.trim();
+  const amount = document.getElementById('edit-receipt-amount')?.value?.trim();
+  const date = document.getElementById('edit-receipt-date')?.value;
+  const customer = document.getElementById('edit-receipt-customer')?.value?.trim();
+  
+  if (!product || !amount || !date) {
+    showToast('Please fill in product, amount, and date', 'error');
+    return;
+  }
+  
+  const receipt = AFV.receipts?.find(r => r.id === id);
+  if (receipt) {
+    receipt.product = product;
+    receipt.amount = parseFloat(amount);
+    receipt.date = date;
+    receipt.customer = customer || 'Walk-in Customer';
+    receipt.editedAt = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    AFV.saveState();
+    AFV.logActivity('✏️', `Receipt updated: ${product} - KES ${parseFloat(amount).toLocaleString()}`);
+    showToast('Receipt updated successfully!', 'success');
+    this.closeEditReceiptModal();
+    this.showPage('receipts');
+  }
 };
   
 // HARVEST TRACKING
