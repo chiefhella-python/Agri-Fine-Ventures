@@ -412,6 +412,7 @@ const AdminDashboard = {
                     ${task.completed ? `<span style="color:var(--green-fresh)">✅ ${task.completedAt ? task.completedAt.toLocaleDateString('en-KE') : 'Done'}</span>` : '<span style="color:var(--orange-warn)">⏳ Pending</span>'}
                   </div>
                   ${!task.completed ? `<div style="font-size:0.78rem;color:var(--text-light);margin-top:4px">${task.desc}</div>` : ''}
+                  ${task.addedBy ? `<div style="font-size:0.7rem;color:var(--blue-water);margin-top:4px">➕ Added by ${task.addedBy} ${task.addedByRole === 'supervisor' ? '(Supervisor)' : ''}</div>` : ''}
                 </div>
                 <span class="task-priority">${task.priority.toUpperCase()}</span>
                 <button onclick="AdminDashboard.openTaskModal(${gh.id}, ${task.id})" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:8px">✏️</button>
@@ -456,6 +457,7 @@ const AdminDashboard = {
                   <th>Priority</th>
                   <th>Duration</th>
                   <th>Assigned To</th>
+                  <th>Added By</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -483,6 +485,7 @@ const AdminDashboard = {
                       <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
                       <td>${t.duration}</td>
                       <td>${worker ? worker.name : '—'}</td>
+                      <td>${t.addedBy ? `<span style="color:var(--blue-water);font-size:0.75rem">${t.addedBy}${t.addedByRole === 'supervisor' ? ' 📱' : ''}</span>` : '<span style="color:var(--text-light)">Admin</span>'}</td>
                       <td><button onclick="AdminDashboard.openTaskModal(${t.gh.id}, ${t.id})" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button></td>
                     </tr>`;
                 }).join('')}

@@ -1048,6 +1048,35 @@ const SupervisorDashboard = {
           </div>`}
         </div>
         
+        <div class="card" style="margin-top:16px;background:linear-gradient(135deg,#fff8e8,#fff3cd);border:2px solid #f0ad4e">
+          <div class="section-title" style="font-size:0.9rem;margin-bottom:12px;color:#8a6d3b">➕ Add New Task</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <select id="add-task-gh" style="padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.85rem">
+              <option value="">Select Greenhouse</option>
+              ${greenhouses.map(gh => `<option value="${gh.id}">${gh.cropEmoji} ${gh.name}</option>`).join('')}
+            </select>
+            <input type="text" id="add-task-name" placeholder="Task name..." style="padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.85rem">
+            <input type="text" id="add-task-desc" placeholder="Task description..." style="padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.85rem">
+            <div style="display:flex;gap:8px">
+              <select id="add-task-priority" style="padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.85rem;flex:1">
+                <option value="high">🔴 High Priority</option>
+                <option value="medium" selected>🟡 Medium Priority</option>
+                <option value="low">🟢 Low Priority</option>
+              </select>
+              <select id="add-task-duration" style="padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.85rem;flex:1">
+                <option value="1 hour">1 hour</option>
+                <option value="2 hours">2 hours</option>
+                <option value="3 hours">3 hours</option>
+                <option value="4 hours">4 hours</option>
+                <option value="5 hours">5 hours</option>
+                <option value="6 hours">6 hours</option>
+                <option value="8 hours">8 hours</option>
+              </select>
+            </div>
+            <button onclick="SupervisorDashboard.addNewTask()" style="padding:12px;background:linear-gradient(135deg,#f0ad4e,#ec971f);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600">➕ Add Task</button>
+          </div>
+        </div>
+        
         <div class="card" style="margin-top:16px">
           <div class="section-title" style="font-size:0.9rem;margin-bottom:12px">💬 Add Comment</div>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -1136,6 +1165,45 @@ const SupervisorDashboard = {
       showToast('Comment added!', 'success');
       this.showPage('assign-tasks');
     }
+  },
+
+  addNewTask() {
+    const ghId = document.getElementById('add-task-gh')?.value;
+    const name = document.getElementById('add-task-name')?.value?.trim();
+    const desc = document.getElementById('add-task-desc')?.value?.trim();
+    const priority = document.getElementById('add-task-priority')?.value || 'medium';
+    const duration = document.getElementById('add-task-duration')?.value || '2 hours';
+    
+    if (!ghId || !name) {
+      showToast('Please select greenhouse and enter task name', 'error');
+      return;
+    }
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    if (!gh) {
+      showToast('Greenhouse not found', 'error');
+      return;
+    }
+    
+    const newTask = {
+      id: 'task_' + Date.now(),
+      name: name,
+      desc: desc || '',
+      category: 'general',
+      priority: priority,
+      duration: duration,
+      completed: false,
+      addedBy: AFV.currentUser.name,
+      addedByRole: 'supervisor',
+      addedAt: new Date()
+    };
+    
+    gh.tasks.push(newTask);
+    AFV.saveState();
+    AFV.logActivity('➕', `Supervisor added task "${name}" to ${gh.name}`);
+    
+    showToast('Task added successfully! Admin will be notified.', 'success');
+    this.showPage('assign-tasks');
   },
 
   showFeedingCalendar() {
