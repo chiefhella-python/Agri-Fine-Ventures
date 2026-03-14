@@ -5,7 +5,7 @@
 const AFV = {
   currentUser: null,
   currentRole: 'admin',
-  aiSettings: { provider: 'openrouter', apiKey: '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', model: 'nvidia/nemotron-3-super-120b-a12b:free' },
+  aiSettings: { provider: 'openrouter', apiKey: '', model: 'nvidia/nemotron-3-super-120b-a12b:free' },
   notifications: [],
   currentGHView: null,
   pendingTaskComplete: null,

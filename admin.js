@@ -1803,6 +1803,28 @@ const AdminDashboard = {
     }
   },
 
+  saveAISettings() {
+    const apiKey = document.getElementById('settings-apikey')?.value?.trim();
+    const model = document.getElementById('settings-aimodel')?.value?.trim();
+    
+    if (!apiKey) {
+      showToast('Please enter your OpenRouter API key', 'error');
+      return;
+    }
+    
+    if (!model) {
+      showToast('Please enter the model name', 'error');
+      return;
+    }
+    
+    // Update AI settings
+    AFV.aiSettings.apiKey = apiKey;
+    AFV.aiSettings.model = model;
+    AFV.saveState();
+    
+    showToast('AI settings saved successfully!', 'success');
+  },
+
   renderSettings() {
     const adminUser = AFV.users.admin || AFV.currentUser;
     return `
@@ -1815,6 +1837,15 @@ const AdminDashboard = {
       <div class="page-body">
         <div class="two-col">
           <div class="card">
+            <div class="section-title">🤖 AI Assistant Settings</div>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:14px">Configure the NVIDIA Nemotron AI helper. Get your free API key from <a href="https://openrouter.ai" target="_blank" style="color:var(--blue-link)">openrouter.ai</a></p>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div class="input-group"><label>OpenRouter API Key</label><input type="password" id="settings-apikey" value="${AFV.aiSettings?.apiKey || ''}" placeholder="sk-or-v1-..."></div>
+              <div class="input-group"><label>Model</label><input type="text" id="settings-aimodel" value="${AFV.aiSettings?.model || 'nvidia/nemotron-3-super-120b-a12b:free'}" placeholder="nvidia/nemotron-3-super-120b-a12b:free"></div>
+              <button class="btn-primary" onclick="AdminDashboard.saveAISettings()">Save AI Settings</button>
+            </div>
+          </div>
+          <div class="card">
             <div class="section-title">🔐 Account Settings</div>
             <div style="display:flex;flex-direction:column;gap:14px">
               <div class="input-group"><label>Email</label><input type="email" id="admin-email" value="${adminUser?.email || ''}" placeholder="your@email.com"></div>
@@ -1824,6 +1855,8 @@ const AdminDashboard = {
               <button class="btn-primary" onclick="AdminDashboard.updateAccountSettings()">Update Account</button>
             </div>
           </div>
+        </div>
+        <div class="two-col" style="margin-top:20px">
           <div class="card">
             <div class="section-title">🌾 Farm Profile</div>
             <div style="display:flex;flex-direction:column;gap:14px">
@@ -1834,8 +1867,8 @@ const AdminDashboard = {
               <button class="btn-primary">Save Farm Profile</button>
             </div>
           </div>
-          
         </div>
+        
         <div class="card" style="margin-top:20px">
           <div class="section-title">👥 Worker Management</div>
           <table>
