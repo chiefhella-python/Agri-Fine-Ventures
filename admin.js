@@ -52,6 +52,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="analytics" onclick="AdminDashboard.showPage('analytics')">
           <span class="nav-icon">📈</span><span>Analytics</span>
         </button>
+        <button class="nav-item" data-page="charts" onclick="AdminDashboard.showPage('charts')">
+          <span class="nav-icon">📊</span><span>Charts</span>
+        </button>
         <button class="nav-item" data-page="inventory" onclick="AdminDashboard.showPage('inventory')">
           <span class="nav-icon">📦</span><span>Inventory</span>
         </button>
@@ -102,6 +105,7 @@ const AdminDashboard = {
       case 'agronomists': content.innerHTML = this.renderAgronomists(); this.attachAgronomistEvents(); break;
       case 'agro-reports': content.innerHTML = this.renderAgroReports(); break;
       case 'analytics': content.innerHTML = this.renderAnalytics(); break;
+      case 'charts': content.innerHTML = this.renderCharts(); break;
       case 'inventory': content.innerHTML = this.renderInventory(); break;
       case 'revenue': content.innerHTML = this.renderRevenue(); break;
       case 'receipts': content.innerHTML = this.renderReceipts(); break;
@@ -1213,6 +1217,187 @@ const AdminDashboard = {
         </div>
       </div>
       
+    `;
+  },
+
+  renderCharts() {
+    const greenhouses = AFV.greenhouses || [];
+    
+    // Prepare data for charts
+    const ghNames = greenhouses.map(gh => gh.name);
+    const ghCrops = greenhouses.map(gh => gh.crop);
+    
+    // Crop growth progress (days planted / total cycle)
+    const growthData = greenhouses.map(gh => {
+      const daysPlanted = Math.floor((new Date() - gh.plantedDate) / (1000*60*60*24));
+      const totalCycle = Math.ceil((gh.expectedHarvest - gh.plantedDate) / (1000*60*60*24));
+      return Math.min(100, Math.round((daysPlanted / totalCycle) * 100));
+    });
+    
+    // Tasks completed per greenhouse
+    const tasksCompleted = greenhouses.map(gh => gh.tasks.filter(t => t.completed).length);
+    const tasksTotal = greenhouses.map(gh => gh.tasks.length);
+    
+    // Yield estimates (based on plants and expected harvest)
+    const yieldEstimates = greenhouses.map(gh => {
+      // Estimate: 15kg per plant as average
+      const estimatedYield = gh.plants * 15; 
+      return estimatedYield;
+    });
+    
+    // Farm productivity (completed tasks %)
+    const productivity = greenhouses.map((gh, i) => {
+      return tasksTotal[i] > 0 ? Math.round((tasksCompleted[i] / tasksTotal[i]) * 100) : 0;
+    });
+    
+    return `
+      <div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none">
+        <div>
+          <div class="page-title" style="color:white">📊 Charts & Analytics</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Visualize farm performance</div>
+        </div>
+      </div>
+      <div class="page-body">
+        
+        <!-- Crop Growth Progress -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-title">🌱 Crop Growth Progress</div>
+          <div style="height:250px;position:relative">
+            <canvas id="growthChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Two Column Layout -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px">
+          <!-- Tasks Completed -->
+          <div class="card">
+            <div class="section-title">✅ Tasks Completed</div>
+            <div style="height:200px;position:relative">
+              <canvas id="tasksChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Yield Estimates -->
+          <div class="card">
+            <div class="section-title">🌾 Yield Estimates (kg)</div>
+            <div style="height:200px;position:relative">
+              <canvas id="yieldChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Farm Productivity -->
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">📈 Farm Productivity (%)</div>
+          <div style="height:250px;position:relative">
+            <canvas id="productivityChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Summary Stats -->
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:20px">
+          <div class="stat-card">
+            <div class="stat-icon">🌱</div>
+            <div><div class="stat-value">${greenhouses.length}</div><div class="stat-label">Total Crops</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div><div class="stat-value">${tasksCompleted.reduce((a,b)=>a+b,0)}</div><div class="stat-label">Tasks Done</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🌾</div>
+            <div><div class="stat-value">${(yieldEstimates.reduce((a,b)=>a+b,0)/1000).toFixed(1)}t</div><div class="stat-label">Est. Yield</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div><div class="stat-value">${Math.round(productivity.reduce((a,b)=>a+b,0)/productivity.length)}%</div><div class="stat-label">Productivity</div></div>
+          </div>
+        </div>
+        
+      </div>
+      <script>
+        // Crop Growth Progress Chart
+        new Chart(document.getElementById('growthChart'), {
+          type: 'bar',
+          data: {
+            labels: ${JSON.stringify(ghNames)},
+            datasets: [{
+              label: 'Growth %',
+              data: ${JSON.stringify(growthData)},
+              backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'],
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+          }
+        });
+        
+        // Tasks Completed Chart (Doughnut)
+        new Chart(document.getElementById('tasksChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ${JSON.stringify(ghNames)},
+            datasets: [{
+              data: ${JSON.stringify(tasksCompleted)},
+              backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+          }
+        });
+        
+        // Yield Estimates Chart (Horizontal Bar)
+        new Chart(document.getElementById('yieldChart'), {
+          type: 'bar',
+          data: {
+            labels: ${JSON.stringify(ghCrops)},
+            datasets: [{
+              label: 'Est. Yield (kg)',
+              data: ${JSON.stringify(yieldEstimates)},
+              backgroundColor: '#4bc0c0',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+        
+        // Farm Productivity Chart (Line)
+        new Chart(document.getElementById('productivityChart'), {
+          type: 'line',
+          data: {
+            labels: ${JSON.stringify(ghNames)},
+            datasets: [{
+              label: 'Productivity %',
+              data: ${JSON.stringify(productivity)},
+              borderColor: '#36a2eb',
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: '#36a2eb',
+              pointRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+          }
+        });
+      </script>
     `;
   },
 
