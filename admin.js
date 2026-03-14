@@ -58,6 +58,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="revenue" onclick="AdminDashboard.showPage('revenue')">
           <span class="nav-icon">💰</span><span>Revenue</span>
         </button>
+        <button class="nav-item" data-page="receipts" onclick="AdminDashboard.showPage('receipts')">
+          <span class="nav-icon">🧾</span><span>Supervisor Receipts</span>
+        </button>
         <button class="nav-item" data-page="harvest" onclick="AdminDashboard.showPage('harvest')">
           <span class="nav-icon">🌾</span><span>Harvest</span>
         </button>
@@ -101,6 +104,7 @@ const AdminDashboard = {
       case 'analytics': content.innerHTML = this.renderAnalytics(); break;
       case 'inventory': content.innerHTML = this.renderInventory(); break;
       case 'revenue': content.innerHTML = this.renderRevenue(); break;
+      case 'receipts': content.innerHTML = this.renderReceipts(); break;
       case 'harvest': content.innerHTML = this.renderHarvest(); break;
       case 'schedule': content.innerHTML = this.renderSchedule(); break;
       case 'alerts': content.innerHTML = this.renderAlerts(); break;
@@ -2414,65 +2418,53 @@ AdminDashboard.deleteInventory = function(itemId) {
 };
 
 AdminDashboard.renderRevenue = function() {
-  const receipts = AFV.receipts || [];
-  const totalSales = receipts.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
-  return `<div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none"><div><div class="page-title" style="color:white">🧾 Sales & Receipts</div><div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Track all sales transactions from supervisors and admin</div></div><div class="header-actions"><button class="btn-primary" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3)" onclick="AdminDashboard.openRevenueModal()">+ Record Sale</button><div style="background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:20px;font-size:0.85rem;margin-left:10px"><span style="opacity:0.7">Total:</span> <strong>KES ${totalSales.toLocaleString()}</strong></div></div></div><div class="page-body"><div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,#f8fff8,#e8f5e9);border:2px solid var(--green-fresh)"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📝 Record New Sale</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px"><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Product/Item Sold</label><input type="text" id="receipt-product" placeholder="e.g., Tomatoes, Milk, Eggs..." style="background:white;border:1px solid var(--green-pale)"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Amount (KES)</label><input type="number" id="receipt-amount" placeholder="0.00" min="0" step="0.01" style="background:white;border:1px solid var(--green-pale)"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Date of Sale</label><input type="date" id="receipt-date" value="${new Date().toISOString().split('T')[0]}" style="background:white;border:1px solid var(--green-pale)"></div><div class="input-group" style="margin:0"><label style="font-size:0.8rem;color:var(--text-light)">Customer (Optional)</label><input type="text" id="receipt-customer" placeholder="Customer name" style="background:white;border:1px solid var(--green-pale)"></div></div><button onclick="AdminDashboard.saveReceipt()" class="btn-primary" style="margin-top:16px;width:100%;background:linear-gradient(135deg,var(--green-forest),var(--green-fresh))">💾 Save Receipt</button></div><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📋 All Recorded Receipts <span style="font-size:0.8rem;font-weight:400;color:var(--text-light)">(${receipts.length} receipts - Cannot be removed)</span></div>${receipts.length===0 ? '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No receipts recorded yet. Use the form above to record your first sale!</div></div>' : receipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--green-ultra-pale);background:${r.isAdmin || r.role==='admin' ? 'linear-gradient(90deg,rgba(155,89,182,0.08),transparent)' : 'white'}"><div style="width:48px;height:48px;background:linear-gradient(135deg,${r.isAdmin || r.role==='admin' ? '#9b59b6' : 'var(--green-fresh)'},${r.isAdmin || r.role==='admin' ? '#8e44ad' : 'var(--green-forest)'});border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div><div style="flex:1"><div style="font-weight:600;font-size:0.95rem">${r.product}</div><div style="font-size:0.75rem;color:var(--text-light)">${r.customer ? '👤 ' + r.customer + ' · ' : ''}${r.date} · Recorded by ${r.isAdmin || r.role==='admin' ? 'Admin' : 'Supervisor'}</div></div><div style="text-align:right"><div style="font-weight:700;font-size:1.1rem;color:var(--green-forest);font-family:'JetBrains Mono',monospace">KES ${parseFloat(r.amount).toLocaleString()}</div><div style="font-size:0.7rem;color:var(--text-light)">${r.recordedAt}</div></div><div style="color:var(--green-fresh);font-size:1rem" title="Cannot be removed">🔒</div></div>`).join('')}</div></div>`;
+  const records = AFV.revenue || [];
+  const total = records.reduce((s,r) => s + (r.amount||0), 0);
+  return `<div class="page-header"><div><div class="page-title">Revenue 💰</div><div class="page-subtitle">Track income from sales</div></div><div class="header-actions"><button class="btn-primary" onclick="AdminDashboard.openRevenueModal()">+ Add Sale</button></div></div><div class="page-body"><div class="stats-grid"><div class="stat-card"><div class="stat-value">KES ${total.toLocaleString()}</div><div class="stat-label">Total Revenue</div></div></div><div class="card"><div class="scroll-x"><table><thead><tr><th>Date</th><th>Source</th><th>Amount</th><th></th></tr></thead><tbody>${records.length===0 ? '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No sales recorded</td></tr>' : records.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.source||'-'}</td><td style="font-weight:600;color:var(--green-fresh)">KES ${r.amount.toLocaleString()}</td><td><button onclick="AdminDashboard.deleteRevenue(${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`).join('')}</tbody></table></div></div></div><div id="revenue-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000"><div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Sale</h2><form onsubmit="AdminDashboard.saveRevenue(event)"><select id="revenue-source" required style="width:100%;padding:10px;margin-bottom:12px"><option value="Greenhouse">Greenhouse</option><option value="Milk">Milk</option><option value="Eggs">Eggs</option><option value="Vegetables">Vegetables</option><option value="Other">Other</option></select><input type="text" id="revenue-product" required placeholder="Product" style="width:100%;padding:10px;margin-bottom:12px"><input type="number" id="revenue-amount" required placeholder="Amount (KES)" style="width:100%;padding:10px;margin-bottom:12px"><input type="date" id="revenue-date" required style="width:100%;padding:10px;margin-bottom:16px"><div style="display:flex;gap:10px"><button type="button" onclick="AdminDashboard.closeRevenueModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div></div>`;
 };
 
 AdminDashboard.openRevenueModal = function() {
-  // Just focus on the first input in the existing form
-  const productInput = document.getElementById('receipt-product');
-  if(productInput) {
-    productInput.focus();
-  }
-  document.getElementById('receipt-date').value = new Date().toISOString().split('T')[0];
-};
-
-AdminDashboard.saveReceipt = function() {
-  const product = document.getElementById('receipt-product')?.value?.trim();
-  const amount = document.getElementById('receipt-amount')?.value?.trim();
-  const date = document.getElementById('receipt-date')?.value;
-  const customer = document.getElementById('receipt-customer')?.value?.trim();
+  const modal = document.getElementById('revenue-modal');
+  modal.style.display = 'flex';
+  document.getElementById('revenue-date').value = new Date().toISOString().split('T')[0];
   
-  if (!product || !amount || !date) {
-    showToast('Please fill in product, amount, and date', 'error');
-    return;
-  }
-  
-  if (!AFV.receipts) AFV.receipts = [];
-  
-  const receipt = {
-    id: Date.now(),
-    product,
-    amount: parseFloat(amount),
-    date,
-    customer: customer || 'Walk-in Customer',
-    recordedBy: 'admin',
-    isAdmin: true,
-    role: 'admin',
-    recordedAt: new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  };
-  
-  AFV.receipts.push(receipt);
-  AFV.saveState();
-  AFV.logActivity('🧾', `Admin recorded sale: ${product} - KES ${parseFloat(amount).toLocaleString()}`);
-  
-  showToast('Receipt saved successfully!', 'success');
-  this.showPage('revenue');
+  // Dynamically populate source dropdown with greenhouse crops
+  const sourceSelect = document.getElementById('revenue-source');
+  const greenhouses = AFV.greenhouses || [];
+  let options = '<option value="Greenhouse">Greenhouse</option>';
+  greenhouses.forEach(gh => {
+    options += `<option value="${gh.name} - ${gh.crop}">${gh.name} (${gh.crop})</option>`;
+  });
+  options += '<option value="Milk">Milk</option><option value="Eggs">Eggs</option><option value="Vegetables">Vegetables</option><option value="Other">Other</option>';
+  sourceSelect.innerHTML = options;
 };
 
 AdminDashboard.closeRevenueModal = function() {
-  // Modal is now inline, no action needed
+  document.getElementById('revenue-modal').style.display = 'none';
 };
 
 AdminDashboard.saveRevenue = function(e) {
-  // Legacy function - redirects to new saveReceipt
-  e?.preventDefault?.();
-  this.saveReceipt();
+  e.preventDefault();
+  if(!AFV.revenue) AFV.revenue = [];
+  AFV.revenue.push({ id: Date.now(), source: document.getElementById('revenue-source').value, product: document.getElementById('revenue-product').value, amount: parseFloat(document.getElementById('revenue-amount').value), date: new Date(document.getElementById('revenue-date').value) });
+  AFV.saveState();
+  this.closeRevenueModal();
+  this.showPage('revenue');
 };
 
 AdminDashboard.deleteRevenue = function(id) {
-  showToast('Receipts cannot be deleted once recorded!', 'error');
+  if(!confirm('Delete this record?')) return;
+  AFV.revenue = (AFV.revenue||[]).filter(r => r.id !== id);
+  AFV.saveState();
+  this.showPage('revenue');
+};
+
+AdminDashboard.renderReceipts = function() {
+  const receipts = AFV.receipts || [];
+  const supervisorReceipts = receipts.filter(r => r.role === 'supervisor' && !r.isAdmin);
+  const totalSales = supervisorReceipts.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  
+  return `<div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none"><div><div class="page-title" style="color:white">🧾 Supervisor Receipts</div><div class="page-subtitle" style="color:rgba(255,255,255,0.65)">View all sales receipts uploaded by supervisors</div></div><div class="header-actions"><div style="background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:20px;font-size:0.85rem"><span style="opacity:0.7">Total:</span> <strong>KES ${totalSales.toLocaleString()}</strong></div></div></div><div class="page-body"><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📋 Receipts from Supervisors <span style="font-size:0.8rem;font-weight:400;color:var(--text-light)">(${supervisorReceipts.length} receipts)</span></div>${supervisorReceipts.length===0 ? '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No receipts uploaded by supervisors yet.</div></div>' : supervisorReceipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--green-ultra-pale)"><div style="width:48px;height:48px;background:linear-gradient(135deg,var(--green-fresh),var(--green-forest));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div><div style="flex:1"><div style="font-weight:600;font-size:0.95rem">${r.product}</div><div style="font-size:0.75rem;color:var(--text-light)">${r.customer ? '👤 ' + r.customer + ' · ' : ''}${r.date} · Recorded by Supervisor</div></div><div style="text-align:right"><div style="font-weight:700;font-size:1.1rem;color:var(--green-forest);font-family:'JetBrains Mono',monospace">KES ${parseFloat(r.amount).toLocaleString()}</div><div style="font-size:0.7rem;color:var(--text-light)">${r.recordedAt}</div></div></div>`).join('')}</div></div>`;
 };
   
 // HARVEST TRACKING
