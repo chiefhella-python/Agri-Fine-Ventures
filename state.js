@@ -144,7 +144,7 @@ ${this.greenhouses.map(gh => `- ${gh.name}: ${gh.crop} (${gh.variety}), planted 
 
 ${context ? `Additional Context: ${context}` : ''}
 
-Provide helpful, accurate agricultural advice. Be concise but informative.`,    
+Provide helpful, accurate agricultural advice. Be concise but informative.`
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
