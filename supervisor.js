@@ -953,24 +953,25 @@ const SupervisorDashboard = {
     });
     
     return `
-      <div class="page-header">
+      <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
         <div>
-          <div class="page-title">Assign Tasks 📋</div>
-          <div class="page-subtitle">Assign tasks to your workers and verify completion</div>
+          <div class="page-title" style="color:white">Assign Tasks 📋</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Assign tasks to workers and verify completion</div>
         </div>
       </div>
       <div class="page-body">
-        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-value">${workers.length}</div><div class="stat-label">Workers</div></div></div>
-          <div class="stat-card"><div class="stat-icon">📋</div><div><div class="stat-value">${allTasks.length}</div><div class="stat-label">Pending Tasks</div></div></div>
-          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${greenhouses.reduce((s, gh) => s + gh.tasks.filter(t => t.completed).length, 0)}</div><div class="stat-label">Completed</div></div></div>
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);gap:10px">
+          <div class="stat-card" style="padding:12px"><div class="stat-icon" style="font-size:1.2rem">👥</div><div><div class="stat-value" style="font-size:1.2rem">${workers.length}</div><div class="stat-label" style="font-size:0.65rem">Workers</div></div></div>
+          <div class="stat-card" style="padding:12px"><div class="stat-icon" style="font-size:1.2rem">📋</div><div><div class="stat-value" style="font-size:1.2rem">${allTasks.length}</div><div class="stat-label" style="font-size:0.65rem">Pending</div></div></div>
+          <div class="stat-card" style="padding:12px"><div class="stat-icon" style="font-size:1.2rem">✅</div><div><div class="stat-value" style="font-size:1.2rem">${greenhouses.reduce((s, gh) => s + gh.tasks.filter(t => t.completed).length, 0)}</div><div class="stat-label" style="font-size:0.65rem">Done</div></div></div>
         </div>
         
         <div class="card">
-          <div class="section-title">Pending Tasks - Assign or Verify</div>
+          <div class="section-title" style="font-size:0.95rem">Pending Tasks</div>
           ${allTasks.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">All tasks completed!</div>' : `
-          <div class="scroll-x">
-            <table>
+          <!-- Desktop Table View -->
+          <div class="scroll-x" style="display:block">
+            <table class="desktop-table">
               <thead>
                 <tr>
                   <th>Task</th>
@@ -987,53 +988,97 @@ const SupervisorDashboard = {
                   const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
                   return `
                     <tr style="background:${task.assignedTo ? 'rgba(59, 130, 246, 0.05)' : 'white'}">
-                      <td><div style="font-weight:600">${task.name}</div><div style="font-size:0.72rem;color:var(--text-light)">${task.desc?.substring(0,40)}...</div></td>
-                      <td>${gh.cropEmoji} ${gh.name}</td>
-                      <td>${task.duration}</td>
-                      <td><span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}">${task.priority}</span></td>
-                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1.2rem">${assignedTo.avatar}</div><div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
-                      <td>${task.verified ? '<span class="badge badge-green">✓ Verified</span>' : task.assignedTo ? '<span class="badge badge-blue">Assigned</span>' : '<span class="badge badge-gray">Unassigned</span>'}</td>
+                      <td><div style="font-weight:600;font-size:0.85rem">${task.name}</div><div style="font-size:0.65rem;color:var(--text-light)">${task.desc?.substring(0,30)}...</div></td>
+                      <td style="font-size:0.8rem">${gh.cropEmoji} ${gh.name}</td>
+                      <td style="font-size:0.8rem">${task.duration}</td>
+                      <td><span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}" style="font-size:0.65rem">${task.priority}</span></td>
+                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1rem">${assignedTo.avatar}</div><div style="font-size:0.6rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light);font-size:0.8rem">—</span>'}</td>
+                      <td>${task.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓</span>' : task.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">✓</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">—</span>'}</td>
                       <td>
                         ${!task.assignedTo ? `
-                          <div style="display:flex;gap:4px">
-                            <select id="assign-worker-${gh.id}-${task.id}" style="padding:4px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.7rem;width:80px">
+                          <div style="display:flex;gap:3px">
+                            <select id="assign-worker-${gh.id}-${task.id}" style="padding:3px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.6rem;width:60px">
                               <option value="">Select</option>
-                              ${workers.map(w => `<option value="${w.id}">${w.avatar} ${w.name}</option>`).join('')}
+                              ${workers.map(w => `<option value="${w.id}">${w.avatar}</option>`).join('')}
                             </select>
-                            <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
+                            <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:3px 6px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.6rem">→</button>
                           </div>
                         ` : `
-                          ${!task.verified ? `<button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:4px 8px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✅ Verify</button>` : ''}
+                          ${!task.verified ? `<button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:3px 6px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.6rem">✓</button>` : '<span style="color:var(--green-fresh);font-size:0.8rem">✓</span>'}
                         `}
                       </td>
                     </tr>`;
                 }).join('')}
               </tbody>
             </table>
+          </div>
+          
+          <!-- Mobile Card View -->
+          <div class="mobile-cards" style="display:none">
+            ${allTasks.map(({gh, task}) => {
+              const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+              return `
+                <div style="background:${task.assignedTo ? 'rgba(59, 130, 246, 0.08)' : 'var(--green-ultra-pale)'};border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid ${task.priority==='high'?'var(--red-alert)':task.priority==='medium'?'var(--orange-warn)':'var(--green-fresh)'}">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                    <div style="flex:1">
+                      <div style="font-weight:600;font-size:0.9rem;color:var(--green-deep)">${task.name}</div>
+                      <div style="font-size:0.7rem;color:var(--text-light)">${gh.cropEmoji} ${gh.name} · ${task.duration}</div>
+                    </div>
+                    <span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}" style="font-size:0.6rem">${task.priority}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <div>
+                      ${assignedTo ? `<div style="font-size:0.75rem"><span style="font-size:1rem">${assignedTo.avatar}</span> ${assignedTo.name}</div>` : '<span style="font-size:0.7rem;color:var(--text-light)">Unassigned</span>'}
+                      <div style="font-size:0.65rem;color:${task.verified ? 'var(--green-fresh)' : task.assignedTo ? 'var(--blue-water)' : 'var(--text-light)'}">${task.verified ? '✓ Verified' : task.assignedTo ? 'Assigned' : 'Pending'}</div>
+                    </div>
+                    ${!task.assignedTo ? `
+                      <div style="display:flex;gap:4px;align-items:center">
+                        <select id="assign-worker-mobile-${gh.id}-${task.id}" style="padding:6px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.75rem;width:70px">
+                          <option value="">Worker</option>
+                          ${workers.map(w => `<option value="${w.id}">${w.avatar} ${w.name.split(' ')[0]}</option>`).join('')}
+                        </select>
+                        <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:6px 10px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">Assign</button>
+                      </div>
+                    ` : `
+                      ${!task.verified ? `<button onclick="SupervisorDashboard.verifyTask('${gh.id}', '${task.id}')" style="padding:6px 12px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">✓ Verify</button>` : '<span style="color:var(--green-fresh);font-size:1.2rem">✓</span>'}
+                    `}
+                  </div>
+                </div>`;
+            }).join('')}
           </div>`}
         </div>
         
-        <div class="card" style="margin-top:20px">
-          <div class="section-title">Add Comment to Task</div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <select id="comment-gh" style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);flex:1">
+        <div class="card" style="margin-top:16px">
+          <div class="section-title" style="font-size:0.9rem;margin-bottom:12px">💬 Add Comment</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <select id="comment-gh" style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.85rem">
               <option value="">Select Greenhouse</option>
               ${greenhouses.map(gh => `<option value="${gh.id}">${gh.cropEmoji} ${gh.name}</option>`).join('')}
             </select>
-            <select id="comment-task" style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);flex:1">
+            <select id="comment-task" style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.85rem">
               <option value="">Select Task</option>
             </select>
-            <input type="text" id="comment-text" placeholder="Enter comment..." style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);flex:2">
-            <button onclick="SupervisorDashboard.addComment()" style="padding:10px 20px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer">💬 Add</button>
+            <input type="text" id="comment-text" placeholder="Enter comment..." style="padding:10px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.85rem">
+            <button onclick="SupervisorDashboard.addComment()" style="padding:12px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600">💬 Add Comment</button>
           </div>
         </div>
+        
+        <style>
+          @media (max-width: 768px) {
+            .desktop-table { display: none !important; }
+            .mobile-cards { display: block !important; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          }
+        </style>
       </div>
     `;
   },
 
   assignTask(ghId, taskId) {
-    const select = document.getElementById(`assign-worker-${ghId}-${taskId}`);
-    const workerId = select.value;
+    // Try desktop first, then mobile
+    let select = document.getElementById(`assign-worker-${ghId}-${taskId}`);
+    if (!select) select = document.getElementById(`assign-worker-mobile-${ghId}-${taskId}`);
+    const workerId = select?.value;
     if (!workerId) {
       showToast('Please select a worker', 'error');
       return;
