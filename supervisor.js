@@ -52,6 +52,9 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="history" onclick="SupervisorDashboard.showPage('history')">
           <span class="nav-icon">📜</span><span>Task History</span>
         </button>
+        <button class="nav-item" data-page="sales" onclick="SupervisorDashboard.showPage('sales')">
+          <span class="nav-icon">🧾</span><span>Sales & Receipts</span>
+        </button>
         <div class="nav-section-label">Task Management</div>
         <button class="nav-item" data-page="pending-tasks" onclick="SupervisorDashboard.showPage('pending-tasks')">
           <span class="nav-icon">⏳</span><span>Pending Tasks</span>
@@ -97,6 +100,7 @@ const SupervisorDashboard = {
       case 'mygreenhouses': content.innerHTML = this.renderMyGreenhouses(); break;
       case 'harvest': content.innerHTML = this.renderHarvest(); break;
       case 'history': content.innerHTML = this.renderHistory(); break;
+      case 'sales': content.innerHTML = this.renderSales(); break;
       case 'guide': content.innerHTML = this.renderGuide(); break;
       case 'workers': content.innerHTML = this.renderWorkers(); break;
       case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); break;
@@ -444,6 +448,109 @@ const SupervisorDashboard = {
       </div>
       
     `;
+  },
+
+  renderSales() {
+    const receipts = AFV.receipts || [];
+    const supervisorReceipts = receipts.filter(r => r.recordedBy === 'supervisor' || r.role === 'supervisor');
+    const totalSales = supervisorReceipts.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+    
+    return `
+      <div class="page-header" style="background:linear-gradient(135deg,#1a472a,#2d6a4f);color:white;border-bottom:none">
+        <div>
+          <div class="page-title" style="color:white">🧾 Sales & Receipts</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Record and track all sales transactions</div>
+        </div>
+        <div class="header-actions">
+          <div style="background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:20px;font-size:0.85rem">
+            <span style="opacity:0.7">Total:</span> 
+            <strong>KES ${totalSales.toLocaleString()}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="page-body">
+        <!-- Add New Receipt Form -->
+        <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,#f8fff8,#e8f5e9);border:2px solid var(--green-fresh)">
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📝 Record New Sale</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+            <div class="input-group" style="margin:0">
+              <label style="font-size:0.8rem;color:var(--text-light)">Product/Item Sold</label>
+              <input type="text" id="receipt-product" placeholder="e.g., Tomatoes, Cucumbers..." style="background:white;border:1px solid var(--green-pale)">
+            </div>
+            <div class="input-group" style="margin:0">
+              <label style="font-size:0.8rem;color:var(--text-light)">Amount (KES)</label>
+              <input type="number" id="receipt-amount" placeholder="0.00" min="0" step="0.01" style="background:white;border:1px solid var(--green-pale)">
+            </div>
+            <div class="input-group" style="margin:0">
+              <label style="font-size:0.8rem;color:var(--text-light)">Date of Sale</label>
+              <input type="date" id="receipt-date" value="${new Date().toISOString().split('T')[0]}" style="background:white;border:1px solid var(--green-pale)">
+            </div>
+            <div class="input-group" style="margin:0">
+              <label style="font-size:0.8rem;color:var(--text-light)">Customer (Optional)</label>
+              <input type="text" id="receipt-customer" placeholder="Customer name" style="background:white;border:1px solid var(--green-pale)">
+            </div>
+          </div>
+          <button onclick="SupervisorDashboard.addReceipt()" class="btn-primary" style="margin-top:16px;width:100%;background:linear-gradient(135deg,var(--green-forest),var(--green-fresh))">
+            💾 Save Receipt
+          </button>
+        </div>
+        
+        <!-- Receipts List -->
+        <div class="card">
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:16px;color:var(--green-forest)">📋 Recorded Receipts <span style="font-size:0.8rem;font-weight:400;color:var(--text-light)">(${supervisorReceipts.length} receipts)</span></div>
+          ${supervisorReceipts.length === 0 ? 
+            '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No receipts recorded yet. Use the form above to record your first sale!</div></div>' :
+            supervisorReceipts.map(r => `
+              <div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--green-ultra-pale);background:${r.isAdmin ? 'linear-gradient(90deg,rgba(155,89,182,0.05),transparent)' : 'white'}">
+                <div style="width:48px;height:48px;background:linear-gradient(135deg,${r.isAdmin ? '#9b59b6' : 'var(--green-fresh)'},${r.isAdmin ? '#8e44ad' : 'var(--green-forest)'});border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div>
+                <div style="flex:1">
+                  <div style="font-weight:600;font-size:0.95rem">${r.product}</div>
+                  <div style="font-size:0.75rem;color:var(--text-light)">
+                    ${r.customer ? '👤 ' + r.customer + ' · ' : ''}${r.date} · Recorded by ${r.isAdmin ? 'Admin' : 'Supervisor'}
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:700;font-size:1.1rem;color:var(--green-forest);font-family:'JetBrains Mono',monospace">KES ${parseFloat(r.amount).toLocaleString()}</div>
+                  <div style="font-size:0.7rem;color:var(--text-light)">${r.recordedAt}</div>
+                </div>
+                <div style="color:var(--green-fresh);font-size:1rem" title="Cannot be removed">🔒</div>
+              </div>`).join('')
+          }
+        </div>
+      </div>
+    `;
+  },
+
+  addReceipt() {
+    const product = document.getElementById('receipt-product').value.trim();
+    const amount = document.getElementById('receipt-amount').value.trim();
+    const date = document.getElementById('receipt-date').value;
+    const customer = document.getElementById('receipt-customer').value.trim();
+    
+    if (!product || !amount || !date) {
+      showToast('Please fill in product, amount, and date', 'error');
+      return;
+    }
+    
+    if (!AFV.receipts) AFV.receipts = [];
+    
+    const receipt = {
+      id: Date.now(),
+      product,
+      amount: parseFloat(amount),
+      date,
+      customer: customer || 'Walk-in Customer',
+      recordedBy: 'supervisor',
+      role: 'supervisor',
+      recordedAt: new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    };
+    
+    AFV.receipts.push(receipt);
+    AFV.saveState();
+    AFV.logActivity('🧾', `Sale recorded: ${product} - KES ${parseFloat(amount).toLocaleString()}`);
+    
+    showToast('Receipt saved successfully!', 'success');
+    this.showPage('sales');
   },
 
   renderGuide() {
