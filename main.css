@@ -1766,9 +1766,6 @@ tbody tr:last-child td { border-bottom: none; }
   .main-content { margin-left: 64px; }
   .nav-item span:last-child, .sidebar-logo-title, .sidebar-logo-sub, .user-name, .user-role { display: none; }
   .sidebar-user { justify-content: center; padding: 12px; }
-  
-  /* Mobile sidebar toggle - hidden in collapsed mode */
-  .sidebar-toggle { display: none; }
 }
 
 /* Mobile sidebar overlay */
