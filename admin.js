@@ -49,6 +49,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="categories" onclick="AdminDashboard.showPage('categories')">
           <span class="nav-icon">🏷️</span><span>Categories</span>
         </button>
+        <button class="nav-item" data-page="orders" onclick="AdminDashboard.showPage('orders')">
+          <span class="nav-icon">📦</span><span>Orders</span>
+        </button>
         <div class="nav-section-label">Intelligence</div>
         <button class="nav-item" data-page="agronomists" onclick="AdminDashboard.showPage('agronomists')">
           <span class="nav-icon">🔬</span><span>Agronomists</span>
@@ -105,6 +108,7 @@ const AdminDashboard = {
       case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
       case 'tasks': content.innerHTML = this.renderAllTasks(); break;
       case 'categories': content.innerHTML = this.renderCategories(); break;
+      case 'orders': content.innerHTML = this.renderOrders(); break;
       case 'supervisors': content.innerHTML = this.renderSupervisors(); break;
       case 'workers': content.innerHTML = this.renderSupervisorWorkers(); break;
       case 'agronomists': content.innerHTML = this.renderAgronomists(); this.attachAgronomistEvents(); break;
@@ -620,6 +624,175 @@ const AdminDashboard = {
       AFV.saveState();
       showToast('Category deleted!', 'success');
       this.showPage('categories');
+    }
+  },
+
+  renderOrders() {
+    const orders = AFV.orders || [];
+    const pending = orders.filter(o => o.status === 'pending');
+    const completed = orders.filter(o => o.status === 'completed');
+    const total = orders.reduce((s, o) => s + (o.amount || 0), 0);
+    
+    return `
+      <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
+        <div>
+          <div class="page-title" style="color:white">📦 Orders Tracking</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">${pending.length} pending · ${completed.length} completed</div>
+        </div>
+        <div class="header-actions">
+          <button onclick="AdminDashboard.showAddOrderModal()" style="padding:8px 16px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">➕ New Order</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">📦</div><div><div class="stat-value">${orders.length}</div><div class="stat-label">Total Orders</div></div></div>
+          <div class="stat-card"><div class="stat-icon">⏳</div><div><div class="stat-value">${pending.length}</div><div class="stat-label">Pending</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${completed.length}</div><div class="stat-label">Completed</div></div></div>
+        </div>
+        
+        <div class="card">
+          <div class="section-title">⏳ Pending Orders (${pending.length})</div>
+          ${pending.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No pending orders</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Order #</th><th>Item</th><th>Supplier</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${pending.map(o => `
+                  <tr>
+                    <td><div style="font-weight:600">#${o.id}</div></td>
+                    <td>${o.item}</td>
+                    <td>${o.supplier || '—'}</td>
+                    <td>KES ${(o.amount || 0).toLocaleString()}</td>
+                    <td>${new Date(o.date).toLocaleDateString('en-KE')}</td>
+                    <td><span class="badge badge-orange">Pending</span></td>
+                    <td>
+                      <button onclick="AdminDashboard.completeOrder('${o.id}')" style="padding:4px 8px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✓ Complete</button>
+                      <button onclick="AdminDashboard.deleteOrder('${o.id}')" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🗑️</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+        
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">✅ Completed Orders (${completed.length})</div>
+          ${completed.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No completed orders</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Order #</th><th>Item</th><th>Supplier</th><th>Amount</th><th>Completed</th><th></th></tr></thead>
+              <tbody>
+                ${completed.map(o => `
+                  <tr>
+                    <td><div style="font-weight:600">#${o.id}</div></td>
+                    <td>${o.item}</td>
+                    <td>${o.supplier || '—'}</td>
+                    <td>KES ${(o.amount || 0).toLocaleString()}</td>
+                    <td>${o.completedAt ? new Date(o.completedAt).toLocaleDateString('en-KE') : '—'}</td>
+                    <td><span class="badge badge-green">Completed</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+      </div>
+    `;
+  },
+
+  showAddOrderModal() {
+    const modalHtml = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center" onclick="if(event.target === this) this.remove()">
+        <div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:450px;width:90%">
+          <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0 0 20px">New Order</h2>
+          <form onsubmit="AdminDashboard.saveOrder(event)">
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Item Name</label>
+              <input type="text" id="order-item" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., Fertilizer, Seeds">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Supplier</label>
+              <input type="text" id="order-supplier" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Supplier name">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Amount (KES)</label>
+              <input type="number" id="order-amount" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Order Date</label>
+              <input type="date" id="order-date" required value="${new Date().toISOString().split('T')[0]}" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+            </div>
+            <div style="display:flex;gap:10px">
+              <button type="button" onclick="this.closest('[style*=\"position:fixed\"]').remove()" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
+              <button type="submit" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">Add Order</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    const existing = document.getElementById('order-modal');
+    if (existing) existing.remove();
+    
+    const div = document.createElement('div');
+    div.id = 'order-modal';
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+  },
+
+  saveOrder(e) {
+    e.preventDefault();
+    const item = document.getElementById('order-item').value.trim();
+    const supplier = document.getElementById('order-supplier').value.trim();
+    const amount = parseFloat(document.getElementById('order-amount').value) || 0;
+    const date = document.getElementById('order-date').value;
+    
+    if (!AFV.orders) AFV.orders = [];
+    
+    const newOrder = {
+      id: Date.now(),
+      item,
+      supplier,
+      amount,
+      date,
+      status: 'pending',
+      createdBy: AFV.currentUser?.name || 'Admin',
+      createdAt: new Date()
+    };
+    
+    AFV.orders.push(newOrder);
+    AFV.saveState();
+    
+    const modal = document.getElementById('order-modal');
+    if (modal) modal.remove();
+    
+    showToast('Order added!', 'success');
+    this.showPage('orders');
+  },
+
+  completeOrder(orderId) {
+    if (!confirm('Mark this order as completed?')) return;
+    
+    const order = AFV.orders.find(o => o.id == orderId);
+    if (order) {
+      order.status = 'completed';
+      order.completedAt = new Date();
+      AFV.saveState();
+      showToast('Order completed!', 'success');
+      this.showPage('orders');
+    }
+  },
+
+  deleteOrder(orderId) {
+    if (!confirm('Delete this order?')) return;
+    
+    const idx = AFV.orders.findIndex(o => o.id == orderId);
+    if (idx > -1) {
+      AFV.orders.splice(idx, 1);
+      AFV.saveState();
+      showToast('Order deleted!', 'success');
+      this.showPage('orders');
     }
   },
 
