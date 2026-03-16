@@ -1672,6 +1672,9 @@ const SupervisorDashboard = {
           <div class="page-title" style="color:white">📋 Tasks</div>
           <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">${pending.length} pending · ${done.length} completed</div>
         </div>
+        <div class="header-actions">
+          <button onclick="SupervisorDashboard.showAddTaskForm()" style="padding:8px 16px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">➕ Add Task</button>
+        </div>
       </div>
       <div class="page-body">
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
@@ -1767,6 +1770,110 @@ const SupervisorDashboard = {
       showToast('Task completed!', 'success');
       this.navigate('tasks');
     }
+  },
+
+  showAddTaskForm() {
+    const formHtml = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center" onclick="if(event.target === this) SupervisorDashboard.showPage('tasks')">
+        <div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0">Add New Task</h2>
+            <button onclick="SupervisorDashboard.showPage('tasks')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+          </div>
+          <form onsubmit="SupervisorDashboard.saveNewTask(event)">
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Greenhouse</label>
+              <select id="supervisor-task-gh" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+                ${AFV.greenhouses.map(gh => `<option value="${gh.id}">${gh.cropEmoji} ${gh.name}</option>`).join('')}
+              </select>
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Task Name</label>
+              <input type="text" id="supervisor-task-name" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Description</label>
+              <textarea id="supervisor-task-desc" rows="2" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem;font-family:inherit"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+              <div>
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Category</label>
+                <select id="supervisor-task-category" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+                  <option value="general">General</option>
+                  <option value="irrigation">Irrigation</option>
+                  <option value="nutrition">Nutrition</option>
+                  <option value="pest">Pest Control</option>
+                  <option value="harvest">Harvest</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Priority</label>
+                <select id="supervisor-task-priority" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+                  <option value="high">🔴 High</option>
+                  <option value="medium" selected>🟡 Medium</option>
+                  <option value="low">🟢 Low</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:20px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Duration</label>
+              <input type="text" id="supervisor-task-duration" value="1 hour" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+            </div>
+            <div style="display:flex;gap:10px">
+              <button type="button" onclick="SupervisorDashboard.showPage('tasks')" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
+              <button type="submit" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">Add Task</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    // Add form to page
+    const existingForm = document.getElementById('supervisor-add-task-form');
+    if (existingForm) existingForm.remove();
+    
+    const formDiv = document.createElement('div');
+    formDiv.id = 'supervisor-add-task-form';
+    formDiv.innerHTML = formHtml;
+    document.body.appendChild(formDiv);
+  },
+
+  saveNewTask(e) {
+    e.preventDefault();
+    const ghId = parseInt(document.getElementById('supervisor-task-gh').value);
+    const name = document.getElementById('supervisor-task-name').value.trim();
+    const desc = document.getElementById('supervisor-task-desc').value.trim();
+    const category = document.getElementById('supervisor-task-category').value;
+    const priority = document.getElementById('supervisor-task-priority').value;
+    const duration = document.getElementById('supervisor-task-duration').value.trim();
+    
+    const gh = AFV.greenhouses.find(g => g.id === ghId);
+    if (!gh) return;
+    
+    const newTask = {
+      id: Date.now(),
+      name: name,
+      desc: desc,
+      category: category,
+      priority: priority,
+      duration: duration,
+      completed: false,
+      assignedTo: null,
+      assignedAt: null,
+      verified: false,
+      createdBy: 'supervisor',
+      createdAt: new Date()
+    };
+    
+    gh.tasks.push(newTask);
+    AFV.saveState();
+    
+    // Remove form
+    const formDiv = document.getElementById('supervisor-add-task-form');
+    if (formDiv) formDiv.remove();
+    
+    showToast('Task added successfully!', 'success');
+    this.showPage('tasks');
   },
 
   submitWeeklyReport() {
