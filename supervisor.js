@@ -1773,12 +1773,18 @@ const SupervisorDashboard = {
   },
 
   showAddTaskForm() {
+    // Remove any existing modal
+    const existingForm = document.getElementById('supervisor-add-task-form');
+    if (existingForm) {
+      existingForm.remove();
+    }
+    
     const formHtml = `
-      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center" onclick="if(event.target === this) SupervisorDashboard.showPage('tasks')">
+      <div id="supervisor-add-task-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center">
         <div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0">Add New Task</h2>
-            <button onclick="SupervisorDashboard.showPage('tasks')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+            <button type="button" onclick="SupervisorDashboard.closeAddTaskForm()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
           </div>
           <form onsubmit="SupervisorDashboard.saveNewTask(event)">
             <div style="margin-bottom:16px">
@@ -1820,7 +1826,7 @@ const SupervisorDashboard = {
               <input type="text" id="supervisor-task-duration" value="1 hour" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
             </div>
             <div style="display:flex;gap:10px">
-              <button type="button" onclick="SupervisorDashboard.showPage('tasks')" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
+              <button type="button" onclick="SupervisorDashboard.closeAddTaskForm()" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
               <button type="submit" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">Add Task</button>
             </div>
           </form>
@@ -1828,14 +1834,18 @@ const SupervisorDashboard = {
       </div>
     `;
     
-    // Add form to page
-    const existingForm = document.getElementById('supervisor-add-task-form');
-    if (existingForm) existingForm.remove();
-    
     const formDiv = document.createElement('div');
     formDiv.id = 'supervisor-add-task-form';
     formDiv.innerHTML = formHtml;
     document.body.appendChild(formDiv);
+  },
+
+  closeAddTaskForm() {
+    const formDiv = document.getElementById('supervisor-add-task-form');
+    if (formDiv) {
+      formDiv.remove();
+    }
+    this.showPage('tasks');
   },
 
   saveNewTask(e) {
