@@ -6,25 +6,30 @@ const SupervisorDashboard = {
   currentPage: 'mytasks',
 
   init() {
-    this.renderNav();
-    // Add harvest modal to body
-    if(!document.getElementById('supervisor-harvest-modal')) {
-      const modal = document.createElement('div');
-      modal.id = 'supervisor-harvest-modal';
-      modal.className = 'modal';
-      modal.style.display = 'none';
-      modal.style.position = 'fixed';
-      modal.style.inset = '0';
-      modal.style.background = 'rgba(0,0,0,0.5)';
-      modal.style.zIndex = '1000';
-      modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1 (Premium)</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
-      document.body.appendChild(modal);
+    try {
+      this.renderNav();
+      // Add harvest modal to body
+      if(!document.getElementById('supervisor-harvest-modal')) {
+        const modal = document.createElement('div');
+        modal.id = 'supervisor-harvest-modal';
+        modal.className = 'modal';
+        modal.style.display = 'none';
+        modal.style.position = 'fixed';
+        modal.style.inset = '0';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        modal.style.zIndex = '1000';
+        modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quality</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1 (Premium)</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
+        document.body.appendChild(modal);
+      }
+      this.showPage('mytasks');
+    } catch (error) {
+      console.error('SupervisorDashboard.init() error:', error);
+      // Render a basic error message in the content area
+      const content = document.getElementById('supervisor-content');
+      if (content) {
+        content.innerHTML = `<div style="padding:40px;text-align:center"><h2>Error Loading Dashboard</h2><p>${error.message}</p><button onclick="location.reload()" class="btn-primary">Reload Page</button></div>`;
+      }
     }
-    this.showPage('mytasks');
-    
-    // Render AI Helper widget
-    document.getElementById('ai-widget-container').innerHTML = '';
-    document.getElementById('ai-widget-container').innerHTML = SupervisorDashboard.renderAIHelper();
   },
 
   renderNav() {
@@ -1713,82 +1718,4 @@ const SupervisorDashboard = {
     showToast('Weekly report submitted successfully!', 'success');
     this.showPage('weekly-reports');
   }
-};
-
-// ============================================
-// AI HELPER FOR SUPERVISOR
-// ============================================
-SupervisorDashboard.renderAIHelper = function() {
-  return `
-    <div id="ai-helper-widget" style="position:fixed;bottom:20px;right:20px;z-index:9999">
-      <button onclick="SupervisorDashboard.toggleAIChat()" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1a2e4a,#2d4a6e);border:none;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);font-size:1.8rem">🤖</button>
-    </div>
-    <div id="ai-chat-modal" style="display:none;position:fixed;bottom:90px;right:20px;width:380px;max-width:90vw;background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.2);z-index:9999;overflow:hidden">
-      <div style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:700;font-size:0.95rem">🤖 AgriBot AI Helper</div>
-        <button onclick="SupervisorDashboard.toggleAIChat()" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;padding:0;line-height:1">×</button>
-      </div>
-      <div id="ai-chat-messages" style="height:300px;overflow-y:auto;padding:14px;background:#f0f4f8">
-        <div style="background:white;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-          <div style="font-size:0.8rem;color:#1a2e4a;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
-          <div style="font-size:0.9rem;color:#333">Hello! I'm your AI assistant powered by NVIDIA Nemotron. Ask me about your assigned greenhouses, tasks, or farming advice!</div>
-        </div>
-      </div>
-      <div style="padding:12px;border-top:1px solid #eee;display:flex;gap:8px">
-        <input id="ai-chat-input" type="text" placeholder="Ask about your tasks..." style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.9rem" onkeypress="if(event.key==='Enter')SupervisorDashboard.sendAIChat()">
-        <button onclick="SupervisorDashboard.sendAIChat()" style="background:#1a2e4a;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600">Send</button>
-      </div>
-    </div>
-  `;
-};
-
-SupervisorDashboard.toggleAIChat = function() {
-  const modal = document.getElementById('ai-chat-modal');
-  modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
-};
-
-SupervisorDashboard.sendAIChat = async function() {
-  const input = document.getElementById('ai-chat-input');
-  const messages = document.getElementById('ai-chat-messages');
-  const question = input.value.trim();
-  if (!question) return;
-
-  messages.innerHTML += `
-    <div style="background:#1a2e4a;color:white;padding:10px 14px;border-radius:12px;margin-bottom:10px;margin-left:40px;box-shadow:0 1px 3px rgba(0,0,0,0.15)">
-      <div style="font-size:0.75rem;opacity:0.8;margin-bottom:2px">You</div>
-      <div style="font-size:0.9rem">${question}</div>
-    </div>
-  `;
-
-  input.value = '';
-  messages.scrollTop = messages.scrollHeight;
-
-  messages.innerHTML += `
-    <div id="ai-loading" style="background:white;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-      <div style="font-size:0.8rem;color:#1a2e4a;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
-      <div style="font-size:0.9rem;color:#666">Thinking...</div>
-    </div>
-  `;
-  messages.scrollTop = messages.scrollHeight;
-
-  const result = await AFV.askAI(question, 'Supervisor user asking about their assigned greenhouses and tasks');
-
-  document.getElementById('ai-loading').remove();
-  
-  if (result.error) {
-    messages.innerHTML += `
-      <div style="background:#fee2e2;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-        <div style="font-size:0.8rem;color:#dc2626;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
-        <div style="font-size:0.9rem;color:#333">${result.error}</div>
-      </div>
-    `;
-  } else {
-    messages.innerHTML += `
-      <div style="background:white;padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-        <div style="font-size:0.8rem;color:#1a2e4a;font-weight:600;margin-bottom:4px">🤖 AgriBot</div>
-        <div style="font-size:0.9rem;color:#333;white-space:pre-wrap">${result.response}</div>
-      </div>
-    `;
-  }
-  messages.scrollTop = messages.scrollHeight;
 };
