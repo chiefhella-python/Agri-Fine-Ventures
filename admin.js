@@ -381,7 +381,7 @@ const AdminDashboard = {
                   ${!task.completed ? `<div style="font-size:0.78rem;color:var(--text-light);margin-top:4px">${task.desc}</div>` : ''}
                 </div>
                 <span class="task-priority">${task.priority.toUpperCase()}</span>
-                <button onclick="AdminDashboard.openTaskModal(${gh.id}, ${task.id})" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:8px">✏️</button>
+                <button onclick="AdminDashboard.openTaskModal('${gh.id}', '${task.id}')" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:8px">✏️</button>
               </div>`).join('')}
           </div>
         </div>
@@ -450,7 +450,17 @@ const AdminDashboard = {
                       <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
                       <td>${t.duration}</td>
                       <td>${worker ? worker.name : '—'}</td>
-                      <td><button onclick="AdminDashboard.openTaskModal(${t.gh.id}, ${t.id})" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button></td>
+                      <td>
+                        ${!t.assignedTo ? `
+                          <select id="admin-assign-worker-${t.gh.id}-${t.id}" style="padding:4px;border-radius:4px;border:1px solid var(--green-pale);font-size:0.75rem;width:80px">
+                            <option value="">Select</option>
+                            ${Object.values(AFV.users || {}).filter(u => u.role === 'worker').map(w => `<option value="${w.id}">${w.name.split(' ')[0]}</option>`).join('')}
+                          </select>
+                          <button onclick="AdminDashboard.assignTaskToWorker('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
+                        ` : `
+                          <button onclick="AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button>
+                        `}
+                      </td>
                     </tr>`;
                 }).join('')}
               </tbody>
@@ -482,7 +492,7 @@ const AdminDashboard = {
                       <td>${t.gh.cropEmoji} ${t.gh.name}</td>
                       <td>${t.completedAt ? t.completedAt.toLocaleDateString('en-KE') : '—'}</td>
                       <td>${worker ? worker.name : '—'}</td>
-                      <td><button onclick="AdminDashboard.openTaskModal(${t.gh.id}, ${t.id})" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button></td>
+                      <td><button onclick="AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button></td>
                     </tr>`;
                 }).join('')}
               </tbody>
@@ -2078,6 +2088,27 @@ const AdminDashboard = {
     
     this.closeTaskModal();
     this.showPage(this.currentPage);
+  },
+
+  assignTaskToWorker(ghId, taskId) {
+    const select = document.getElementById(`admin-assign-worker-${ghId}-${taskId}`);
+    const workerId = select?.value;
+    if (!workerId) {
+      showToast('Please select a worker', 'error');
+      return;
+    }
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh?.tasks.find(t => t.id === taskId);
+    
+    if (gh && task) {
+      task.assignedTo = workerId;
+      task.assignedAt = new Date();
+      task.verified = false;
+      AFV.logActivity('📋', `Task "${task.name}" assigned to worker by Admin`);
+      showToast('Task assigned successfully!', 'success');
+      this.showPage(this.currentPage);
+    }
   },
 
   deleteCurrentTask() {
