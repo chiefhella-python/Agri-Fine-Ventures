@@ -91,6 +91,9 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="tasks" onclick="SupervisorDashboard.showPage('tasks')">
           <span class="nav-icon">📋</span><span>Tasks</span>
         </button>
+        <button class="nav-item" data-page="categories" onclick="SupervisorDashboard.showPage('categories')">
+          <span class="nav-icon">🏷️</span><span>Categories</span>
+        </button>
       </nav>
       <div class="sidebar-footer">
         <button class="logout-btn" onclick="handleLogout()">🚪 <span>Sign Out</span></button>
@@ -118,6 +121,7 @@ const SupervisorDashboard = {
       case 'weekly-reports': content.innerHTML = this.renderWeeklyReports(); break;
       case 'feeding': content.innerHTML = this.renderFeeding(); break;
       case 'tasks': content.innerHTML = this.renderTasks(); break;
+      case 'categories': content.innerHTML = this.renderCategories(); break;
     }
   },
 
@@ -1805,11 +1809,7 @@ const SupervisorDashboard = {
               <div>
                 <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Category</label>
                 <select id="supervisor-task-category" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
-                  <option value="general">General</option>
-                  <option value="irrigation">Irrigation</option>
-                  <option value="nutrition">Nutrition</option>
-                  <option value="pest">Pest Control</option>
-                  <option value="harvest">Harvest</option>
+                  ${(AFV.taskCategories || []).map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                 </select>
               </div>
               <div>
@@ -1884,6 +1884,113 @@ const SupervisorDashboard = {
     
     showToast('Task added successfully!', 'success');
     this.showPage('tasks');
+  },
+
+  renderCategories() {
+    const categories = AFV.taskCategories || [];
+    
+    return `
+      <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
+        <div>
+          <div class="page-title" style="color:white">🏷️ Task Categories</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Manage task categories</div>
+        </div>
+        <div class="header-actions">
+          <button onclick="SupervisorDashboard.showAddCategoryModal()" style="padding:8px 16px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">➕ Add Category</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="section-title">Categories (${categories.length})</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:16px">
+            ${categories.map(cat => `
+              <div style="background:var(--green-ultra-pale);padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-weight:600;color:var(--green-deep)">${cat}</div>
+                </div>
+                <div style="display:flex;gap:4px">
+                  <button onclick="SupervisorDashboard.editCategory('${cat}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✏️</button>
+                  <button onclick="SupervisorDashboard.deleteCategory('${cat}')" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🗑️</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  showAddCategoryModal(existingCategory = null) {
+    const isEdit = !!existingCategory;
+    const modalHtml = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center" onclick="if(event.target === this) this.remove()">
+        <div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%">
+          <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0 0 20px">${isEdit ? 'Edit' : 'Add'} Category</h2>
+          <form onsubmit="SupervisorDashboard.saveCategory(event, ${isEdit ? `'${existingCategory}'` : 'null'})">
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Category Name</label>
+              <input type="text" id="supervisor-category-name" value="${existingCategory || ''}" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., pruning, training">
+            </div>
+            <div style="display:flex;gap:10px">
+              <button type="button" onclick="this.closest('[style*=\"position:fixed\"]').remove()" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
+              <button type="submit" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">${isEdit ? 'Update' : 'Add'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    const existing = document.getElementById('supervisor-category-modal');
+    if (existing) existing.remove();
+    
+    const div = document.createElement('div');
+    div.id = 'supervisor-category-modal';
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+  },
+
+  editCategory(category) {
+    this.showAddCategoryModal(category);
+  },
+
+  saveCategory(e, existingCategory) {
+    e.preventDefault();
+    const name = document.getElementById('supervisor-category-name').value.trim().toLowerCase();
+    if (!name) return;
+    
+    if (!AFV.taskCategories) AFV.taskCategories = [];
+    
+    // Remove existing category if editing
+    if (existingCategory) {
+      const idx = AFV.taskCategories.indexOf(existingCategory);
+      if (idx > -1) AFV.taskCategories.splice(idx, 1);
+    }
+    
+    // Add new category if not exists
+    if (!AFV.taskCategories.includes(name)) {
+      AFV.taskCategories.push(name);
+    }
+    
+    AFV.saveState();
+    
+    // Close modal
+    const modal = document.getElementById('supervisor-category-modal');
+    if (modal) modal.remove();
+    
+    showToast(existingCategory ? 'Category updated!' : 'Category added!', 'success');
+    this.showPage('categories');
+  },
+
+  deleteCategory(category) {
+    if (!confirm(`Delete category "${category}"?`)) return;
+    
+    const idx = AFV.taskCategories.indexOf(category);
+    if (idx > -1) {
+      AFV.taskCategories.splice(idx, 1);
+      AFV.saveState();
+      showToast('Category deleted!', 'success');
+      this.showPage('categories');
+    }
   },
 
   submitWeeklyReport() {

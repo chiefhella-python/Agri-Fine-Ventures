@@ -20,6 +20,7 @@ const AFV = {
   activePage: {},
   weeklyReports: [],
   passwordResetRequests: [],
+  taskCategories: ['general', 'irrigation', 'nutrition', 'pest', 'harvest', 'pruning', 'training', 'planting', 'preparation', 'stress_management'],
 
   // USERS (passwords should be hashed in production - using placeholders for demo)
   users: {
@@ -713,7 +714,8 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         activityLog: this.activityLog,
         receipts: this.receipts,
         revenue: this.revenue,
-        harvest: this.harvest
+        harvest: this.harvest,
+        taskCategories: this.taskCategories
       };
       // Save AI model preference only (not API key) for security
       if (this.aiSettings?.model) {
@@ -745,6 +747,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         if (parsed.receipts) this.receipts = parsed.receipts;
         if (parsed.revenue) this.revenue = parsed.revenue;
         if (parsed.harvest) this.harvest = parsed.harvest;
+        if (parsed.taskCategories) this.taskCategories = parsed.taskCategories;
         
         // Convert date strings back to Date objects
         this.passwordResetRequests?.forEach(r => {
