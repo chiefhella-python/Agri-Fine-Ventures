@@ -44,7 +44,8 @@ function handleLogin() {
   if (selectedRole === 'admin') {
     user = Object.values(AFV.users).find(u => (u.email === username || u.id === username) && u.role === 'admin');
   } else {
-    user = AFV.users[username];
+    // Search by id OR name for supervisor/agronomist roles
+    user = Object.values(AFV.users).find(u => (u.id === username || u.name === username) && u.role === selectedRole);
   }
   
   // Demo mode: accept any password for users with passwordHash (placeholder auth)
@@ -300,13 +301,6 @@ function closeSidebar(role) {
   
   sidebar.classList.remove('open');
   overlay.classList.remove('active');
-}
-
-// Close sidebar when clicking nav items on mobile
-function closeSidebarOnNav(role) {
-  if (window.innerWidth <= 768) {
-    closeSidebar(role);
-  }
 }
 
 // Close sidebar when clicking nav items on mobile

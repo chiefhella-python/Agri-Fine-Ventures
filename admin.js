@@ -510,11 +510,11 @@ const AdminDashboard = {
             const tasks = AFV.getTasksForWorker(s.id);
             const totalAssigned = s.assignedGH?.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => g.id === ghId);
-              return s + (gh ? gh.tasks.length : 0);
+              return sum + (gh ? gh.tasks.length : 0);
             }, 0) || 0;
             const doneAssigned = s.assignedGH?.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => g.id === ghId);
-              return s + (gh ? gh.tasks.filter(t => t.completed).length : 0);
+              return sum + (gh ? gh.tasks.filter(t => t.completed).length : 0);
             }, 0) || 0;
             return `
               <div class="card" style="text-align:center;border:1px solid var(--green-pale)">
@@ -589,7 +589,7 @@ const AdminDashboard = {
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
-              <input type="text" id="supervisor-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
+              <input type="password" id="supervisor-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assigned Greenhouses</label>
@@ -873,7 +873,7 @@ const AdminDashboard = {
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
-              <input type="text" id="agronomist-password" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
+              <input type="password" id="agronomist-password" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
               <button type="button" onclick="AdminDashboard.closeAgronomistModal()" style="padding:10px 20px;background:#e8d5e8;color:#9b59b6;border:none;border-radius:var(--radius-sm);cursor:pointer">Cancel</button>
@@ -1379,7 +1379,7 @@ const AdminDashboard = {
                   <span class="badge badge-orange">Pending</span>
                 </div>
                 <div style="display:flex;gap:8px;align-items:center">
-                  <input type="text" id="new-password-${r.id}" placeholder="Enter new password" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.9rem">
+                  <input type="password" id="new-password-${r.id}" placeholder="Enter new password" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--blue-pale);font-size:0.9rem">
                   <button onclick="AdminDashboard.resetUserPassword('${r.id}')" style="padding:8px 16px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem">🔑 Reset Password</button>
                 </div>
               </div>

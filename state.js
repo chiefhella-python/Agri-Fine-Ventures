@@ -733,7 +733,10 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         if (parsed.weeklyReports) this.weeklyReports = parsed.weeklyReports;
         if (parsed.workers) this.workers = parsed.workers;
         if (parsed.inventory) this.inventory = parsed.inventory;
-        if (parsed.greenhouses) this.greenhouses = parsed.greenhouses;
+        // Only load greenhouses if valid array exists (not null, undefined, or empty)
+        if (parsed.greenhouses && Array.isArray(parsed.greenhouses) && parsed.greenhouses.length > 0) {
+          this.greenhouses = parsed.greenhouses;
+        }
         if (parsed.notifications) this.notifications = parsed.notifications;
         if (parsed.feedingProgram) this.feedingProgram = parsed.feedingProgram;
         if (parsed.aiSettings) {
