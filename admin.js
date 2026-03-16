@@ -58,6 +58,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="revenue" onclick="AdminDashboard.showPage('revenue')">
           <span class="nav-icon">💰</span><span>Revenue</span>
         </button>
+        <button class="nav-item" data-page="receipts" onclick="AdminDashboard.showPage('receipts')">
+          <span class="nav-icon">🧾</span><span>Receipts</span>
+        </button>
         <button class="nav-item" data-page="harvest" onclick="AdminDashboard.showPage('harvest')">
           <span class="nav-icon">🌾</span><span>Harvest</span>
         </button>
@@ -101,6 +104,7 @@ const AdminDashboard = {
       case 'analytics': content.innerHTML = this.renderAnalytics(); break;
       case 'inventory': content.innerHTML = this.renderInventory(); break;
       case 'revenue': content.innerHTML = this.renderRevenue(); break;
+      case 'receipts': content.innerHTML = this.renderReceipts(); break;
       case 'harvest': content.innerHTML = this.renderHarvest(); break;
       case 'schedule': content.innerHTML = this.renderSchedule(); break;
       case 'alerts': content.innerHTML = this.renderAlerts(); break;
@@ -2454,7 +2458,14 @@ AdminDashboard.deleteRevenue = function(id) {
   AFV.saveState();
   this.showPage('revenue');
 };
-  
+
+// RECEIPTS TRACKING (from Supervisors)
+AdminDashboard.renderReceipts = function() {
+  const receipts = AFV.receipts || [];
+  const total = receipts.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  return `<div class="page-header"><div><div class="page-title">🧾 Supervisor Receipts</div><div class="page-subtitle">View sales recorded by supervisors</div></div><div class="header-actions"></div></div><div class="page-body"><div class="stats-grid"><div class="stat-card"><div class="stat-value">KES ${total.toLocaleString()}</div><div class="stat-label">Total from Receipts</div></div><div class="stat-card"><div class="stat-value">${receipts.length}</div><div class="stat-label">Total Receipts</div></div></div><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px">All Receipts</div>${receipts.length === 0 ? '<div style="text-align:center;color:var(--text-light);padding:40px">No receipts recorded by supervisors yet</div>' : '<div class="scroll-x"><table><thead><tr><th>Date</th><th>Product</th><th>Customer</th><th>Amount</th><th>Transaction Code</th><th>Recorded At</th></tr></thead><tbody>' + receipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<tr><td>${r.date}</td><td>${escapeHtml(r.product)}</td><td>${escapeHtml(r.customer)||'-'}</td><td style="font-weight:600;color:var(--green-fresh)">KES ${parseFloat(r.amount).toLocaleString()}</td><td>${r.transactionCode||'-'}</td><td>${r.recordedAt||'-'}</td></tr>`).join('') + '</tbody></table></div>'}</div></div>`;
+};
+
 // HARVEST TRACKING
 AdminDashboard.renderHarvest = function() {
   const greenhouses = AFV.greenhouses || [];
