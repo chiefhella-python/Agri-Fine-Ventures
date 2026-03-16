@@ -555,6 +555,9 @@ const SupervisorDashboard = {
             <div class="input-group" style="margin:0">
               <label style="font-size:0.8rem;color:var(--text-light)">Transaction Code</label>
               <input type="text" id="receipt-transaction-code" placeholder="e.g., M-Pesa code" style="background:white;border:1px solid var(--green-pale)">
+            </div>
+            <div class="input-group" style="margin:0">
+              <label style="font-size:0.8rem;color:var(--text-light)">Date</label>
               <input type="date" id="receipt-date" value="${new Date().toISOString().split('T')[0]}" style="background:white;border:1px solid var(--green-pale)">
             </div>
             <div class="input-group" style="margin:0">
@@ -605,12 +608,14 @@ const SupervisorDashboard = {
       return;
     }
     
-    if (!AFV.receipts) AFV.receipts = [];
+    const receiptAmount = parseFloat(amount);
     
+    // Save to receipts array (for supervisor view)
+    if (!AFV.receipts) AFV.receipts = [];
     const receipt = {
       id: Date.now(),
       product,
-      amount: parseFloat(amount),
+      amount: receiptAmount,
       date,
       customer: customer || 'Walk-in Customer',
       transactionCode: transactionCode || '',
@@ -618,10 +623,23 @@ const SupervisorDashboard = {
       role: 'supervisor',
       recordedAt: new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     };
-    
     AFV.receipts.push(receipt);
+    
+    // Also save to revenue array (for admin view)
+    if (!AFV.revenue) AFV.revenue = [];
+    AFV.revenue.push({
+      id: Date.now() + 1,
+      date: date,
+      source: 'Supervisor Sales',
+      product: product,
+      amount: receiptAmount,
+      recordedBy: 'supervisor',
+      customer: customer || 'Walk-in Customer',
+      transactionCode: transactionCode || ''
+    });
+    
     AFV.saveState();
-    AFV.logActivity('🧾', `Sale recorded: ${product} - KES ${parseFloat(amount).toLocaleString()}`);
+    AFV.logActivity('🧾', `Sale recorded: ${product} - KES ${receiptAmount.toLocaleString()}`);
     
     showToast('Receipt saved successfully!', 'success');
     this.showPage('sales');
