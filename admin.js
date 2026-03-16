@@ -423,6 +423,8 @@ const AdminDashboard = {
                   <th>Priority</th>
                   <th>Duration</th>
                   <th>Assigned To</th>
+                  <th>Assigned By</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -450,6 +452,8 @@ const AdminDashboard = {
                       <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
                       <td>${t.duration}</td>
                       <td>${worker ? worker.name : '—'}</td>
+                      <td>${t.assignedTo ? '<span style="font-size:0.7rem;color:var(--blue-water)">Supervisor</span>' : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
+                      <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
                         ${!t.assignedTo ? `
                           <select id="admin-assign-worker-${t.gh.id}-${t.id}" style="padding:4px;border-radius:4px;border:1px solid var(--green-pale);font-size:0.75rem;width:80px">
