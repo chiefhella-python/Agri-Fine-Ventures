@@ -2463,7 +2463,91 @@ AdminDashboard.deleteRevenue = function(id) {
 AdminDashboard.renderReceipts = function() {
   const receipts = AFV.receipts || [];
   const total = receipts.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
-  return `<div class="page-header"><div><div class="page-title">🧾 Supervisor Receipts</div><div class="page-subtitle">View sales recorded by supervisors</div></div><div class="header-actions"></div></div><div class="page-body"><div class="stats-grid"><div class="stat-card"><div class="stat-value">KES ${total.toLocaleString()}</div><div class="stat-label">Total from Receipts</div></div><div class="stat-card"><div class="stat-value">${receipts.length}</div><div class="stat-label">Total Receipts</div></div></div><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px">All Receipts</div>${receipts.length === 0 ? '<div style="text-align:center;color:var(--text-light);padding:40px">No receipts recorded by supervisors yet</div>' : '<div class="scroll-x"><table><thead><tr><th>Date</th><th>Product</th><th>Customer</th><th>Amount</th><th>Transaction Code</th><th>Recorded At</th></tr></thead><tbody>' + receipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<tr><td>${r.date}</td><td>${escapeHtml(r.product)}</td><td>${escapeHtml(r.customer)||'-'}</td><td style="font-weight:600;color:var(--green-fresh)">KES ${parseFloat(r.amount).toLocaleString()}</td><td>${r.transactionCode||'-'}</td><td>${r.recordedAt||'-'}</td></tr>`).join('') + '</tbody></table></div>'}</div></div>`;
+  return `<div class="page-header"><div><div class="page-title">🧾 Supervisor Receipts</div><div class="page-subtitle">View and edit sales recorded by supervisors</div></div><div class="header-actions"></div></div><div class="page-body"><div class="stats-grid"><div class="stat-card"><div class="stat-value">KES ${total.toLocaleString()}</div><div class="stat-label">Total from Receipts</div></div><div class="stat-card"><div class="stat-value">${receipts.length}</div><div class="stat-label">Total Receipts</div></div></div><div class="card"><div style="font-weight:700;font-size:1.1rem;margin-bottom:16px">All Receipts</div>${receipts.length === 0 ? '<div style="text-align:center;color:var(--text-light);padding:40px">No receipts recorded by supervisors yet</div>' : '<div class="scroll-x"><table><thead><tr><th>Date</th><th>Product</th><th>Customer</th><th>Amount</th><th>Transaction Code</th><th>Image</th><th>Recorded By</th><th>Actions</th></tr></thead><tbody>' + receipts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `<tr><td>${r.date}</td><td>${escapeHtml(r.product)}</td><td>${escapeHtml(r.customer)||'-'}</td><td style="font-weight:600;color:var(--green-fresh)">KES ${parseFloat(r.amount).toLocaleString()}</td><td>${r.transactionCode||'-'}</td><td>${r.imageUrl ? '<button onclick="AdminDashboard.viewReceiptImage(' + r.id + ')" style="background:var(--blue-water);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">📷 View</button>' : '<button onclick="AdminDashboard.uploadReceiptImage(' + r.id + ')" style="background:var(--green-fresh);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">+ Upload</button>'}</td><td>${r.recordedBy === 'supervisor' ? 'Supervisor' : 'Admin'}</td><td><button onclick="AdminDashboard.editReceipt(${r.id})" style="background:var(--blue-water);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">✏️ Edit</button> <button onclick="AdminDashboard.deleteReceipt(${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`).join('') + '</tbody></table></div>'}</div></div><div id="receipt-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center"><div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="receipt-modal-title">Edit Receipt</h2><button onclick="AdminDashboard.closeReceiptModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button></div><form id="receipt-form" onsubmit="AdminDashboard.saveReceipt(event)"><input type="hidden" id="receipt-id"><div style="margin-bottom:16px"><label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Product/Item Sold</label><input type="text" id="receipt-product" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem"></div><div style="margin-bottom:16px"><label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Amount (KES)</label><input type="number" id="receipt-amount" required min="0" step="0.01" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem"></div><div style="margin-bottom:16px"><label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Date</label><input type="date" id="receipt-date" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem"></div><div style="margin-bottom:16px"><label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Customer</label><input type="text" id="receipt-customer" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem"></div><div style="margin-bottom:16px"><label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Transaction Code</label><input type="text" id="receipt-transaction-code" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem"></div><div style="margin-bottom:16px"><label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Receipt Image</label><input type="file" id="receipt-image-input" accept="image/*" onchange="AdminDashboard.handleReceiptImageUpload(this)" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem;background:white"><input type="hidden" id="receipt-image-url"><div id="receipt-image-preview" style="margin-top:10px"></div></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button type="button" onclick="AdminDashboard.closeReceiptModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button><button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Changes</button></div></form></div></div><div id="receipt-view-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target === this) this.style.display='none'"><div style="max-width:90%;max-height:90vh"><img id="receipt-view-image" style="max-width:100%;max-height:90vh;border-radius:8px"></div></div>`;
+};
+
+AdminDashboard.editReceipt = function(id) {
+  const receipt = AFV.receipts.find(r => r.id === id);
+  if (!receipt) return;
+  
+  const modal = document.getElementById('receipt-modal');
+  document.getElementById('receipt-modal-title').textContent = 'Edit Receipt';
+  document.getElementById('receipt-id').value = receipt.id;
+  document.getElementById('receipt-product').value = receipt.product;
+  document.getElementById('receipt-amount').value = receipt.amount;
+  document.getElementById('receipt-date').value = receipt.date;
+  document.getElementById('receipt-customer').value = receipt.customer || '';
+  document.getElementById('receipt-transaction-code').value = receipt.transactionCode || '';
+  document.getElementById('receipt-image-url').value = receipt.imageUrl || '';
+  
+  if (receipt.imageUrl) {
+    document.getElementById('receipt-image-preview').innerHTML = `<img src="${receipt.imageUrl}" style="max-width:200px;border-radius:8px"> <button type="button" onclick="AdminDashboard.clearReceiptImage()" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-left:8px">Remove</button>`;
+  } else {
+    document.getElementById('receipt-image-preview').innerHTML = '';
+  }
+  
+  modal.style.display = 'flex';
+};
+
+AdminDashboard.closeReceiptModal = function() {
+  document.getElementById('receipt-modal').style.display = 'none';
+};
+
+AdminDashboard.handleReceiptImageUpload = function(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('receipt-image-url').value = e.target.result;
+      document.getElementById('receipt-image-preview').innerHTML = `<img src="${e.target.result}" style="max-width:200px;border-radius:8px"> <button type="button" onclick="AdminDashboard.clearReceiptImage()" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-left:8px">Remove</button>`;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+
+AdminDashboard.clearReceiptImage = function() {
+  document.getElementById('receipt-image-url').value = '';
+  document.getElementById('receipt-image-input').value = '';
+  document.getElementById('receipt-image-preview').innerHTML = '';
+};
+
+AdminDashboard.saveReceipt = function(e) {
+  e.preventDefault();
+  const id = parseInt(document.getElementById('receipt-id').value);
+  const receipt = AFV.receipts.find(r => r.id === id);
+  if (!receipt) return;
+  
+  receipt.product = document.getElementById('receipt-product').value.trim();
+  receipt.amount = parseFloat(document.getElementById('receipt-amount').value);
+  receipt.date = document.getElementById('receipt-date').value;
+  receipt.customer = document.getElementById('receipt-customer').value.trim();
+  receipt.transactionCode = document.getElementById('receipt-transaction-code').value.trim();
+  receipt.imageUrl = document.getElementById('receipt-image-url').value;
+  
+  AFV.saveState();
+  AFV.logActivity('✏️', `Receipt updated: ${receipt.product} - KES ${receipt.amount.toLocaleString()}`);
+  showToast('Receipt updated successfully!', 'success');
+  this.closeReceiptModal();
+  this.showPage('receipts');
+};
+
+AdminDashboard.deleteReceipt = function(id) {
+  if (!confirm('Are you sure you want to delete this receipt?')) return;
+  AFV.receipts = AFV.receipts.filter(r => r.id !== id);
+  AFV.saveState();
+  AFV.logActivity('🗑️', 'Receipt deleted');
+  showToast('Receipt deleted', 'success');
+  this.showPage('receipts');
+};
+
+AdminDashboard.uploadReceiptImage = function(id) {
+  this.editReceipt(id);
+};
+
+AdminDashboard.viewReceiptImage = function(id) {
+  const receipt = AFV.receipts.find(r => r.id === id);
+  if (!receipt || !receipt.imageUrl) return;
+  document.getElementById('receipt-view-image').src = receipt.imageUrl;
+  document.getElementById('receipt-view-modal').style.display = 'flex';
 };
 
 // HARVEST TRACKING

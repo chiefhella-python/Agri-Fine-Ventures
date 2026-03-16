@@ -565,6 +565,10 @@ const SupervisorDashboard = {
               <input type="text" id="receipt-customer" placeholder="Customer name" style="background:white;border:1px solid var(--green-pale)">
             </div>
           </div>
+          <div style="margin-top:12px">
+            <label style="font-size:0.8rem;color:var(--text-light)">Receipt Image (Optional)</label>
+            <input type="file" id="receipt-image" accept="image/*" style="width:100%;padding:10px;background:white;border:1px solid var(--green-pale);border-radius:6px">
+          </div>
           <button onclick="SupervisorDashboard.addReceipt()" class="btn-primary" style="margin-top:16px;width:100%;background:linear-gradient(135deg,var(--green-forest),var(--green-fresh))">
             💾 Save Receipt
           </button>
@@ -577,7 +581,7 @@ const SupervisorDashboard = {
             '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No receipts recorded yet. Use the form above to record your first sale!</div></div>' :
             supervisorReceipts.map(r => `
               <div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--green-ultra-pale);background:${r.isAdmin ? 'linear-gradient(90deg,rgba(155,89,182,0.05),transparent)' : 'white'}">
-                <div style="width:48px;height:48px;background:linear-gradient(135deg,${r.isAdmin ? '#9b59b6' : 'var(--green-fresh)'},${r.isAdmin ? '#8e44ad' : 'var(--green-forest)'});border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div>
+                ${r.imageUrl ? `<img src="${r.imageUrl}" style="width:48px;height:48px;border-radius:8px;object-fit:cover" onclick="SupervisorDashboard.viewReceiptImage('${r.id}')">` : `<div style="width:48px;height:48px;background:linear-gradient(135deg,${r.isAdmin ? '#9b59b6' : 'var(--green-fresh)'},${r.isAdmin ? '#8e44ad' : 'var(--green-forest)'});border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:white">🧾</div>`}
                 <div style="flex:1">
                   <div style="font-weight:600;font-size:0.95rem">${escapeHtml(r.product)}</div>
                   <div style="font-size:0.75rem;color:var(--text-light)">
@@ -593,6 +597,9 @@ const SupervisorDashboard = {
           }
         </div>
       </div>
+      <div id="supervisor-receipt-view-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target === this) this.style.display='none'">
+        <div style="max-width:90%;max-height:90vh"><img id="supervisor-receipt-view-image" style="max-width:100%;max-height:90vh;border-radius:8px"></div>
+      </div>
     `;
   },
 
@@ -602,6 +609,7 @@ const SupervisorDashboard = {
     const date = document.getElementById('receipt-date').value;
     const customer = document.getElementById('receipt-customer').value.trim();
     const transactionCode = document.getElementById('receipt-transaction-code').value.trim();
+    const imageInput = document.getElementById('receipt-image');
     
     if (!product || !amount || !date) {
       showToast('Please fill in product, amount, and date', 'error');
@@ -610,39 +618,63 @@ const SupervisorDashboard = {
     
     const receiptAmount = parseFloat(amount);
     
-    // Save to receipts array (for supervisor view)
-    if (!AFV.receipts) AFV.receipts = [];
-    const receipt = {
-      id: Date.now(),
-      product,
-      amount: receiptAmount,
-      date,
-      customer: customer || 'Walk-in Customer',
-      transactionCode: transactionCode || '',
-      recordedBy: 'supervisor',
-      role: 'supervisor',
-      recordedAt: new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-    };
-    AFV.receipts.push(receipt);
+    // Handle image upload
+    let imageUrl = '';
+    if (imageInput && imageInput.files && imageInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imageUrl = e.target.result;
+        saveReceiptWithImage();
+      };
+      reader.readAsDataURL(imageInput.files[0]);
+    } else {
+      saveReceiptWithImage();
+    }
     
-    // Also save to revenue array (for admin view)
-    if (!AFV.revenue) AFV.revenue = [];
-    AFV.revenue.push({
-      id: Date.now() + 1,
-      date: date,
-      source: 'Supervisor Sales',
-      product: product,
-      amount: receiptAmount,
-      recordedBy: 'supervisor',
-      customer: customer || 'Walk-in Customer',
-      transactionCode: transactionCode || ''
-    });
-    
-    AFV.saveState();
-    AFV.logActivity('🧾', `Sale recorded: ${product} - KES ${receiptAmount.toLocaleString()}`);
-    
-    showToast('Receipt saved successfully!', 'success');
-    this.showPage('sales');
+    function saveReceiptWithImage() {
+      // Save to receipts array (for supervisor view)
+      if (!AFV.receipts) AFV.receipts = [];
+      const receipt = {
+        id: Date.now(),
+        product,
+        amount: receiptAmount,
+        date,
+        customer: customer || 'Walk-in Customer',
+        transactionCode: transactionCode || '',
+        recordedBy: 'supervisor',
+        role: 'supervisor',
+        recordedAt: new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        imageUrl: imageUrl
+      };
+      AFV.receipts.push(receipt);
+      
+      // Also save to revenue array (for admin view)
+      if (!AFV.revenue) AFV.revenue = [];
+      AFV.revenue.push({
+        id: Date.now() + 1,
+        date: date,
+        source: 'Supervisor Sales',
+        product: product,
+        amount: receiptAmount,
+        recordedBy: 'supervisor',
+        customer: customer || 'Walk-in Customer',
+        transactionCode: transactionCode || '',
+        imageUrl: imageUrl
+      });
+      
+      AFV.saveState();
+      AFV.logActivity('🧾', `Sale recorded: ${product} - KES ${receiptAmount.toLocaleString()}`);
+      
+      showToast('Receipt saved successfully!', 'success');
+      SupervisorDashboard.showPage('sales');
+    }
+  },
+
+  viewReceiptImage(id) {
+    const receipt = AFV.receipts.find(r => r.id == id);
+    if (!receipt || !receipt.imageUrl) return;
+    document.getElementById('supervisor-receipt-view-image').src = receipt.imageUrl;
+    document.getElementById('supervisor-receipt-view-modal').style.display = 'flex';
   },
 
   renderGuide() {
