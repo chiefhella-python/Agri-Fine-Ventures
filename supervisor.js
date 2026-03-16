@@ -1656,65 +1656,93 @@ const SupervisorDashboard = {
   },
 
   renderTasks() {
-    const tasks = AFV.tasks || [];
-    const userId = AFV.currentUser?.id;
-    const myTasks = tasks.filter(t => t.assignedTo === userId && t.status !== 'completed');
-    
-    // Get pending and completed counts
-    const pendingTasks = myTasks.filter(t => t.status === 'pending');
-    const inProgressTasks = myTasks.filter(t => t.status === 'in-progress');
+    // Get all tasks from greenhouses
+    const allTasks = [];
+    AFV.greenhouses.forEach(gh => {
+      gh.tasks.forEach(t => {
+        allTasks.push({...t, gh});
+      });
+    });
+    const pending = allTasks.filter(t => !t.completed);
+    const done = allTasks.filter(t => t.completed);
     
     return `
-      <div class="page-header">
+      <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
         <div>
-          <div class="page-title">📋 My Tasks</div>
-          <div class="page-subtitle">View and manage your assigned tasks</div>
+          <div class="page-title" style="color:white">📋 Tasks</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">${pending.length} pending · ${done.length} completed</div>
         </div>
       </div>
       <div class="page-body">
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="stat-card"><div class="stat-icon">📥</div><div><div class="stat-value">${pendingTasks.length}</div><div class="stat-label">Pending</div></div></div>
-          <div class="stat-card"><div class="stat-icon">🔄</div><div><div class="stat-value">${inProgressTasks.length}</div><div class="stat-label">In Progress</div></div></div>
-          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${myTasks.filter(t => t.status === 'completed').length}</div><div class="stat-label">Completed</div></div></div>
+          <div class="stat-card"><div class="stat-icon">📥</div><div><div class="stat-value">${pending.length}</div><div class="stat-label">Pending</div></div></div>
+          <div class="stat-card"><div class="stat-icon">🔄</div><div><div class="stat-value">${done.length}</div><div class="stat-label">Completed</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${allTasks.length}</div><div class="stat-label">Total</div></div></div>
         </div>
         
-        ${myTasks.length === 0 ? `
-          <div class="card">
-            <div style="text-align:center;padding:40px;color:var(--text-light)">
-              <div style="font-size:3rem;margin-bottom:16px">📋</div>
-              <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px">No Tasks Assigned</div>
-              <div style="font-size:0.9rem">You don't have any tasks assigned yet.</div>
-            </div>
-          </div>
-        ` : `
-          ${['pending', 'in-progress'].map(status => {
-            const statusTasks = myTasks.filter(t => t.status === status);
-            if (statusTasks.length === 0) return '';
-            const statusLabel = status === 'pending' ? '📥 Pending Tasks' : '🔄 In Progress';
-            return `
-              <div class="card" style="margin-top:20px">
-                <div class="section-title">${statusLabel}</div>
-                ${statusTasks.map(task => `
-                  <div style="padding:16px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-                      <div style="font-weight:600">${task.title}</div>
-                      <span style="padding:4px 10px;background:${status === 'pending' ? 'rgba(241,196,15,0.15)' : 'rgba(52,152,219,0.15)'};color:${status === 'pending' ? '#f39c12' : '#3498db'};border-radius:12px;font-size:0.75rem;font-weight:600">${status === 'pending' ? 'Pending' : 'In Progress'}</span>
-                    </div>
-                    <div style="font-size:0.85rem;color:var(--text-mid);margin-bottom:8px">${task.description}</div>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <div style="font-size:0.75rem;color:var(--text-light)">Due: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-KE') : 'No due date'}</div>
-                      ${status === 'pending' ? `
-                        <button onclick="SupervisorDashboard.startTask('${task.id}')" style="padding:6px 12px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">Start Task</button>
-                      ` : `
-                        <button onclick="SupervisorDashboard.completeTask('${task.id}')" style="padding:6px 12px;background:var(--green-deep);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">Mark Complete</button>
-                      `}
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            `;
-          }).join('')}
-        `}
+        <div class="card">
+          <div class="section-title">⏳ Pending Tasks (${pending.length})</div>
+          ${pending.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No pending tasks</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Greenhouse</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Duration</th>
+                  <th>Assigned To</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pending.map(t => {
+                  const worker = t.assignedTo ? (AFV.workers.find(w => w.id === t.assignedTo) || AFV.users?.[t.assignedTo]) : null;
+                  return `
+                    <tr>
+                      <td><div style="font-weight:600">${t.name}</div><div style="font-size:0.7rem;color:var(--text-light)">${t.desc?.substring(0,40)}...</div></td>
+                      <td>${t.gh.cropEmoji} ${t.gh.name}</td>
+                      <td><span class="badge badge-green">${t.category || 'general'}</span></td>
+                      <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
+                      <td>${t.duration}</td>
+                      <td>${worker ? worker.name : '—'}</td>
+                      <td>${t.verified ? '<span class="badge badge-green">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue">Assigned</span>' : '<span class="badge badge-gray">Pending</span>'}</td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+        
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">✅ Completed Tasks (${done.length})</div>
+          ${done.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No completed tasks</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Greenhouse</th>
+                  <th>Completed</th>
+                  <th>By</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${done.map(t => {
+                  const worker = t.assignedTo ? (AFV.workers.find(w => w.id === t.assignedTo) || AFV.users?.[t.assignedTo]) : null;
+                  return `
+                    <tr>
+                      <td style="text-decoration:line-through;opacity:0.7">${t.name}</td>
+                      <td>${t.gh.cropEmoji} ${t.gh.name}</td>
+                      <td>${t.completedAt ? t.completedAt.toLocaleDateString('en-KE') : '—'}</td>
+                      <td>${worker ? worker.name : '—'}</td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
       </div>
     `;
   },
