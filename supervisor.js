@@ -2020,7 +2020,7 @@ const SupervisorDashboard = {
           ${pending.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No pending harvest orders</div>' : `
           <div class="scroll-x">
             <table>
-              <thead><tr><th>Greenhouse</th><th>Crop</th><th>Variety</th><th>Expected Harvest</th><th>Plants</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Greenhouse</th><th>Crop</th><th>Variety</th><th>Buyer</th><th>Phone</th><th>Expected Harvest</th><th>Plants</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 ${pending.map(o => {
                   const gh = AFV.greenhouses.find(g => g.id == o.greenhouseId);
@@ -2029,6 +2029,8 @@ const SupervisorDashboard = {
                       <td>${gh ? gh.cropEmoji + ' ' + gh.name : '—'}</td>
                       <td>${o.crop || '—'}</td>
                       <td>${o.variety || '—'}</td>
+                      <td>${o.buyer || '—'}</td>
+                      <td>${o.phone || '—'}</td>
                       <td>${o.expectedHarvest ? new Date(o.expectedHarvest).toLocaleDateString('en-KE') : '—'}</td>
                       <td>${o.plants || '—'}</td>
                       <td><span class="badge badge-orange">Pending</span></td>
@@ -2048,7 +2050,7 @@ const SupervisorDashboard = {
           ${completed.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No completed harvest orders</div>' : `
           <div class="scroll-x">
             <table>
-              <thead><tr><th>Greenhouse</th><th>Crop</th><th>Variety</th><th>Expected Harvest</th><th>Completed</th><th></th></tr></thead>
+              <thead><tr><th>Greenhouse</th><th>Crop</th><th>Variety</th><th>Buyer</th><th>Phone</th><th>Expected Harvest</th><th>Completed</th><th></th></tr></thead>
               <tbody>
                 ${completed.map(o => {
                   const gh = AFV.greenhouses.find(g => g.id == o.greenhouseId);
@@ -2057,6 +2059,8 @@ const SupervisorDashboard = {
                       <td>${gh ? gh.cropEmoji + ' ' + gh.name : '—'}</td>
                       <td>${o.crop || '—'}</td>
                       <td>${o.variety || '—'}</td>
+                      <td>${o.buyer || '—'}</td>
+                      <td>${o.phone || '—'}</td>
                       <td>${o.expectedHarvest ? new Date(o.expectedHarvest).toLocaleDateString('en-KE') : '—'}</td>
                       <td>${o.completedAt ? new Date(o.completedAt).toLocaleDateString('en-KE') : '—'}</td>
                       <td><span class="badge badge-green">Completed</span></td>
@@ -2099,6 +2103,14 @@ const SupervisorDashboard = {
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Expected Harvest Date</label>
               <input type="date" id="order-expected" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem">
             </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Buyer Name</label>
+              <input type="text" id="order-buyer" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., John Doe">
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Buyer Phone</label>
+              <input type="tel" id="order-phone" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., 0712345678">
+            </div>
             <div style="display:flex;gap:10px">
               <button type="button" onclick="SupervisorDashboard.closeModal('supervisor-order-modal')" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
               <button type="submit" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">Add Order</button>
@@ -2124,6 +2136,8 @@ const SupervisorDashboard = {
     const variety = document.getElementById('order-variety').value.trim();
     const plants = document.getElementById('order-plants').value;
     const expectedHarvest = document.getElementById('order-expected').value;
+    const buyer = document.getElementById('order-buyer').value.trim();
+    const phone = document.getElementById('order-phone').value.trim();
     
     if (!AFV.harvestOrders) AFV.harvestOrders = [];
     
@@ -2134,6 +2148,8 @@ const SupervisorDashboard = {
       variety,
       plants: plants ? parseInt(plants) : 0,
       expectedHarvest,
+      buyer,
+      phone,
       status: 'pending',
       createdBy: AFV.currentUser?.name || 'Supervisor',
       createdAt: new Date()
