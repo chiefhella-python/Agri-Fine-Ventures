@@ -711,7 +711,9 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         feedingProgram: this.feedingProgram,
         agronomistReports: this.agronomistReports,
         activityLog: this.activityLog,
-        receipts: this.receipts
+        receipts: this.receipts,
+        revenue: this.revenue,
+        harvest: this.harvest
       };
       // Save AI model preference only (not API key) for security
       if (this.aiSettings?.model) {
@@ -733,10 +735,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         if (parsed.weeklyReports) this.weeklyReports = parsed.weeklyReports;
         if (parsed.workers) this.workers = parsed.workers;
         if (parsed.inventory) this.inventory = parsed.inventory;
-        // Only load greenhouses if valid array exists (not null, undefined, or empty)
-        if (parsed.greenhouses && Array.isArray(parsed.greenhouses) && parsed.greenhouses.length > 0) {
-          this.greenhouses = parsed.greenhouses;
-        }
+        if (parsed.greenhouses) this.greenhouses = parsed.greenhouses;
         if (parsed.notifications) this.notifications = parsed.notifications;
         if (parsed.feedingProgram) this.feedingProgram = parsed.feedingProgram;
         if (parsed.aiSettings) {
@@ -744,6 +743,8 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
           if (parsed.aiSettings.model) this.aiSettings.model = parsed.aiSettings.model;
         }
         if (parsed.receipts) this.receipts = parsed.receipts;
+        if (parsed.revenue) this.revenue = parsed.revenue;
+        if (parsed.harvest) this.harvest = parsed.harvest;
         
         // Convert date strings back to Date objects
         this.passwordResetRequests?.forEach(r => {
