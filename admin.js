@@ -42,6 +42,10 @@ const AdminDashboard = {
         <button class="nav-item" data-page="workers" onclick="AdminDashboard.showPage('workers')">
           <span class="nav-icon">👷</span><span>Workers</span>
         </button>
+        <div class="nav-section-label">Resources</div>
+        <button class="nav-item" data-page="tasks" onclick="AdminDashboard.showPage('tasks')">
+          <span class="nav-icon">📋</span><span>Tasks</span>
+        </button>
         <div class="nav-section-label">Intelligence</div>
         <button class="nav-item" data-page="agronomists" onclick="AdminDashboard.showPage('agronomists')">
           <span class="nav-icon">🔬</span><span>Agronomists</span>
