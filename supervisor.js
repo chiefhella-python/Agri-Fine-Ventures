@@ -1936,7 +1936,7 @@ const SupervisorDashboard = {
               <input type="text" id="supervisor-category-name" value="${existingCategory || ''}" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., pruning, training">
             </div>
             <div style="display:flex;gap:10px">
-              <button type="button" onclick="this.closest('[style*=\"position:fixed\"]').remove()" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
+              <button type="button" onclick="SupervisorDashboard.closeModal('supervisor-category-modal')" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
               <button type="submit" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">${isEdit ? 'Update' : 'Add'}</button>
             </div>
           </form>
