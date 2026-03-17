@@ -728,7 +728,7 @@ const AdminDashboard = {
           ${pending.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No pending harvest orders</div>' : `
           <div class="scroll-x">
             <table>
-              <thead><tr><th>Greenhouse</th><th>Crop</th><th>Variety</th><th>Buyer</th><th>Phone</th><th>Expected Harvest</th><th>Plants</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Greenhouse</th><th>Crop</th><th>Variety</th><th>Buyer</th><th>Phone</th><th>Expected Harvest</th><th>Qty (kg)</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 ${pending.map(o => {
                   const gh = AFV.greenhouses.find(g => g.id == o.greenhouseId);
@@ -740,7 +740,7 @@ const AdminDashboard = {
                       <td>${o.buyer || '—'}</td>
                       <td>${o.phone || '—'}</td>
                       <td>${o.expectedHarvest ? new Date(o.expectedHarvest).toLocaleDateString('en-KE') : '—'}</td>
-                      <td>${o.plants || '—'}</td>
+                      <td>${o.qty ? o.qty + ' kg' : '—'}</td>
                       <td><span class="badge badge-orange">Pending</span></td>
                       <td>
                         <button onclick="AdminDashboard.completeOrder('${o.id}')" style="padding:4px 8px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✓ Complete</button>
@@ -805,8 +805,8 @@ const AdminDashboard = {
               <input type="text" id="order-variety" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., Cherry Roma">
             </div>
             <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Number of Plants</label>
-              <input type="number" id="order-plants" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Quantity (kg)</label>
+              <input type="number" id="order-qty" step="0.01" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Expected Harvest Date</label>
@@ -843,7 +843,7 @@ const AdminDashboard = {
     const greenhouseId = parseInt(document.getElementById('order-gh').value);
     const crop = document.getElementById('order-crop').value.trim();
     const variety = document.getElementById('order-variety').value.trim();
-    const plants = document.getElementById('order-plants').value;
+    const qty = document.getElementById('order-qty').value;
     const expectedHarvest = document.getElementById('order-expected').value;
     const buyer = document.getElementById('order-buyer').value.trim();
     const phone = document.getElementById('order-phone').value.trim();
@@ -855,7 +855,7 @@ const AdminDashboard = {
       greenhouseId,
       crop,
       variety,
-      plants: plants ? parseInt(plants) : 0,
+      qty: qty ? parseFloat(qty) : 0,
       expectedHarvest,
       buyer,
       phone,

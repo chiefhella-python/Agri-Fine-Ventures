@@ -1460,7 +1460,7 @@ const SupervisorDashboard = {
                       <td><div style="font-weight:600">${task.name}</div><div style="font-size:0.72rem;color:var(--text-light)">${task.desc?.substring(0,40)}...</div></td>
                       <td>${gh.cropEmoji} ${gh.name}</td>
                       <td><span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}">${task.priority}</span></td>
-                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1.2rem">${assignedTo.avatar}</div><div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
+                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-weight:600;font-size:0.8rem">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
                       <td>${task.verified ? '<span class="badge badge-green">✓ Verified</span>' : task.assignedTo ? '<span class="badge badge-blue">Assigned</span>' : '<span class="badge badge-gray">Unassigned</span>'}</td>
                       <td>
                         <input type="text" id="comment-${gh.id}-${task.id}" placeholder="Add comment..." value="${task.supervisorComment || ''}" style="padding:4px 8px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.75rem;width:120px">
@@ -1558,7 +1558,7 @@ const SupervisorDashboard = {
                     <tr>
                       <td style="text-decoration:line-through;opacity:0.7"><div style="font-weight:600">${task.name}</div></td>
                       <td>${gh.cropEmoji} ${gh.name}</td>
-                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-size:1rem">${assignedTo.avatar}</div><div style="font-size:0.7rem;color:var(--text-light)">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
+                      <td>${assignedTo ? `<div style="text-align:center"><div style="font-weight:600;font-size:0.8rem">${assignedTo.name}</div></div>` : '<span style="color:var(--text-light)">—</span>'}</td>
                       <td>${task.verifiedBy || '—'}</td>
                       <td>${completedDate}</td>
                       <td>${task.supervisorComment || task.verificationComment || '—'}</td>
@@ -2032,7 +2032,7 @@ const SupervisorDashboard = {
                       <td>${o.buyer || '—'}</td>
                       <td>${o.phone || '—'}</td>
                       <td>${o.expectedHarvest ? new Date(o.expectedHarvest).toLocaleDateString('en-KE') : '—'}</td>
-                      <td>${o.plants || '—'}</td>
+                      <td>${o.qty ? o.qty + ' kg' : '—'}</td>
                       <td><span class="badge badge-orange">Pending</span></td>
                       <td>
                         <button onclick="SupervisorDashboard.completeOrder('${o.id}')" style="padding:4px 8px;background:var(--green-fresh);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">✓ Complete</button>
@@ -2096,8 +2096,8 @@ const SupervisorDashboard = {
               <input type="text" id="order-variety" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., Cherry Roma">
             </div>
             <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Number of Plants</label>
-              <input type="number" id="order-plants" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Quantity (kg)</label>
+              <input type="number" id="order-qty" step="0.01" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Expected Harvest Date</label>
@@ -2134,7 +2134,7 @@ const SupervisorDashboard = {
     const greenhouseId = parseInt(document.getElementById('order-gh').value);
     const crop = document.getElementById('order-crop').value.trim();
     const variety = document.getElementById('order-variety').value.trim();
-    const plants = document.getElementById('order-plants').value;
+    const qty = document.getElementById('order-qty').value;
     const expectedHarvest = document.getElementById('order-expected').value;
     const buyer = document.getElementById('order-buyer').value.trim();
     const phone = document.getElementById('order-phone').value.trim();
@@ -2146,7 +2146,7 @@ const SupervisorDashboard = {
       greenhouseId,
       crop,
       variety,
-      plants: plants ? parseInt(plants) : 0,
+      qty: qty ? parseFloat(qty) : 0,
       expectedHarvest,
       buyer,
       phone,
