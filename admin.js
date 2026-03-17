@@ -446,7 +446,7 @@ const AdminDashboard = {
                   let worker = null;
                   if (t.assignedTo) {
                     // Check in AFV.workers (supervisor-added workers)
-                    worker = AFV.workers.find(w => w.id === t.assignedTo);
+                    worker = (AFV.workers || []).find(w => w.id == t.assignedTo);
                     // Also check in AFV.users
                     if (!worker && AFV.users[t.assignedTo]) {
                       worker = AFV.users[t.assignedTo];
@@ -468,9 +468,10 @@ const AdminDashboard = {
                       <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
                         ${!t.assignedTo ? `
-                          <select id="admin-assign-worker-${t.gh.id}-${t.id}" style="padding:4px;border-radius:4px;border:1px solid var(--green-pale);font-size:0.75rem;width:80px">
+                          <select id="admin-assign-worker-${t.gh.id}-${t.id}" style="padding:4px;border-radius:4px;border:1px solid var(--green-pale);font-size:0.75rem;width:100px">
                             <option value="">Select</option>
-                            ${Object.values(AFV.users || {}).filter(u => u.role === 'worker').map(w => `<option value="${w.id}">${w.name.split(' ')[0]}</option>`).join('')}
+                            ${(AFV.workers || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                            ${Object.values(AFV.users || {}).filter(u => u.role === 'worker').map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
                           </select>
                           <button onclick="AdminDashboard.assignTaskToWorker('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
                         ` : `
@@ -495,12 +496,12 @@ const AdminDashboard = {
                   // Check task.assignedTo first, then fallback to completedBy
                   let worker = null;
                   if (t.assignedTo) {
-                    worker = AFV.workers.find(w => w.id === t.assignedTo);
+                    worker = (AFV.workers || []).find(w => w.id == t.assignedTo);
                     if (!worker && AFV.users[t.assignedTo]) {
                       worker = AFV.users[t.assignedTo];
                     }
                   } else if (t.completedBy) {
-                    worker = AFV.users[t.completedBy];
+                    worker = (AFV.workers || []).find(w => w.id == t.completedBy) || AFV.users[t.completedBy];
                   }
                   return `
                     <tr>
@@ -2426,7 +2427,10 @@ const AdminDashboard = {
       task.assignedTo = workerId;
       task.assignedAt = new Date();
       task.verified = false;
-      AFV.logActivity('📋', `Task "${task.name}" assigned to worker by Admin`);
+      // Find worker name for logging
+      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.id == workerId);
+      const workerName = worker?.name || 'Worker';
+      AFV.logActivity('📋', `Task "${task.name}" assigned to ${workerName} by Admin`);
       showToast('Task assigned successfully!', 'success');
       this.showPage(this.currentPage);
     }
