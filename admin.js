@@ -269,7 +269,6 @@ const AdminDashboard = {
                         </div>
                       </div>
                       <span class="task-priority">🔴 HIGH</span>
-                      <button onclick="AdminDashboard.openTaskModal(String(${gh.id}), String(${task.id}))" style="background:var(--blue-water);color:white;border:none;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-left:8px">✏️</button>
                     </div>`).join('');
               })()}
             </div>
@@ -391,7 +390,6 @@ const AdminDashboard = {
                   ${!task.completed ? `<div style="font-size:0.78rem;color:var(--text-light);margin-top:4px">${task.desc}</div>` : ''}
                 </div>
                 <span class="task-priority">${task.priority.toUpperCase()}</span>
-                <button onclick="AdminDashboard.openTaskModal(String(${gh.id}), String(${task.id}))" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:8px">✏️</button>
               </div>`).join('')}
           </div>
         </div>
@@ -465,16 +463,7 @@ const AdminDashboard = {
                       <td>${t.assignedTo ? '<span style="font-size:0.7rem;color:var(--blue-water)">Supervisor</span>' : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
                       <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
-                        ${!t.assignedTo ? `
-                          <select id="admin-assign-worker-${t.gh.id}-${t.id}" style="padding:4px;border-radius:4px;border:1px solid var(--green-pale);font-size:0.75rem;width:100px">
-                            <option value="">Select</option>
-                            ${(AFV.workers || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
-                            ${Object.values(AFV.users || {}).filter(u => u.role === 'worker').map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
-                          </select>
-                          <button onclick="AdminDashboard.assignTaskToWorker('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
-                        ` : `
-                          <button onclick="AdminDashboard.openTaskModal(String(${t.gh.id}), String(${t.id}))" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button>
-                        `}
+                        <button onclick="AdminDashboard.openTaskModal(String(${t.gh.id}), String(${t.id}))" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button>
                       </td>
                     </tr>`;
                 }).join('')}
