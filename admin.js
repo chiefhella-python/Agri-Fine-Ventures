@@ -103,7 +103,7 @@ const AdminDashboard = {
     switch(page) {
       case 'overview': content.innerHTML = this.renderOverview(); break;
       case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
-      case 'tasks': content.innerHTML = this.renderAllTasks(); break;
+      case 'tasks': content.innerHTML = this.renderAllTasks(); this.attachPageEvents('tasks'); break;
       case 'categories': content.innerHTML = this.renderCategories(); break;
       case 'orders': content.innerHTML = this.renderOrders(); break;
       case 'supervisors': content.innerHTML = this.renderSupervisors(); break;
@@ -2071,13 +2071,16 @@ const AdminDashboard = {
     }
     
     // Add event listeners for edit task buttons
-    document.querySelectorAll('.edit-task-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const ghId = this.getAttribute('data-gh-id');
-        const taskId = this.getAttribute('data-task-id');
-        AdminDashboard.openTaskModal(ghId, taskId);
-      });
-    });
+    var btns = document.querySelectorAll('.edit-task-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].onclick = (function(btn) {
+        return function() {
+          var ghId = btn.getAttribute('data-gh-id');
+          var taskId = btn.getAttribute('data-task-id');
+          AdminDashboard.openTaskModal(ghId, taskId);
+        };
+      })(btns[i]);
+    }
   },
 
   filterTasks(filter) {
