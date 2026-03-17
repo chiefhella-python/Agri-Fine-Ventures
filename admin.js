@@ -463,7 +463,7 @@ const AdminDashboard = {
                       <td>${t.assignedTo ? '<span style="font-size:0.7rem;color:var(--blue-water)">Supervisor</span>' : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
                       <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
-                        <button onclick="alert('Edit clicked!')" class="edit-task-btn" data-gh-id="${t.gh.id}" data-task-id="${t.id}" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button>
+                        <button onclick="alert('Edit clicked!')" class="edit-task-btn" data-gh-id="${t.gh.id}" data-task-id="${t.id}" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;position:relative;z-index:999">✏️</button>
                       </td>
                     </tr>`;
                 }).join('')}
@@ -2065,6 +2065,7 @@ const AdminDashboard = {
   },
 
   attachPageEvents(page) {
+    console.log('attachPageEvents called for page:', page);
     if (page === 'settings') {
       const keyInput = document.getElementById('settings-apikey');
       if (keyInput && AFV.aiSettings.apiKey) keyInput.value = AFV.aiSettings.apiKey;
@@ -2075,6 +2076,7 @@ const AdminDashboard = {
     
     // Add event listeners for edit task buttons
     var btns = document.querySelectorAll('.edit-task-btn');
+    console.log('Found edit buttons:', btns.length);
     for (var i = 0; i < btns.length; i++) {
       (function(btn) {
         btn.onclick = function() {
