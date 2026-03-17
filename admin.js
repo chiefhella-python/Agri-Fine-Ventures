@@ -2360,6 +2360,7 @@ const AdminDashboard = {
   // TASK EDIT MODAL
   // ============================================
   openTaskModal(ghId = null, taskId = null) {
+    console.log('openTaskModal called with:', ghId, taskId);
     const modal = document.getElementById('task-modal');
     if (!modal) {
       this.insertTaskModal();
