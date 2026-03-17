@@ -43,9 +43,6 @@ const AdminDashboard = {
           <span class="nav-icon">👷</span><span>Workers</span>
         </button>
         <div class="nav-section-label">Resources</div>
-        <button class="nav-item" data-page="tasks" onclick="AdminDashboard.showPage('tasks')">
-          <span class="nav-icon">📋</span><span>Tasks</span>
-        </button>
         <button class="nav-item" data-page="categories" onclick="AdminDashboard.showPage('categories')">
           <span class="nav-icon">🏷️</span><span>Categories</span>
         </button>
