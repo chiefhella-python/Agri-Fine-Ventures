@@ -269,7 +269,7 @@ const AdminDashboard = {
                         </div>
                       </div>
                       <span class="task-priority">🔴 HIGH</span>
-                      <button onclick="AdminDashboard.openTaskModal('${gh.id}', '${task.id}')" style="background:var(--blue-water);color:white;border:none;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-left:8px">✏️</button>
+                      <button onclick="AdminDashboard.openTaskModal(String(${gh.id}), String(${task.id}))" style="background:var(--blue-water);color:white;border:none;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-left:8px">✏️</button>
                     </div>`).join('');
               })()}
             </div>
@@ -391,7 +391,7 @@ const AdminDashboard = {
                   ${!task.completed ? `<div style="font-size:0.78rem;color:var(--text-light);margin-top:4px">${task.desc}</div>` : ''}
                 </div>
                 <span class="task-priority">${task.priority.toUpperCase()}</span>
-                <button onclick="AdminDashboard.openTaskModal('${gh.id}', '${task.id}')" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:8px">✏️</button>
+                <button onclick="AdminDashboard.openTaskModal(String(${gh.id}), String(${task.id}))" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-left:8px">✏️</button>
               </div>`).join('')}
           </div>
         </div>
@@ -473,7 +473,7 @@ const AdminDashboard = {
                           </select>
                           <button onclick="AdminDashboard.assignTaskToWorker('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">Assign</button>
                         ` : `
-                          <button onclick="AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button>
+                          <button onclick="AdminDashboard.openTaskModal(String(${t.gh.id}), String(${t.id}))" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button>
                         `}
                       </td>
                     </tr>`;
@@ -507,7 +507,7 @@ const AdminDashboard = {
                       <td>${t.gh.cropEmoji} ${t.gh.name}</td>
                       <td>${t.completedAt ? t.completedAt.toLocaleDateString('en-KE') : '—'}</td>
                       <td>${worker ? worker.name : '—'}</td>
-                      <td><button onclick="AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button></td>
+                      <td><button onclick="AdminDashboard.openTaskModal(String(${t.gh.id}), String(${t.id}))" class="btn-icon" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️</button></td>
                     </tr>`;
                 }).join('')}
               </tbody>
@@ -2277,13 +2277,15 @@ const AdminDashboard = {
     
     if (taskId && ghId) {
       // Edit existing task
-      const gh = AFV.greenhouses.find(g => g.id === ghId);
-      const task = gh?.tasks.find(t => t.id === taskId);
+      const ghIdNum = parseInt(ghId);
+      const taskIdNum = parseInt(taskId);
+      const gh = AFV.greenhouses.find(g => g.id === ghIdNum);
+      const task = gh?.tasks.find(t => t.id === taskIdNum);
       if (!task) return;
       
       title.textContent = 'Edit Task';
-      document.getElementById('task-gh-id').value = ghId;
-      document.getElementById('task-id').value = taskId;
+      document.getElementById('task-gh-id').value = ghIdNum;
+      document.getElementById('task-id').value = taskIdNum;
       document.getElementById('task-name').value = task.name;
       document.getElementById('task-desc').value = task.desc || '';
       document.getElementById('task-category').value = task.category;
