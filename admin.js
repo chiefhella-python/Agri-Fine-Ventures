@@ -1943,23 +1943,8 @@ const AdminDashboard = {
           </div>
           
         </div>
-        <div class="card" style="margin-top:20px">
-          <div class="section-title">👥 Worker Management</div>
-          <table>
-            <thead><tr><th>Name</th><th>Role</th><th>Assigned Greenhouses</th><th>Status</th></tr></thead>
-            <tbody>
-              ${Object.values(AFV.users).filter(u=>u.role==='worker').map(w => `
-                <tr>
-                  <td style="font-weight:600">${w.avatar} ${w.name}</td>
-                  <td><span class="badge badge-green">Field Worker</span></td>
-                  <td>${w.assignedGH?.map(id => `GH${id}`).join(', ') || '—'}</td>
-                  <td><span class="badge badge-green">Active</span></td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
       </div>
-      
+       
     `;
   },
 
