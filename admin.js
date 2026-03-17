@@ -36,6 +36,9 @@ const AdminDashboard = {
         <button class="nav-item" data-page="tasks" onclick="AdminDashboard.showPage('tasks')">
           <span class="nav-icon">📋</span><span>All Tasks</span>
         </button>
+        <button class="nav-item" data-page="task-management" onclick="AdminDashboard.showPage('task-management')">
+          <span class="nav-icon">➕</span><span>Task Management</span>
+        </button>
         <button class="nav-item" data-page="supervisors" onclick="AdminDashboard.showPage('supervisors')">
           <span class="nav-icon">👥</span><span>Supervisors</span>
         </button>
@@ -104,6 +107,7 @@ const AdminDashboard = {
       case 'overview': content.innerHTML = this.renderOverview(); break;
       case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
       case 'tasks': content.innerHTML = this.renderAllTasks(); this.attachPageEvents('tasks'); break;
+      case 'task-management': content.innerHTML = this.renderTaskManagement(); break;
       case 'categories': content.innerHTML = this.renderCategories(); break;
       case 'orders': content.innerHTML = this.renderOrders(); break;
       case 'supervisors': content.innerHTML = this.renderSupervisors(); break;
@@ -409,7 +413,6 @@ const AdminDashboard = {
           <div class="page-subtitle">${pending.length} pending · ${done.length} completed</div>
         </div>
         <div class="header-actions">
-          <button class="btn-primary" onclick="AdminDashboard.openTaskModal()">➕ Add Task</button>
           <select onchange="AdminDashboard.filterTasks(this.value)" style="font-size:0.85rem">
             <option value="all">All Tasks</option>
             <option value="pending">Pending Only</option>
@@ -463,7 +466,6 @@ const AdminDashboard = {
                       <td>${t.assignedTo ? '<span style="font-size:0.7rem;color:var(--blue-water)">Supervisor</span>' : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
                       <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
-                        <button onclick="alert('Edit clicked!')" class="edit-task-btn" data-gh-id="${t.gh.id}" data-task-id="${t.id}" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;position:relative;z-index:999">🖊️</button>
                       </td>
                     </tr>`;
                 }).join('')}
@@ -496,7 +498,7 @@ const AdminDashboard = {
                       <td>${t.gh.cropEmoji} ${t.gh.name}</td>
                       <td>${t.completedAt ? t.completedAt.toLocaleDateString('en-KE') : '—'}</td>
                       <td>${worker ? worker.name : '—'}</td>
-                      <td><button class="edit-task-btn" data-gh-id="${t.gh.id}" data-task-id="${t.id}" title="Edit task" style="background:var(--blue-water);color:white;border:none;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:0.75rem;position:relative;z-index:999">🖊️</button></td>
+                      <td></td>
                     </tr>`;
                 }).join('')}
               </tbody>
@@ -506,6 +508,88 @@ const AdminDashboard = {
       </div>
       
     `;
+  },
+
+  renderTaskManagement() {
+    const allTasks = [];
+    AFV.greenhouses.forEach(gh => gh.tasks.forEach(t => allTasks.push({...t, gh})));
+    const pending = allTasks.filter(t => !t.completed);
+    const done = allTasks.filter(t => t.completed);
+    
+    return `
+      <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
+        <div>
+          <div class="page-title" style="color:white">➕ Task Management</div>
+          <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Create and manage tasks</div>
+        </div>
+        <div class="header-actions">
+          <button onclick="AdminDashboard.openTaskModal()" style="padding:8px 16px;background:var(--green-fresh);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">➕ Create Task</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">📋</div><div><div class="stat-value">${allTasks.length}</div><div class="stat-label">Total Tasks</div></div></div>
+          <div class="stat-card"><div class="stat-icon">⏳</div><div><div class="stat-value">${pending.length}</div><div class="stat-label">Pending</div></div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-value">${done.length}</div><div class="stat-label">Completed</div></div></div>
+        </div>
+        
+        <div class="card">
+          <div class="section-title">⏳ Pending Tasks (${pending.length})</div>
+          ${pending.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No pending tasks</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Task</th><th>Greenhouse</th><th>Category</th><th>Priority</th><th>Duration</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${pending.map(t => `
+                  <tr>
+                    <td><div style="font-weight:600">${t.name}</div></td>
+                    <td>${t.gh.cropEmoji} ${t.gh.name}</td>
+                    <td><span class="badge badge-green">${t.category}</span></td>
+                    <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
+                    <td>${t.duration}</td>
+                    <td>
+                      <button onclick="AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🖊️ Edit</button>
+                      <button onclick="AdminDashboard.deleteTaskAdmin('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🗑️</button>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+        
+        <div class="card" style="margin-top:20px">
+          <div class="section-title">✅ Completed Tasks (${done.length})</div>
+          ${done.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--text-light)">No completed tasks</div>' : `
+          <div class="scroll-x">
+            <table>
+              <thead><tr><th>Task</th><th>Greenhouse</th><th>Completed</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${done.map(t => `
+                  <tr>
+                    <td style="text-decoration:line-through;opacity:0.7">${t.name}</td>
+                    <td>${t.gh.cropEmoji} ${t.gh.name}</td>
+                    <td>${t.completedAt ? t.completedAt.toLocaleDateString('en-KE') : '—'}</td>
+                    <td>
+                      <button onclick="AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🖊️ Edit</button>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`}
+        </div>
+      </div>
+    `;
+  },
+
+  deleteTaskAdmin(ghId, taskId) {
+    if (!confirm('Delete this task?')) return;
+    const gh = AFV.greenhouses.find(g => g.id == ghId);
+    if (gh) {
+      gh.tasks = gh.tasks.filter(t => t.id != taskId);
+      AFV.saveState();
+      showToast('Task deleted', 'success');
+      this.showPage('task-management');
+    }
   },
 
   renderCategories() {
