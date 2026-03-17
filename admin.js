@@ -2368,10 +2368,12 @@ const AdminDashboard = {
     }
     // Note: taskId should NOT have non-numeric chars stripped as it may contain format like 't1_3'
     
-    const modal = document.getElementById('task-modal');
-    if (!modal) {
-      this.insertTaskModal();
+    // Always remove existing modal and insert fresh to ensure all elements are available
+    const existingModal = document.getElementById('task-modal');
+    if (existingModal) {
+      existingModal.remove();
     }
+    this.insertTaskModal();
     
     const title = document.getElementById('task-modal-title');
     
