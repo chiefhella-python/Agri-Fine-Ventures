@@ -2361,6 +2361,13 @@ const AdminDashboard = {
   // ============================================
   openTaskModal(ghId = null, taskId = null) {
     console.log('openTaskModal called with:', ghId, taskId);
+    // Handle numeric ghId conversion
+    if (typeof ghId === 'string') {
+      const numericGhId = ghId.replace(/\D/g, '');
+      if (numericGhId) ghId = parseInt(numericGhId);
+    }
+    // Note: taskId should NOT have non-numeric chars stripped as it may contain format like 't1_3'
+    
     const modal = document.getElementById('task-modal');
     if (!modal) {
       this.insertTaskModal();
@@ -2371,14 +2378,13 @@ const AdminDashboard = {
     if (taskId && ghId) {
       // Edit existing task
       const ghIdNum = parseInt(ghId);
-      const taskIdNum = parseInt(taskId);
       const gh = AFV.greenhouses.find(g => g.id === ghIdNum);
-      const task = gh?.tasks.find(t => t.id === taskIdNum);
+      const task = gh?.tasks.find(t => t.id == taskId);
       if (!task) return;
       
       title.textContent = 'Edit Task';
       document.getElementById('task-gh-id').value = ghIdNum;
-      document.getElementById('task-id').value = taskIdNum;
+      document.getElementById('task-id').value = taskId;
       document.getElementById('task-name').value = task.name;
       document.getElementById('task-desc').value = task.desc || '';
       document.getElementById('task-category').value = task.category;
