@@ -2070,11 +2070,14 @@ const AdminDashboard = {
       if (keyInput && AFV.aiSettings.apiKey) keyInput.value = AFV.aiSettings.apiKey;
     }
     
+    // Make AdminDashboard globally accessible
+    window.AdminDashboard = this;
+    
     // Add event listeners for edit task buttons
     var btns = document.querySelectorAll('.edit-task-btn');
     for (var i = 0; i < btns.length; i++) {
-      btns[i].onclick = (function(btn) {
-        return function() {
+      (function(btn) {
+        btn.onclick = function() {
           var ghId = btn.getAttribute('data-gh-id');
           var taskId = btn.getAttribute('data-task-id');
           AdminDashboard.openTaskModal(ghId, taskId);
