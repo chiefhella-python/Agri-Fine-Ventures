@@ -550,7 +550,7 @@ const AdminDashboard = {
                     <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
                     <td>${t.duration}</td>
                     <td>
-                      <button onclick="alert('Edit clicked')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🖊️ Edit</button>
+                      <button onclick="window.AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🖊️ Edit</button>
                       <button onclick="AdminDashboard.deleteTaskAdmin('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🗑️</button>
                     </td>
                   </tr>`).join('')}
@@ -572,7 +572,7 @@ const AdminDashboard = {
                     <td>${t.gh.cropEmoji} ${t.gh.name}</td>
                     <td>${t.completedAt ? t.completedAt.toLocaleDateString('en-KE') : '—'}</td>
                     <td>
-                      <button onclick="alert('Edit clicked')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🖊️ Edit</button>
+                      <button onclick="window.AdminDashboard.openTaskModal('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">🖊️ Edit</button>
                     </td>
                   </tr>`).join('')}
               </tbody>
