@@ -269,6 +269,7 @@ const AdminDashboard = {
                         </div>
                       </div>
                       <span class="task-priority">🔴 HIGH</span>
+                      <button onclick="AdminDashboard.openTaskModal('${gh.id}', '${task.id}')" style="background:var(--blue-water);color:white;border:none;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-left:8px">✏️</button>
                     </div>`).join('');
               })()}
             </div>
