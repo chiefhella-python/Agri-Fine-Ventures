@@ -2000,6 +2000,12 @@ const AdminDashboard = {
               <button class="btn-primary">Save Farm Profile</button>
             </div>
           </div>
+
+          <div class="card" style="border:2px solid var(--red-alert)">
+            <div class="section-title" style="color:var(--red-alert)">⚠️ Reset System</div>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px">This will clear ALL data including greenhouses, tasks, workers, supervisors, harvest records, receipts, and more. The system will reset to default values.</p>
+            <button onclick="AdminDashboard.resetAllData()" style="padding:10px 20px;background:var(--red-alert);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.9rem;font-weight:600">🗑️ Reset All Data</button>
+          </div>
           
         </div>
       </div>
@@ -3423,7 +3429,15 @@ AdminDashboard.deleteHarvest = function(ghId, recordId) {
     AFV.saveState();
     this.showPage('harvest');
   }
-}
+};
+
+AdminDashboard.resetAllData = function() {
+  if (confirm('Are you sure you want to reset ALL data? This will clear everything including greenhouses, tasks, workers, supervisors, harvest records, receipts, and more. This cannot be undone!')) {
+    localStorage.removeItem('afv_state');
+    showToast('System reset! Reloading...', 'success');
+    setTimeout(() => location.reload(), 1000);
+  }
+};
 
 
 
