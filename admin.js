@@ -526,6 +526,7 @@ const AdminDashboard = {
                       <td>${t.assignedTo ? '<span style="font-size:0.7rem;color:var(--blue-water)">Supervisor</span>' : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
                       <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
+                        <button onclick="AdminDashboard.openAssignTaskModal('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">👤 Assign</button>
                       </td>
                     </tr>`;
                 }).join('')}
@@ -2523,6 +2524,84 @@ const AdminDashboard = {
   closeTaskModal() {
     const modal = document.getElementById('task-modal');
     if (modal) modal.style.display = 'none';
+  },
+
+  openAssignTaskModal(ghId, taskId) {
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh?.tasks.find(t => t.id === taskId);
+    if (!gh || !task) return;
+    
+    // Get all available workers
+    const allWorkers = [...(AFV.workers || []), ...Object.values(AFV.users || {}).filter(u => u.role === 'worker')];
+    const uniqueWorkers = allWorkers.filter((w, i, a) => a.findIndex(x => x.id === w.id) === i);
+    
+    const modal = document.createElement('div');
+    modal.id = 'assign-task-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000';
+    modal.innerHTML = `
+      <div style="background:white;border-radius:var(--radius-lg);width:90%;max-width:400px;max-height:90vh;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--green-ultra-pale)">
+          <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0">👤 Assign Task</h2>
+          <button onclick="AdminDashboard.closeAssignTaskModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+        </div>
+        <div style="padding:20px">
+          <div style="margin-bottom:16px">
+            <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:4px">Task</div>
+            <div style="font-weight:600;color:var(--green-deep)">${task.name}</div>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:4px">Greenhouse</div>
+            <div style="font-weight:600">${gh.cropEmoji} ${gh.name}</div>
+          </div>
+          <form onsubmit="event.preventDefault(); AdminDashboard.assignTaskToWorkerModal('${ghId}', '${taskId}')">
+            <div style="margin-bottom:20px">
+              <label style="display:block;font-size:0.75rem;color:var(--text-light);margin-bottom:4px">Select Worker</label>
+              <select id="assign-worker-select" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.9rem" required>
+                <option value="">-- Select a worker --</option>
+                ${uniqueWorkers.map(w => `<option value="${w.id}">${w.avatar || '👤'} ${w.name}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <button type="button" onclick="AdminDashboard.closeAssignTaskModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
+              <button type="submit" class="btn-primary" style="padding:10px 24px">✓ Assign Task</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  },
+
+  closeAssignTaskModal() {
+    const modal = document.getElementById('assign-task-modal');
+    if (modal) modal.remove();
+  },
+
+  assignTaskToWorkerModal(ghId, taskId) {
+    const workerId = document.getElementById('assign-worker-select').value;
+    if (!workerId) {
+      showToast('Please select a worker', 'error');
+      return;
+    }
+    
+    const gh = AFV.greenhouses.find(g => g.id === parseInt(ghId));
+    const task = gh?.tasks.find(t => t.id === taskId);
+    
+    if (gh && task) {
+      task.assignedTo = workerId;
+      task.assignedAt = new Date().toISOString();
+      task.verified = false;
+      
+      // Find worker name for logging
+      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.id == workerId);
+      const workerName = worker?.name || 'Worker';
+      
+      AFV.saveState();
+      AFV.logActivity('📋', `Task "${task.name}" assigned to ${workerName} by Admin`);
+      
+      showToast(`Task assigned to ${workerName}!`, 'success');
+      this.closeAssignTaskModal();
+      this.showPage(this.currentPage);
+    }
   },
 
   saveTask(e) {
