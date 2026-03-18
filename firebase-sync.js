@@ -3,6 +3,7 @@
 // ============================================
 
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { getDatabase, ref, set, get } from "firebase/database";
 
 // Firebase configuration
@@ -25,6 +26,8 @@ let firebaseReady = false;
 async function initFirebase() {
   try {
     firebaseApp = initializeApp(firebaseConfig);
+    // Initialize Analytics
+    getAnalytics(firebaseApp);
     db = getDatabase(firebaseApp);
     firebaseReady = true;
     console.log('Firebase initialized successfully');
