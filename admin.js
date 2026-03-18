@@ -4,10 +4,74 @@
 
 const AdminDashboard = {
   currentPage: 'overview',
+  weatherData: null,
+
+  // Limuru, Kiambu, Kenya coordinates
+  farmLocation: {
+    latitude: -1.1064,
+    longitude: 36.6414
+  },
+
+  async fetchWeatherData() {
+    try {
+      const { latitude, longitude } = this.farmLocation;
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,daylight_duration&daily=sunshine_duration`
+      );
+      const data = await response.json();
+      
+      // Calculate sunshine hours from daylight duration (convert seconds to hours)
+      const sunshineHours = (data.current.daylight_duration / 3600).toFixed(1);
+      
+      this.weatherData = {
+        temperature: Math.round(data.current.temperature_2m),
+        humidity: data.current.relative_humidity_2m,
+        windSpeed: Math.round(data.current.wind_speed_10m),
+        rainfall: data.current.precipitation,
+        sunshineHours: sunshineHours
+      };
+      
+      return this.weatherData;
+    } catch (error) {
+      console.error('Failed to fetch weather data:', error);
+      return null;
+    }
+  },
+
+  getWeatherHTML(weather) {
+    if (!weather) {
+      return `<div class="weather-bar">
+        <div class="weather-item"><span class="weather-icon">🌡️</span><div><div class="weather-val">--°C</div><div class="weather-lbl">Temperature</div></div></div>
+        <div class="weather-divider"></div>
+        <div class="weather-item"><span class="weather-icon">💧</span><div><div class="weather-val">--%</div><div class="weather-lbl">Humidity</div></div></div>
+        <div class="weather-divider"></div>
+        <div class="weather-item"><span class="weather-icon">☀️</span><div><div class="weather-val">-- hrs</div><div class="weather-lbl">Sunlight Today</div></div></div>
+        <div class="weather-divider"></div>
+        <div class="weather-item"><span class="weather-icon">💨</span><div><div class="weather-val">-- km/h</div><div class="weather-lbl">Wind Speed</div></div></div>
+        <div class="weather-divider"></div>
+        <div class="weather-item"><span class="weather-icon">🌧️</span><div><div class="weather-val">--mm</div><div class="weather-lbl">Rainfall</div></div></div>
+      </div>`;
+    }
+    
+    return `<div class="weather-bar">
+      <div class="weather-item"><span class="weather-icon">🌡️</span><div><div class="weather-val">${weather.temperature}°C</div><div class="weather-lbl">Temperature</div></div></div>
+      <div class="weather-divider"></div>
+      <div class="weather-item"><span class="weather-icon">💧</span><div><div class="weather-val">${weather.humidity}%</div><div class="weather-lbl">Humidity</div></div></div>
+      <div class="weather-divider"></div>
+      <div class="weather-item"><span class="weather-icon">☀️</span><div><div class="weather-val">${weather.sunshineHours} hrs</div><div class="weather-lbl">Sunlight Today</div></div></div>
+      <div class="weather-divider"></div>
+      <div class="weather-item"><span class="weather-icon">💨</span><div><div class="weather-val">${weather.windSpeed} km/h</div><div class="weather-lbl">Wind Speed</div></div></div>
+      <div class="weather-divider"></div>
+      <div class="weather-item"><span class="weather-icon">🌧️</span><div><div class="weather-val">${weather.rainfall}mm</div><div class="weather-lbl">Rainfall</div></div></div>
+    </div>`;
+  },
 
   init() {
     this.renderNav();
     this.showPage('overview');
+    // Fetch weather data on init and refresh every 15 minutes
+    this.fetchWeatherData();
+    setInterval(() => this.fetchWeatherData(), 15 * 60 * 1000);
   },
 
   renderNav() {
@@ -97,7 +161,7 @@ const AdminDashboard = {
     `;
   },
 
-  showPage(page) {
+  async showPage(page) {
     this.currentPage = page;
     // Make AdminDashboard globally accessible
     window.AdminDashboard = this;
@@ -106,7 +170,11 @@ const AdminDashboard = {
     if (btn) btn.classList.add('active');
     const content = document.getElementById('admin-content');
     switch(page) {
-      case 'overview': content.innerHTML = this.renderOverview(); break;
+      case 'overview': 
+        // Fetch latest weather data when showing overview
+        await this.fetchWeatherData();
+        content.innerHTML = this.renderOverview(); 
+        break;
       case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
       case 'tasks': content.innerHTML = this.renderAllTasks(); this.attachPageEvents('tasks'); break;
       case 'task-management': content.innerHTML = this.renderTaskManagement(); break;
@@ -148,17 +216,7 @@ const AdminDashboard = {
         </div>
       </div>
       <div class="page-body">
-        <div class="weather-bar">
-          <div class="weather-item"><span class="weather-icon">🌡️</span><div><div class="weather-val">24°C</div><div class="weather-lbl">Temperature</div></div></div>
-          <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">💧</span><div><div class="weather-val">68%</div><div class="weather-lbl">Humidity</div></div></div>
-          <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">☀️</span><div><div class="weather-val">8.2 hrs</div><div class="weather-lbl">Sunlight Today</div></div></div>
-          <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">💨</span><div><div class="weather-val">12 km/h</div><div class="weather-lbl">Wind Speed</div></div></div>
-          <div class="weather-divider"></div>
-          <div class="weather-item"><span class="weather-icon">🌧️</span><div><div class="weather-val">0mm</div><div class="weather-lbl">Rainfall</div></div></div>
-        </div>
+        ${this.getWeatherHTML(this.weatherData)}
 
         <div class="stats-grid">
           <div class="stat-card">
