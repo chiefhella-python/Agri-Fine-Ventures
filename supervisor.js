@@ -58,9 +58,6 @@ const SupervisorDashboard = {
         <button class="nav-item" data-page="harvest" onclick="SupervisorDashboard.showPage('harvest')">
           <span class="nav-icon">🌾</span><span>Harvest</span>
         </button>
-        <button class="nav-item" data-page="history" onclick="SupervisorDashboard.showPage('history')">
-          <span class="nav-icon">📜</span><span>Task History</span>
-        </button>
         <button class="nav-item" data-page="sales" onclick="SupervisorDashboard.showPage('sales')">
           <span class="nav-icon">🧾</span><span>Sales & Receipts</span>
         </button>
@@ -114,7 +111,6 @@ const SupervisorDashboard = {
       case 'mytasks': content.innerHTML = this.renderMyTasks(); break;
       case 'mygreenhouses': content.innerHTML = this.renderMyGreenhouses(); break;
       case 'harvest': content.innerHTML = this.renderHarvest(); break;
-      case 'history': content.innerHTML = this.renderHistory(); break;
       case 'sales': content.innerHTML = this.renderSales(); break;
       case 'guide': content.innerHTML = this.renderGuide(); break;
       case 'workers': content.innerHTML = this.renderWorkers(); break;
