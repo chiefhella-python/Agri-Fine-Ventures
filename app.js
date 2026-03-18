@@ -330,7 +330,12 @@ document.getElementById('forgot-password-modal')?.addEventListener('click', func
 });
 
 // Load saved state on init
-AFV.loadState();
+AFV.loadState().then(() => {
+  // Initialize Firebase after state is loaded
+  if (window.FirebaseSync) {
+    window.FirebaseSync.initFirebase();
+  }
+});
 
 // Auto-initialize feeding calendar if not set (default to today)
 if (!AFV.feedingProgram?.calendarStartDate) {

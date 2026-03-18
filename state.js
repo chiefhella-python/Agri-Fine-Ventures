@@ -700,7 +700,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     this.logActivity('🧪', `Fertilizer amount updated: ${fertilizerKey} = ${amount}${unit}`);
   },
 
-  // Save state to localStorage
+  // Save state to localStorage (and Firebase if available)
   saveState() {
     try {
       const stateToSave = {
@@ -724,13 +724,30 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         stateToSave.aiSettings = { model: this.aiSettings.model };
       }
       localStorage.setItem('afv_state', JSON.stringify(stateToSave));
+      
+      // Try to save to Firebase (async, don't wait)
+      if (window.FirebaseSync?.isFirebaseReady()) {
+        window.FirebaseSync.saveToFirebase(stateToSave);
+      }
     } catch (e) {
       console.error('Error saving state:', e);
     }
   },
 
-  // Load state from localStorage
-  loadState() {
+  // Load state from localStorage (and try Firebase first if available)
+  async loadState() {
+    // Try Firebase first if available
+    if (window.FirebaseSync) {
+      const fbData = await window.FirebaseSync.loadFromFirebase();
+      if (fbData) {
+        this.applyLoadedState(fbData);
+        // Also save to localStorage as backup
+        localStorage.setItem('afv_state', JSON.stringify(fbData));
+        return;
+      }
+    }
+    
+    // Fallback to localStorage
     try {
       const saved = localStorage.getItem('afv_state');
       if (saved) {
