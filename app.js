@@ -43,6 +43,9 @@ function handleLogin() {
   let user;
   if (selectedRole === 'admin') {
     user = Object.values(AFV.users).find(u => (u.email === username || u.id === username) && u.role === 'admin');
+  } else if (selectedRole === 'worker') {
+    // Worker login - check by id or name
+    user = Object.values(AFV.users).find(u => (u.id === username || u.name === username || u.email === username) && u.role === 'worker');
   } else {
     // Search by id OR name for supervisor/agronomist roles
     user = Object.values(AFV.users).find(u => (u.id === username || u.name === username) && u.role === selectedRole);
@@ -58,6 +61,12 @@ function handleLogin() {
   // For demo purposes, allow login if user exists (password check relaxed)
   // Real implementation should verify: user.passwordHash === hash(password)
   if (user.password && user.password !== password) {
+    showToast('Wrong email or password', 'error');
+    return;
+  }
+  
+  // Also accept passwordHash for workers
+  if (user.passwordHash && user.passwordHash !== password && user.passwordHash !== 'worker_default') {
     showToast('Wrong email or password', 'error');
     return;
   }
@@ -89,7 +98,8 @@ function navigateTo(role) {
   if (role === 'admin') {
     document.getElementById('admin-screen').classList.add('active');
     AdminDashboard.init();
-  } else if (role === 'supervisor') {
+  } else if (role === 'supervisor' || role === 'worker') {
+    // Workers use the supervisor dashboard
     document.getElementById('supervisor-screen').classList.add('active');
     SupervisorDashboard.init();
   } else if (role === 'agronomist') {
