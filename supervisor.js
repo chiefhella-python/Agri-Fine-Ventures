@@ -1088,19 +1088,19 @@ const SupervisorDashboard = {
               <tbody>
                 ${allTasks.map(({gh, task}) => {
                   const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
-                  // Check if worker is assigned via greenhouse (admin assigned)
-                  const ghWorker = !task.assignedTo ? Object.values(AFV.users || {}).find(u => u.role === 'worker' && u.assignedGH?.includes(gh.id)) : null;
-                  const assignedBy = ghWorker ? `Admin → ${ghWorker.name}` : (assignedTo ? assignedTo.name : null);
+                  // Use assignedBy field to determine who assigned the task
+                  const assignedBySource = task.assignedBy === 'admin' ? 'Admin' : (task.assignedBy === 'supervisor' ? 'Supervisor' : null);
+                  const assignedBy = assignedBySource ? `${assignedBySource}${assignedTo ? ' → ' + assignedTo.name : ''}` : (assignedTo ? assignedTo.name : null);
                   return `
-                    <tr style="background:${task.assignedTo || ghWorker ? 'rgba(59, 130, 246, 0.05)' : 'white'}">
+                    <tr style="background:${task.assignedTo ? 'rgba(59, 130, 246, 0.05)' : 'white'}">
                       <td><div style="font-weight:600;font-size:0.85rem">${task.name}</div><div style="font-size:0.65rem;color:var(--text-light)">${task.desc?.substring(0,30)}...</div></td>
                       <td style="font-size:0.8rem">${gh.cropEmoji} ${gh.name}</td>
                       <td style="font-size:0.8rem">${task.duration}</td>
                       <td><span class="badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-green'}" style="font-size:0.65rem">${task.priority}</span></td>
                       <td>${assignedBy ? `<div style="text-align:center"><div style="font-weight:600;font-size:0.8rem">${assignedBy}</div></div>` : '<span style="color:var(--text-light);font-size:0.8rem">—</span>'}</td>
-                      <td>${task.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓</span>' : (task.assignedTo || ghWorker) ? '<span class="badge badge-blue" style="font-size:0.65rem">✓</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">—</span>'}</td>
+                      <td>${task.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓</span>' : (task.assignedTo) ? '<span class="badge badge-blue" style="font-size:0.65rem">✓</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">—</span>'}</td>
                       <td>
-                        ${(!task.assignedTo && !ghWorker) ? `
+                        ${(!task.assignedTo) ? `
                           <div style="display:flex;gap:3px">
                             <select id="assign-worker-${gh.id}-${task.id}" style="padding:3px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.6rem;width:70px">
                               <option value="">Select</option>
@@ -1122,11 +1122,11 @@ const SupervisorDashboard = {
           <div class="mobile-cards" style="display:none">
             ${allTasks.map(({gh, task}) => {
               const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
-              // Check if worker is assigned via greenhouse (admin assigned)
-              const ghWorker = !task.assignedTo ? Object.values(AFV.users || {}).find(u => u.role === 'worker' && u.assignedGH?.includes(gh.id)) : null;
-              const assignedBy = ghWorker ? `Admin → ${ghWorker.name}` : (assignedTo ? assignedTo.name : null);
+              // Use assignedBy field to determine who assigned the task
+              const assignedBySource = task.assignedBy === 'admin' ? 'Admin' : (task.assignedBy === 'supervisor' ? 'Supervisor' : null);
+              const assignedBy = assignedBySource ? `${assignedBySource}${assignedTo ? ' → ' + assignedTo.name : ''}` : (assignedTo ? assignedTo.name : null);
               return `
-                <div style="background:${task.assignedTo || ghWorker ? 'rgba(59, 130, 246, 0.08)' : 'var(--green-ultra-pale)'};border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid ${task.priority==='high'?'var(--red-alert)':task.priority==='medium'?'var(--orange-warn)':'var(--green-fresh)'}">
+                <div style="background:${task.assignedTo ? 'rgba(59, 130, 246, 0.08)' : 'var(--green-ultra-pale)'};border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid ${task.priority==='high'?'var(--red-alert)':task.priority==='medium'?'var(--orange-warn)':'var(--green-fresh)'}">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
                     <div style="flex:1">
                       <div style="font-weight:600;font-size:0.9rem;color:var(--green-deep)">${task.name}</div>
@@ -1137,9 +1137,9 @@ const SupervisorDashboard = {
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                     <div>
                       ${assignedBy ? `<div style="font-size:0.75rem;font-weight:600">${assignedBy}</div>` : '<span style="font-size:0.7rem;color:var(--text-light)">Unassigned</span>'}
-                      <div style="font-size:0.65rem;color:${task.verified ? 'var(--green-fresh)' : (task.assignedTo || ghWorker) ? 'var(--blue-water)' : 'var(--text-light)'}">${task.verified ? '✓ Verified' : (task.assignedTo || ghWorker) ? 'Assigned' : 'Pending'}</div>
+                      <div style="font-size:0.65rem;color:${task.verified ? 'var(--green-fresh)' : (task.assignedTo) ? 'var(--blue-water)' : 'var(--text-light)'}">${task.verified ? '✓ Verified' : (task.assignedTo) ? 'Assigned' : 'Pending'}</div>
                     </div>
-                    ${!task.assignedTo && !ghWorker ? `
+                    ${!task.assignedTo ? `
                       <div style="display:flex;gap:4px;align-items:center">
                         <select id="assign-worker-mobile-${gh.id}-${task.id}" style="padding:6px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.75rem;width:90px">
                           <option value="">Worker</option>
