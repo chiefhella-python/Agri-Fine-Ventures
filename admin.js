@@ -523,7 +523,7 @@ const AdminDashboard = {
                       <td><span class="badge ${t.priority==='high'?'badge-red':t.priority==='medium'?'badge-orange':'badge-green'}">${t.priority}</span></td>
                       <td>${t.duration}</td>
                       <td>${worker ? worker.name : '—'}</td>
-                      <td>${t.assignedTo ? '<span style="font-size:0.7rem;color:var(--blue-water)">Supervisor</span>' : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
+                      <td>${t.assignedTo ? `<span style="font-size:0.7rem;color:${t.assignedBy === 'admin' ? 'var(--orange-warn)' : 'var(--blue-water)'}">${t.assignedBy === 'admin' ? 'Admin' : 'Supervisor'}</span>` : (worker ? '<span style="font-size:0.7rem;color:var(--orange-warn)">Admin</span>' : '—')}</td>
                       <td>${t.verified ? '<span class="badge badge-green" style="font-size:0.65rem">✓ Verified</span>' : t.assignedTo ? '<span class="badge badge-blue" style="font-size:0.65rem">Assigned</span>' : '<span class="badge badge-gray" style="font-size:0.65rem">Pending</span>'}</td>
                       <td>
                         <button onclick="AdminDashboard.openAssignTaskModal('${t.gh.id}', '${t.id}')" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem">👤 Assign</button>
@@ -2589,6 +2589,7 @@ const AdminDashboard = {
     if (gh && task) {
       task.assignedTo = workerId;
       task.assignedAt = new Date().toISOString();
+      task.assignedBy = 'admin';
       task.verified = false;
       
       // Find worker name for logging

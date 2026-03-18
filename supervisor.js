@@ -1227,6 +1227,7 @@ const SupervisorDashboard = {
     if (gh && task) {
       task.assignedTo = workerId;
       task.assignedAt = new Date();
+      task.assignedBy = 'supervisor';
       task.verified = false;
       AFV.logActivity('📋', `Task "${task.name}" assigned to worker`);
       showToast('Task assigned successfully!', 'success');
