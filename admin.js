@@ -1270,9 +1270,10 @@ const AdminDashboard = {
     }
     
     delete AFV.users[workerId];
+    AFV.saveState();
     AFV.logActivity('🗑️', `Worker deleted: ${worker.name}`);
     showToast(`Worker "${worker.name}" has been deleted`, 'success');
-    this.showPage('workers');
+    this.showPage('supervisors');
   },
 
   renderAgronomists() {
