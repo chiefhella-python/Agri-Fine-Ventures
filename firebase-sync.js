@@ -2,13 +2,13 @@
 // FIREBASE SYNC MODULE
 // ============================================
 
-// Firebase configuration - REPLACE THESE VALUES WITH YOUR FIREBASE CONFIG
+// Firebase configuration
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDemo-ReplaceWithYourKey",
-  authDomain: "agri-fine-ventures.firebaseapp.com",
-  databaseURL: "https://agri-fine-ventures-default-rtdb.firebaseio.com",
-  projectId: "agri-fine-ventures",
-  storageBucket: "agri-fine-ventures.appspot.com",
+  authDomain: "agri-fine-ventures-ec293.firebaseapp.com",
+  databaseURL: "https://agri-fine-ventures-ec293-default-rtdb.firebaseio.com",
+  projectId: "agri-fine-ventures-ec293",
+  storageBucket: "agri-fine-ventures-ec293.appspot.com",
   messagingSenderId: "000000000000",
   appId: "1:000000000000:web:0000000000000000000000"
 };
