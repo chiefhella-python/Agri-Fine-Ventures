@@ -30,28 +30,11 @@ const AFV = {
     agronomist: { id: 'agronomist', name: 'Dr. Grace Njeri', role: 'agronomist', passwordHash: 'demo_agronomist', avatar: '🔬', imageUrl: '' },
   },
 
-  // INVENTORY
-  inventory: [
-    { id: 1, name: 'Calcium Nitrate (Ca-Nit)', category: 'Fertilizer', qty: 180, unit: 'kg', reorder: 50, status: 'good' },
-    { id: 2, name: 'Mancozeb 80WP', category: 'Fungicide', qty: 12, unit: 'kg', reorder: 20, status: 'low' },
-    { id: 3, name: 'Abamectin 1.8EC', category: 'Pesticide', qty: 3, unit: 'L', reorder: 5, status: 'critical' },
-    { id: 4, name: 'NPK 17:17:17', category: 'Fertilizer', qty: 250, unit: 'kg', reorder: 100, status: 'good' },
-    { id: 5, name: 'Magnesium Sulphate', category: 'Fertilizer', qty: 45, unit: 'kg', reorder: 30, status: 'good' },
-    { id: 6, name: 'Drip Emitters', category: 'Equipment', qty: 280, unit: 'pcs', reorder: 100, status: 'good' },
-    { id: 7, name: 'Jute String (500m)', category: 'Supplies', qty: 4, unit: 'rolls', reorder: 5, status: 'low' },
-    { id: 8, name: 'Coco Peat Bags', category: 'Media', qty: 320, unit: 'bags', reorder: 200, status: 'good' },
-    { id: 9, name: 'Sticky Yellow Traps', category: 'Pest Control', qty: 85, unit: 'pcs', reorder: 50, status: 'good' },
-    { id: 10, name: 'Vapor Gard (Anti-transpirant)', category: 'Chemicals', qty: 2, unit: 'L', reorder: 5, status: 'critical' },
-  ],
+  // INVENTORY - Default empty
+  inventory: [],
 
-  // FARM PRODUCE (other than greenhouses)
-  farmProduce: [
-    { id: 1, name: 'Fresh Milk', category: 'Dairy', quantity: 45, unit: 'liters/day', price: 60, emoji: '🥛' },
-    { id: 2, name: ' Eggs', category: 'Poultry', quantity: 120, unit: 'pieces/day', price: 15, emoji: '🥚' },
-    { id: 3, name: 'Cabbages', category: 'Vegetables', quantity: 0, unit: 'heads', price: 50, emoji: '🥬' },
-    { id: 4, name: 'Kale (Sukuma Wiki)', category: 'Vegetables', quantity: 0, unit: 'bunches', price: 30, emoji: '🥬' },
-    { id: 5, name: 'Spinach', category: 'Vegetables', quantity: 0, unit: 'bunches', price: 25, emoji: '🥬' },
-  ],
+  // FARM PRODUCE - Default empty
+  farmProduce: [],
 
   // REVENUE RECORDS
   revenue: [],
@@ -63,12 +46,8 @@ const AFV = {
   // IMAGE ANALYSIS REQUESTS
   imageAnalysisRequests: [],
 
-  // WORKERS (passwords should be hashed in production - using placeholders for demo)
-  workers: [
-    { id: 'worker1', name: 'Peter Kamau', role: 'worker', passwordHash: 'demo_worker1', avatar: '👨‍🌾', assignedGH: [1, 2], addedBy: 'supervisor', imageUrl: '' },
-    { id: 'worker2', name: 'Mary Wanjiku', role: 'worker', passwordHash: 'demo_worker2', avatar: '👩‍🌾', assignedGH: [3, 4], addedBy: 'supervisor', imageUrl: '' },
-    { id: 'worker3', name: 'John Otieno', role: 'worker', passwordHash: 'demo_worker3', avatar: '👨‍🌾', assignedGH: [5], addedBy: 'supervisor', imageUrl: '' },
-  ],
+  // WORKERS - Default empty, add via UI
+  workers: [],
 
   // ACTIVITY LOG
   activityLog: [],
