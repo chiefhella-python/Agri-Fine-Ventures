@@ -3432,10 +3432,47 @@ AdminDashboard.deleteHarvest = function(ghId, recordId) {
 };
 
 AdminDashboard.resetAllData = function() {
-  if (confirm('Are you sure you want to reset ALL data? This will clear everything including greenhouses, tasks, workers, supervisors, harvest records, receipts, and more. This cannot be undone!')) {
+  if (confirm('Are you sure you want to reset ALL data? This will clear EVERYTHING - greenhouses, workers, supervisors, agronomists, tasks, harvest, receipts - and leave the system completely empty. This cannot be undone!')) {
+    // Clear all data in memory
+    AFV.workers = [];
+    AFV.greenhouses = [];
+    AFV.supervisors = [];
+    AFV.agronomistReports = [];
+    AFV.tasks = [];
+    AFV.harvest = {};
+    AFV.receipts = [];
+    AFV.revenue = [];
+    AFV.harvestOrders = [];
+    AFV.weeklyReports = [];
+    AFV.inventory = [];
+    AFV.notifications = [];
+    AFV.activityLog = [];
+    AFV.passwordResetRequests = [];
+    
+    // Clear localStorage
     localStorage.removeItem('afv_state');
-    showToast('System reset! Reloading...', 'success');
-    setTimeout(() => location.reload(), 1000);
+    
+    // Save empty state to Firebase
+    const emptyState = {
+      workers: [],
+      greenhouses: [],
+      agronomistReports: [],
+      harvest: {},
+      receipts: [],
+      revenue: [],
+      harvestOrders: [],
+      weeklyReports: [],
+      inventory: [],
+      notifications: [],
+      activityLog: [],
+      passwordResetRequests: [],
+      taskCategories: AFV.taskCategories,
+      feedingProgram: AFV.feedingProgram
+    };
+    
+    AFV.saveState();
+    showToast('System completely reset! Reloading...', 'success');
+    setTimeout(() => location.reload(), 1500);
   }
 };
 
