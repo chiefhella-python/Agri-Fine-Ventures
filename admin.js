@@ -2950,14 +2950,6 @@ AdminDashboard.getWorkerModalHtml = function() {
             <input type="text" id="worker-name" required style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Worker name">
           </div>
           <div style="margin-bottom:16px">
-            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email (for login)</label>
-            <input type="email" id="worker-email" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="worker@agrifine.co.ke">
-          </div>
-          <div style="margin-bottom:16px">
-            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
-            <input type="password" id="worker-password" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password">
-          </div>
-          <div style="margin-bottom:16px">
             <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Phone</label>
             <input type="tel" id="worker-phone" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., 0712345678">
           </div>
@@ -2989,8 +2981,6 @@ AdminDashboard.openWorkerModal = function(workerId = null) {
   
   const title = document.getElementById('worker-modal-title');
   const nameInput = document.getElementById('worker-name');
-  const emailInput = document.getElementById('worker-email');
-  const passwordInput = document.getElementById('worker-password');
   const phoneInput = document.getElementById('worker-phone');
   const ghSelect = document.getElementById('worker-gh');
   const idInput = document.getElementById('worker-id');
@@ -3001,8 +2991,6 @@ AdminDashboard.openWorkerModal = function(workerId = null) {
       title.textContent = 'Edit Worker';
       idInput.value = worker.id;
       nameInput.value = worker.name;
-      emailInput.value = worker.email || '';
-      passwordInput.value = ''; // Don't show password
       phoneInput.value = worker.phone || '';
       
       // Select assigned greenhouses
@@ -3014,8 +3002,6 @@ AdminDashboard.openWorkerModal = function(workerId = null) {
     title.textContent = 'Add Worker';
     idInput.value = '';
     nameInput.value = '';
-    emailInput.value = '';
-    passwordInput.value = '';
     phoneInput.value = '';
     Array.from(ghSelect.options).forEach(opt => opt.selected = false);
   }
@@ -3033,16 +3019,10 @@ AdminDashboard.saveWorker = function(e) {
   const id = document.getElementById('worker-id').value;
   const name = document.getElementById('worker-name').value.trim();
   const phone = document.getElementById('worker-phone').value.trim();
-  const email = document.getElementById('worker-email')?.value?.trim() || '';
-  const password = document.getElementById('worker-password')?.value?.trim() || '';
   const ghSelect = document.getElementById('worker-gh');
   const assignedGH = Array.from(ghSelect.selectedOptions).map(opt => parseInt(opt.value));
   
   const avatars = ['👨‍🌾', '👩‍🌾', '👨‍💼', '👩‍💼', '👷', '👷‍♀️', '🧑‍🌾', '🧑‍💼'];
-  
-  // Generate worker ID for user account
-  const workerId = id ? parseInt(id) : Date.now();
-  const userId = 'worker_' + workerId;
   
   if (id) {
     // Edit existing
@@ -3051,45 +3031,22 @@ AdminDashboard.saveWorker = function(e) {
       worker.name = name;
       worker.phone = phone;
       worker.assignedGH = assignedGH;
-      worker.email = email;
-    }
-    // Update user account if exists
-    if (AFV.users[userId]) {
-      AFV.users[userId].name = name;
-      if (email) AFV.users[userId].email = email;
-      if (password) AFV.users[userId].passwordHash = password;
-      AFV.users[userId].assignedGH = assignedGH;
     }
   } else {
-    // Add new worker to workers array
+    // Add new
     if (!AFV.workers) AFV.workers = [];
     AFV.workers.push({
-      id: workerId,
+      id: Date.now(),
       name,
       phone,
-      email,
       assignedGH,
       avatar: avatars[Math.floor(Math.random() * avatars.length)]
     });
-    
-    // Create user account for worker login
-    AFV.users[userId] = {
-      id: userId,
-      name,
-      email: email || '',
-      role: 'worker',
-      passwordHash: password || 'worker_default',
-      avatar: avatars[Math.floor(Math.random() * avatars.length)],
-      assignedGH: assignedGH,
-      imageUrl: ''
-    };
-    
-    AFV.logActivity('👤', `Worker account created: ${name}`);
   }
   
   AFV.saveState();
   this.closeWorkerModal();
-  showToast('Worker and account saved!', 'success');
+  showToast('Worker saved!', 'success');
   this.showPage('workers');
 };
 
