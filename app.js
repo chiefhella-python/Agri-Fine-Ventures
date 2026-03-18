@@ -96,6 +96,9 @@ function navigateTo(role) {
     document.getElementById('agronomist-screen').classList.add('active');
     AgronomistDashboard.init();
   }
+  
+  // Subscribe to Firebase real-time updates after login
+  subscribeToFirebaseUpdates();
 }
 
 function handleLogout() {
@@ -103,6 +106,12 @@ function handleLogout() {
   AFV.logActivity('🚪', `${userName} logged out`);
   AFV.currentUser = null;
   AFV.currentRole = null;
+  
+  // Unsubscribe from Firebase real-time updates on logout
+  if (window.FirebaseSync) {
+    window.FirebaseSync.unsubscribeFromFirebaseUpdates();
+  }
+  
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('login-screen').classList.add('active');
   document.getElementById('login-username').value = '';
@@ -336,6 +345,37 @@ AFV.loadState().then(() => {
     window.FirebaseSync.initFirebase();
   }
 });
+
+// Handle Firebase remote updates - update UI when data changes on another device
+function handleFirebaseRemoteUpdate(remoteData) {
+  console.log('Received remote update from Firebase:', remoteData);
+  
+  // Apply the remote state to local AFV
+  AFV.applyLoadedState(remoteData);
+  
+  // Also save to localStorage as backup
+  localStorage.setItem('afv_state', JSON.stringify(remoteData));
+  
+  // Show notification about sync
+  showToast('🔄 Data synced from another device', 'success');
+  
+  // Re-render current page if logged in
+  if (AFV.currentRole === 'admin') {
+    AdminDashboard.refreshCurrentPage && AdminDashboard.refreshCurrentPage();
+  } else if (AFV.currentRole === 'supervisor') {
+    SupervisorDashboard.refreshCurrentPage && SupervisorDashboard.refreshCurrentPage();
+  } else if (AFV.currentRole === 'agronomist') {
+    AgronomistDashboard.refreshCurrentPage && AgronomistDashboard.refreshCurrentPage();
+  }
+}
+
+// Subscribe to Firebase updates after successful login
+function subscribeToFirebaseUpdates() {
+  if (window.FirebaseSync?.isFirebaseReady()) {
+    window.FirebaseSync.subscribeToFirebaseUpdates(handleFirebaseRemoteUpdate);
+    console.log('Subscribed to Firebase real-time updates');
+  }
+}
 
 // Auto-initialize feeding calendar if not set (default to today)
 if (!AFV.feedingProgram?.calendarStartDate) {

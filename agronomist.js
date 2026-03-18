@@ -5,7 +5,18 @@
 const AgronomistDashboard = {
   currentPage: 'overview',
 
+  // Refresh current page (called when Firebase sync receives remote updates)
+  refreshCurrentPage() {
+    if (this.currentPage) {
+      this.showPage(this.currentPage);
+      console.log('AgronomistDashboard: Refreshed page after remote sync');
+    }
+  },
+
   init() {
+    // Make AgronomistDashboard globally accessible
+    window.AgronomistDashboard = this;
+    
     this.renderNav();
     this.showPage('overview');
   },

@@ -5,8 +5,19 @@
 const SupervisorDashboard = {
   currentPage: 'mytasks',
 
+  // Refresh current page (called when Firebase sync receives remote updates)
+  refreshCurrentPage() {
+    if (this.currentPage) {
+      this.showPage(this.currentPage);
+      console.log('SupervisorDashboard: Refreshed page after remote sync');
+    }
+  },
+
   init() {
     try {
+      // Make SupervisorDashboard globally accessible
+      window.SupervisorDashboard = this;
+      
       this.renderNav();
       // Add harvest modal to body
       if(!document.getElementById('supervisor-harvest-modal')) {

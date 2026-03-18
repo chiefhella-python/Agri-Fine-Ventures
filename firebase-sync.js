@@ -4,7 +4,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getDatabase, ref, set, get } from "firebase/database";
+import { getDatabase, ref, set, get, onValue, off } from "firebase/database";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -21,6 +21,8 @@ const firebaseConfig = {
 let firebaseApp = null;
 let db = null;
 let firebaseReady = false;
+let unsubscribeFirebase = null;
+let onFirebaseUpdateCallback = null;
 
 // Initialize Firebase
 async function initFirebase() {
@@ -36,6 +38,49 @@ async function initFirebase() {
     console.error('Firebase init error:', e);
   }
   return false;
+}
+
+// Subscribe to real-time Firebase updates
+function subscribeToFirebaseUpdates(callback) {
+  if (!firebaseReady || !db) {
+    console.warn('Firebase not ready, cannot subscribe to updates');
+    return false;
+  }
+  
+  // Store callback for when data changes
+  onFirebaseUpdateCallback = callback;
+  
+  // Create a reference to the farmState
+  const stateRef = ref(db, 'farmState');
+  
+  // Subscribe to real-time changes using onValue
+  unsubscribeFirebase = onValue(stateRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const newData = snapshot.val();
+      console.log('Firebase update received from remote:', newData);
+      
+      // Call the callback with the new data
+      if (onFirebaseUpdateCallback) {
+        onFirebaseUpdateCallback(newData);
+      }
+    }
+  }, (error) => {
+    console.error('Firebase realtime listener error:', error);
+  });
+  
+  console.log('Subscribed to Firebase real-time updates');
+  return true;
+}
+
+// Unsubscribe from Firebase updates
+function unsubscribeFromFirebaseUpdates() {
+  if (unsubscribeFirebase && db) {
+    const stateRef = ref(db, 'farmState');
+    off(stateRef);
+    unsubscribeFirebase = null;
+    onFirebaseUpdateCallback = null;
+    console.log('Unsubscribed from Firebase updates');
+  }
 }
 
 // Save state to Firebase
@@ -76,5 +121,7 @@ window.FirebaseSync = {
   initFirebase,
   saveToFirebase,
   loadFromFirebase,
-  isFirebaseReady
+  isFirebaseReady,
+  subscribeToFirebaseUpdates,
+  unsubscribeFromFirebaseUpdates
 };

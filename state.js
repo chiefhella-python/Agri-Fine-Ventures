@@ -781,5 +781,74 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     } catch (e) {
       console.error('Error loading state:', e);
     }
+  },
+
+  // Apply loaded state data (used by Firebase sync and localStorage)
+  applyLoadedState(parsed) {
+    if (!parsed) return;
+    
+    try {
+      if (parsed.passwordResetRequests) this.passwordResetRequests = parsed.passwordResetRequests;
+      if (parsed.weeklyReports) this.weeklyReports = parsed.weeklyReports;
+      if (parsed.workers) this.workers = parsed.workers;
+      if (parsed.inventory) this.inventory = parsed.inventory;
+      if (parsed.greenhouses) this.greenhouses = parsed.greenhouses;
+      if (parsed.notifications) this.notifications = parsed.notifications;
+      if (parsed.feedingProgram) this.feedingProgram = parsed.feedingProgram;
+      if (parsed.aiSettings) {
+        if (parsed.aiSettings.model) this.aiSettings.model = parsed.aiSettings.model;
+      }
+      if (parsed.receipts) this.receipts = parsed.receipts;
+      if (parsed.revenue) this.revenue = parsed.revenue;
+      if (parsed.harvest) this.harvest = parsed.harvest;
+      if (parsed.taskCategories) this.taskCategories = parsed.taskCategories;
+      if (parsed.harvestOrders) this.harvestOrders = parsed.harvestOrders;
+      if (parsed.farmProduce) this.farmProduce = parsed.farmProduce;
+      
+      // Convert date strings back to Date objects
+      this.passwordResetRequests?.forEach(r => {
+        r.requestedAt = new Date(r.requestedAt);
+        r.resolvedAt = r.resolvedAt ? new Date(r.resolvedAt) : null;
+      });
+      this.weeklyReports?.forEach(r => {
+        r.submittedAt = new Date(r.submittedAt);
+        r.weekStart = new Date(r.weekStart);
+      });
+      
+      // Convert greenhouse date fields
+      this.greenhouses?.forEach(gh => {
+        gh.plantedDate = gh.plantedDate ? new Date(gh.plantedDate) : null;
+        gh.expectedHarvest = gh.expectedHarvest ? new Date(gh.expectedHarvest) : null;
+        gh.tasks?.forEach(task => {
+          task.completedAt = task.completedAt ? new Date(task.completedAt) : null;
+          task.startedAt = task.startedAt ? new Date(task.startedAt) : null;
+        });
+      });
+      
+      // Convert agronomist report timestamps
+      this.agronomistReports?.forEach(r => {
+        r.timestamp = new Date(r.timestamp);
+        r.editedAt = r.editedAt ? new Date(r.editedAt) : null;
+      });
+      
+      // Convert activity log timestamps
+      this.activityLog?.forEach(log => {
+        log.time = new Date(log.time);
+      });
+      
+      // Convert harvest records
+      if (this.harvest) {
+        Object.keys(this.harvest).forEach(ghId => {
+          this.harvest[ghId]?.forEach(record => {
+            record.recordedAt = new Date(record.recordedAt);
+            record.date = new Date(record.date);
+          });
+        });
+      }
+      
+      console.log('State applied successfully from remote data');
+    } catch (e) {
+      console.error('Error applying loaded state:', e);
+    }
   }
 };

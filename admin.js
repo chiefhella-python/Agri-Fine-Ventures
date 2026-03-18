@@ -6,6 +6,14 @@ const AdminDashboard = {
   currentPage: 'overview',
   weatherData: null,
 
+  // Refresh current page (called when Firebase sync receives remote updates)
+  refreshCurrentPage() {
+    if (this.currentPage) {
+      this.showPage(this.currentPage);
+      console.log('AdminDashboard: Refreshed page after remote sync');
+    }
+  },
+
   // Limuru, Kiambu, Kenya coordinates
   farmLocation: {
     latitude: -1.1064,
