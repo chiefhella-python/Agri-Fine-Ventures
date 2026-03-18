@@ -3432,13 +3432,11 @@ AdminDashboard.deleteHarvest = function(ghId, recordId) {
 };
 
 AdminDashboard.resetAllData = function() {
-  if (confirm('Are you sure you want to reset ALL data? This will clear EVERYTHING - greenhouses, workers, supervisors, agronomists, tasks, harvest, receipts - and leave the system completely empty. This cannot be undone!')) {
+  if (confirm('Are you sure you want to reset ALL data? This will clear EVERYTHING - greenhouses, workers, agronomists, tasks, harvest, receipts - and leave the system completely empty. This cannot be undone!')) {
     // Clear all data in memory
     AFV.workers = [];
     AFV.greenhouses = [];
-    AFV.supervisors = [];
     AFV.agronomistReports = [];
-    AFV.tasks = [];
     AFV.harvest = {};
     AFV.receipts = [];
     AFV.revenue = [];
@@ -3449,10 +3447,7 @@ AdminDashboard.resetAllData = function() {
     AFV.activityLog = [];
     AFV.passwordResetRequests = [];
     
-    // Clear localStorage
-    localStorage.removeItem('afv_state');
-    
-    // Save empty state to Firebase
+    // Save empty state to localStorage
     const emptyState = {
       workers: [],
       greenhouses: [],
@@ -3470,7 +3465,14 @@ AdminDashboard.resetAllData = function() {
       feedingProgram: AFV.feedingProgram
     };
     
-    AFV.saveState();
+    // Save to localStorage
+    localStorage.setItem('afv_state', JSON.stringify(emptyState));
+    
+    // Save to Firebase (async)
+    if (window.FirebaseSync?.isFirebaseReady()) {
+      window.FirebaseSync.saveToFirebase(emptyState);
+    }
+    
     showToast('System completely reset! Reloading...', 'success');
     setTimeout(() => location.reload(), 1500);
   }
