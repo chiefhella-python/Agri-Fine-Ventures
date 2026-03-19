@@ -1,5 +1,8 @@
 {
-  "dependencies": {
-    "firebase": "^12.10.0"
+  "name": "agri-fine-ventures",
+  "version": "1.0.0",
+  "description": "Agri-Fine Ventures - Greenhouse Management System",
+  "scripts": {
+    "start": "node backend/server.js"
   }
 }
