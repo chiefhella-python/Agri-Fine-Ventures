@@ -92,7 +92,7 @@ router.post('/register', [
   }
   
   try {
-    // Check if user already exists
+    // Check if user already exists by email
     const existing = await db.getUserByEmail(email);
     if (existing) {
       return res.status(400).json({ error: 'User already exists' });
@@ -102,6 +102,8 @@ router.post('/register', [
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
     const uid = email.split('@')[0];
+    console.log('Creating user:', { uid, email, role, displayName });
+    
     const newUser = {
       uid: uid,
       email,
@@ -113,7 +115,8 @@ router.post('/register', [
       imageUrl: ''
     };
     
-    await db.createUser(newUser);
+    const created = await db.createUser(newUser);
+    console.log('User created:', created);
     
     const { password: _, ...userWithoutPassword } = newUser;
     const token = generateToken(newUser);
@@ -123,9 +126,9 @@ router.post('/register', [
       token,
       expiresIn: 3600
     });
-  } catch (err) {
-    console.error('Register error:', err);
-    res.status(500).json({ error: 'Server error' });
+   } catch (err) {
+    console.error('Register error:', err.message, err.stack);
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 
