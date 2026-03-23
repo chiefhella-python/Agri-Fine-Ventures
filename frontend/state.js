@@ -690,6 +690,8 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         await this.fetchUsersFromBackend();
         return true;
       }
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Create user failed:', errorData.error || 'Unknown error');
       return false;
     } catch (err) {
       console.error('Failed to create user:', err);

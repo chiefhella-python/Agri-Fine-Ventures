@@ -101,11 +101,12 @@ router.post('/register', [
     // Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
+    const uid = email.split('@')[0];
     const newUser = {
-      uid: `user_${Date.now()}`,
+      uid: uid,
       email,
       password: hashedPassword,
-      displayName: displayName || email.split('@')[0],
+      displayName: displayName || uid,
       role: role,
       assignedGH: assignedGH || [],
       avatar: role === 'supervisor' ? '👨‍🌾' : role === 'agronomist' ? '🔬' : '👤',

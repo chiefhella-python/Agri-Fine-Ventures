@@ -1867,7 +1867,7 @@ const AdminDashboard = {
         AFV.logActivity('➕', `New supervisor added: ${name}`);
         showToast(`Supervisor "${name}" added successfully!`, 'success');
       } else {
-        showToast('Failed to create supervisor. Username may already exist.', 'error');
+        showToast('Failed to create supervisor. Username/email may already exist.', 'error');
         return;
       }
     }
