@@ -11,6 +11,7 @@ const SALT_ROUNDS = 10;
 const getPoolConfig = () => {
   const config = {
     connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
     // Increase timeouts for cloud databases
     connectionTimeoutMillis: 15000,
     idleTimeoutMillis: 30000,
