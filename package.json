@@ -12,12 +12,16 @@
     "supabase": "^2.83.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.99.3",
+    "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
+    "express-validator": "^7.0.1",
     "helmet": "^8.1.0",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "pg": "^8.20.0"
   }
 }
