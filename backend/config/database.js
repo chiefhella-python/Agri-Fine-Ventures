@@ -123,17 +123,29 @@ async function initializeDatabase() {
 // Get all users
 async function getAllUsers() {
   const result = await pool.query('SELECT * FROM users ORDER BY created_at');
-  return result.rows.map(row => ({
-    uid: row.uid,
-    email: row.email,
-    password: row.password,
-    displayName: row.display_name,
-    role: row.role,
-    avatar: row.avatar,
-    imageUrl: row.image_url,
-    assignedGH: row.assigned_gh,
-    createdAt: row.created_at
-  }));
+  return result.rows.map(row => {
+    let assignedGH = row.assigned_gh;
+    if (assignedGH === null || assignedGH === undefined) {
+      assignedGH = [];
+    } else if (typeof assignedGH === 'string') {
+      try {
+        assignedGH = JSON.parse(assignedGH);
+      } catch (e) {
+        assignedGH = [];
+      }
+    }
+    return {
+      uid: row.uid,
+      email: row.email,
+      password: row.password,
+      displayName: row.display_name,
+      role: row.role,
+      avatar: row.avatar,
+      imageUrl: row.image_url,
+      assignedGH: assignedGH,
+      createdAt: row.created_at
+    };
+  });
 }
 
 // Get user by email
@@ -141,6 +153,16 @@ async function getUserByEmail(email) {
   const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
+  let assignedGH = row.assigned_gh;
+  if (assignedGH === null || assignedGH === undefined) {
+    assignedGH = [];
+  } else if (typeof assignedGH === 'string') {
+    try {
+      assignedGH = JSON.parse(assignedGH);
+    } catch (e) {
+      assignedGH = [];
+    }
+  }
   return {
     uid: row.uid,
     email: row.email,
@@ -149,7 +171,7 @@ async function getUserByEmail(email) {
     role: row.role,
     avatar: row.avatar,
     imageUrl: row.image_url,
-    assignedGH: row.assigned_gh,
+    assignedGH: assignedGH,
     createdAt: row.created_at
   };
 }
