@@ -68,6 +68,16 @@ async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
     `);
     
+    // Add assigned_gh column if it doesn't exist (for supervisors/agronomists)
+    try {
+      await client.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS assigned_gh TEXT[]
+      `);
+      console.log('✅ PostgreSQL: added assigned_gh column');
+    } catch (e) {
+      // Column might already exist or be added by another process
+    }
+    
     // Create admin user if not exists (with hashed password)
     const adminExists = await client.query('SELECT * FROM users WHERE uid = $1', ['admin']);
     if (adminExists.rows.length === 0) {
