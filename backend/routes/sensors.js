@@ -1,10 +1,11 @@
 // ============================================
 // AGRI-FINE VENTURES — SENSORS API ROUTES
-// In-memory storage (no Firebase)
+// PostgreSQL database (Supabase)
 // ============================================
 
 const express = require('express');
 const router = express.Router();
+const { authenticate, requireAdmin, requireSupervisorOrAdmin } = require('../middleware/auth');
 
 // In-memory sensor data storage (simulates IoT data)
 let sensorReadings = {};
@@ -19,13 +20,13 @@ const sensorTypes = [
   { type: 'ph', name: 'pH Level', unit: 'pH', icon: '⚗️' }
 ];
 
-// GET /api/sensors - Get all sensor types
+// GET /api/sensors - Get all sensor types (public)
 router.get('/', (req, res) => {
   res.json(sensorTypes);
 });
 
 // GET /api/sensors/:greenhouseId - Get sensors for specific greenhouse
-router.get('/:greenhouseId', (req, res) => {
+router.get('/:greenhouseId', authenticate, async (req, res) => {
   const { greenhouseId } = req.params;
   const { limit = '50' } = req.query;
   
@@ -34,7 +35,7 @@ router.get('/:greenhouseId', (req, res) => {
 });
 
 // POST /api/sensors/:greenhouseId - Submit sensor reading
-router.post('/:greenhouseId', (req, res) => {
+router.post('/:greenhouseId', authenticate, requireSupervisorOrAdmin, (req, res) => {
   const { greenhouseId } = req.params;
   const { sensors, timestamp } = req.body;
   
@@ -66,7 +67,7 @@ router.post('/:greenhouseId', (req, res) => {
 });
 
 // GET /api/sensors/:greenhouseId/latest - Get latest readings for greenhouse
-router.get('/:greenhouseId/latest', (req, res) => {
+router.get('/:greenhouseId/latest', authenticate, (req, res) => {
   const { greenhouseId } = req.params;
   
   const readings = sensorReadings[greenhouseId] || [];
@@ -79,7 +80,7 @@ router.get('/:greenhouseId/latest', (req, res) => {
 });
 
 // GET /api/sensors/:greenhouseId/history - Get historical data
-router.get('/:greenhouseId/history', (req, res) => {
+router.get('/:greenhouseId/history', authenticate, (req, res) => {
   const { greenhouseId } = req.params;
   const { sensorType, limit = '100' } = req.query;
   
@@ -97,7 +98,7 @@ router.get('/:greenhouseId/history', (req, res) => {
 });
 
 // GET /api/sensors/:greenhouseId/analytics - Get sensor analytics
-router.get('/:greenhouseId/analytics', (req, res) => {
+router.get('/:greenhouseId/analytics', authenticate, (req, res) => {
   const { greenhouseId } = req.params;
   const { period = '24h' } = req.query;
   
@@ -150,8 +151,8 @@ router.get('/:greenhouseId/analytics', (req, res) => {
   res.json(analytics);
 });
 
-// DELETE /api/sensors/:greenhouseId - Clear sensor data for greenhouse
-router.delete('/:greenhouseId', (req, res) => {
+// DELETE /api/sensors/:greenhouseId - Clear sensor data for greenhouse (Admin only)
+router.delete('/:greenhouseId', authenticate, requireAdmin, (req, res) => {
   const { greenhouseId } = req.params;
   
   if (!sensorReadings[greenhouseId]) {

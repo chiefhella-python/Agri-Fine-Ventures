@@ -1,11 +1,12 @@
 // ============================================
 // AGRI-FINE VENTURES — ADMIN API ROUTES
-// In-memory storage (no Firebase)
+// PostgreSQL database (Supabase)
 // ============================================
 
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
+const { authenticate, requireAdmin, requireSupervisorOrAdmin } = require('../middleware/auth');
 
 // In-memory admin data
 let adminData = {
@@ -28,8 +29,8 @@ let adminData = {
   }
 };
 
-// GET /api/admin/stats - Get system statistics
-router.get('/stats', (req, res) => {
+// GET /api/admin/stats - Get system statistics (Admin/Supervisor only)
+router.get('/stats', authenticate, requireSupervisorOrAdmin, (req, res) => {
   res.json({
     greenhouses: 2,
     sensors: 5,
@@ -41,13 +42,13 @@ router.get('/stats', (req, res) => {
   });
 });
 
-// GET /api/admin/users - Get all users
-router.get('/users', (req, res) => {
+// GET /api/admin/users - Get all users (Admin only)
+router.get('/users', authenticate, requireAdmin, (req, res) => {
   res.json(adminData.users);
 });
 
-// POST /api/admin/users - Create new user
-router.post('/users', [
+// POST /api/admin/users - Create new user (Admin only)
+router.post('/users', authenticate, requireAdmin, [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('role').optional().isIn(['admin', 'supervisor', 'agronomist', 'user'])
@@ -71,8 +72,8 @@ router.post('/users', [
   res.status(201).json(newUser);
 });
 
-// DELETE /api/admin/users/:uid - Delete user
-router.delete('/users/:uid', (req, res) => {
+// DELETE /api/admin/users/:uid - Delete user (Admin only)
+router.delete('/users/:uid', authenticate, requireAdmin, (req, res) => {
   const { uid } = req.params;
   const index = adminData.users.findIndex(u => u.uid === uid);
   
@@ -84,26 +85,26 @@ router.delete('/users/:uid', (req, res) => {
   res.json({ message: 'User deleted successfully' });
 });
 
-// GET /api/admin/settings - Get system settings
-router.get('/settings', (req, res) => {
+// GET /api/admin/settings - Get system settings (Admin only)
+router.get('/settings', authenticate, requireAdmin, (req, res) => {
   res.json(adminData.settings);
 });
 
-// PUT /api/admin/settings - Update system settings
-router.put('/settings', (req, res) => {
+// PUT /api/admin/settings - Update system settings (Admin only)
+router.put('/settings', authenticate, requireAdmin, (req, res) => {
   const updates = req.body;
   adminData.settings = { ...adminData.settings, ...updates };
   res.json(adminData.settings);
 });
 
-// GET /api/admin/logs - Get system logs
-router.get('/logs', (req, res) => {
+// GET /api/admin/logs - Get system logs (Admin only)
+router.get('/logs', authenticate, requireAdmin, (req, res) => {
   const { limit = '100' } = req.query;
   res.json(adminData.logs.slice(-parseInt(limit)));
 });
 
-// POST /api/admin/logs - Create log entry
-router.post('/logs', (req, res) => {
+// POST /api/admin/logs - Create log entry (Authenticated users)
+router.post('/logs', authenticate, (req, res) => {
   const { type, message, data } = req.body;
   
   const logEntry = {
@@ -124,8 +125,8 @@ router.post('/logs', (req, res) => {
   res.status(201).json(logEntry);
 });
 
-// POST /api/admin/backup - Trigger data backup
-router.post('/backup', (req, res) => {
+// POST /api/admin/backup - Trigger data backup (Admin only)
+router.post('/backup', authenticate, requireAdmin, (req, res) => {
   const backup = {
     timestamp: new Date().toISOString(),
     data: {
@@ -143,8 +144,8 @@ router.post('/backup', (req, res) => {
   });
 });
 
-// POST /api/admin/cleanup - Clean up old data
-router.post('/cleanup', (req, res) => {
+// POST /api/admin/cleanup - Clean up old data (Admin only)
+router.post('/cleanup', authenticate, requireAdmin, (req, res) => {
   const { days = 30 } = req.body;
   
   res.json({
@@ -155,8 +156,8 @@ router.post('/cleanup', (req, res) => {
   });
 });
 
-// GET /api/admin/export - Export all data
-router.get('/export', (req, res) => {
+// GET /api/admin/export - Export all data (Admin only)
+router.get('/export', authenticate, requireAdmin, (req, res) => {
   res.json({
     exportDate: new Date().toISOString(),
     users: adminData.users,

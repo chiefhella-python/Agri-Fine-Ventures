@@ -1,12 +1,13 @@
 // ============================================
 // AGRI-FINE VENTURES — AUTH API ROUTES
-// PostgreSQL database (Neon)
+// PostgreSQL database (Supabase)
 // ============================================
 
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const db = require('../config/database');
+const { authenticate, requireAdmin, requireSupervisorOrAdmin } = require('../middleware/auth');
 
 // For password hashing
 const bcrypt = require('bcrypt');
@@ -128,7 +129,7 @@ router.post('/register', [
 });
 
 // POST /api/auth/verify - Verify token
-router.post('/verify', (req, res) => {
+router.post('/verify', authenticate, (req, res) => {
   const { token } = req.body;
   
   if (!token) {
@@ -147,12 +148,12 @@ router.post('/verify', (req, res) => {
 });
 
 // POST /api/auth/logout - User logout
-router.post('/logout', (req, res) => {
+router.post('/logout', authenticate, (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
 // GET /api/auth/users - Get all users (for frontend sync)
-router.get('/users', async (req, res) => {
+router.get('/users', authenticate, requireSupervisorOrAdmin, async (req, res) => {
   try {
     const users = await db.getAllUsers();
     const usersWithoutPassword = users.map(({ password, ...user }) => user);
@@ -164,7 +165,7 @@ router.get('/users', async (req, res) => {
 });
 
 // POST /api/auth/reset - Reset all users (only admin remains)
-router.post('/reset', async (req, res) => {
+router.post('/reset', authenticate, requireAdmin, async (req, res) => {
   try {
     await db.resetUsers();
     res.json({ message: 'All users reset. Only admin remains.' });
@@ -175,7 +176,7 @@ router.post('/reset', async (req, res) => {
 });
 
 // DELETE /api/auth/users/:uid - Delete a user
-router.delete('/users/:uid', async (req, res) => {
+router.delete('/users/:uid', authenticate, requireAdmin, async (req, res) => {
   const { uid } = req.params;
   
   try {
@@ -193,6 +194,17 @@ router.delete('/users/:uid', async (req, res) => {
   } catch (err) {
     console.error('Delete user error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/auth/reset-all - Full system reset (Admin only)
+router.post('/reset-all', authenticate, requireAdmin, async (req, res) => {
+  try {
+    await db.resetAll();
+    res.json({ message: 'Full system reset complete. All users, workers, and greenhouses have been reset.' });
+  } catch (err) {
+    console.error('Reset all error:', err);
+    res.status(500).json({ error: 'Reset failed' });
   }
 });
 

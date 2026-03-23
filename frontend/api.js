@@ -3,7 +3,23 @@
 // Connects frontend to backend API
 // ============================================
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = '/api';
+
+// Get auth token from localStorage
+const getAuthHeader = () => {
+  const token = localStorage.getItem('afv_token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
+// Make authenticated request
+const authFetch = async (url, options = {}) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...getAuthHeader(),
+    ...options.headers
+  };
+  return fetch(url, { ...options, headers });
+};
 
 const AFV_API = {
   // Auth
@@ -37,7 +53,7 @@ const AFV_API = {
   // Greenhouses
   async getGreenhouses() {
     try {
-      const response = await fetch(`${API_BASE}/greenhouses`);
+      const response = await authFetch(`${API_BASE}/greenhouses`);
       return await response.json();
     } catch (error) {
       console.error('Error fetching greenhouses:', error);
@@ -46,30 +62,28 @@ const AFV_API = {
   },
 
   async getGreenhouse(id) {
-    const response = await fetch(`${API_BASE}/greenhouses/${id}`);
+    const response = await authFetch(`${API_BASE}/greenhouses/${id}`);
     return response.json();
   },
 
   async createGreenhouse(data) {
-    const response = await fetch(`${API_BASE}/greenhouses`, {
+    const response = await authFetch(`${API_BASE}/greenhouses`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return response.json();
   },
 
   async updateGreenhouse(id, data) {
-    const response = await fetch(`${API_BASE}/greenhouses/${id}`, {
+    const response = await authFetch(`${API_BASE}/greenhouses/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return response.json();
   },
 
   async deleteGreenhouse(id) {
-    const response = await fetch(`${API_BASE}/greenhouses/${id}`, {
+    const response = await authFetch(`${API_BASE}/greenhouses/${id}`, {
       method: 'DELETE'
     });
     return response.json();
@@ -142,6 +156,50 @@ const AFV_API = {
     return response.json();
   },
 
+  // Utility
+  getAuthHeader,
+
+  // Workers
+  async getWorkers() {
+    try {
+      const response = await fetch(`${API_BASE}/workers`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching workers:', error);
+      return [];
+    }
+  },
+
+  async getWorker(id) {
+    const response = await fetch(`${API_BASE}/workers/${id}`);
+    return response.json();
+  },
+
+  async createWorker(data) {
+    const response = await fetch(`${API_BASE}/workers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  },
+
+  async updateWorker(id, data) {
+    const response = await fetch(`${API_BASE}/workers/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  },
+
+  async deleteWorker(id) {
+    const response = await fetch(`${API_BASE}/workers/${id}`, {
+      method: 'DELETE'
+    });
+    return response.json();
+  },
+
   // Initialize: Load data from backend
   async init() {
     try {
@@ -171,3 +229,5 @@ AFV_API.init();
 
 // Make available globally
 window.AFV_API = AFV_API;
+window.authFetch = authFetch;
+window.getAuthHeader = getAuthHeader;

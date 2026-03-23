@@ -22,12 +22,10 @@ const EXTERNAL_DOMAINS = [
   'cdn.jsdelivr.net',
   'www.gstatic.com',
   'gstatic.com',
-  'firebasejs',
-  'firebase',
-  'firebaseio.com',
   'googleapis.com',
   'api.open-meteo.com',
-  'images.unsplash.com'
+  'images.unsplash.com',
+  'supabase.co'
 ];
 
 // Install event - cache static assets

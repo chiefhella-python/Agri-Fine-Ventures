@@ -5,7 +5,7 @@
 const AgronomistDashboard = {
   currentPage: 'overview',
 
-  // Refresh current page (called when Firebase sync receives remote updates)
+  // Refresh current page
   refreshCurrentPage() {
     if (this.currentPage) {
       this.showPage(this.currentPage);

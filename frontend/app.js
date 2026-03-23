@@ -4,6 +4,19 @@
 
 // Note: escapeHtml function is defined in state.js (loaded first)
 
+// ============================================ KEYBOARD ACCESSIBILITY
+// Close modals on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    // Close any visible modal
+    document.querySelectorAll('.modal-overlay, .modal[style*="flex"]').forEach(modal => {
+      if (modal.style.display === 'flex' || modal.style.display === 'block') {
+        modal.style.display = 'none';
+      }
+    });
+  }
+});
+
 // ============================================ SPLASH SCREEN
 document.addEventListener('DOMContentLoaded', function() {
   const splash = document.getElementById('splash-screen');
@@ -27,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ============================================ AUTH
 
-function handleLogin() {
+async function handleLogin() {
   const username = document.getElementById('login-username')?.value?.trim();
   const password = document.getElementById('login-password')?.value?.trim();
   const roleBtn = document.querySelector('.role-btn.active');
@@ -38,41 +51,77 @@ function handleLogin() {
     return;
   }
 
-  // For admin, check by email; for others, check by id/username
-  // Note: In production, verify password hash instead of plaintext
-  let user;
-  if (selectedRole === 'admin') {
-    user = Object.values(AFV.users).find(u => (u.email === username || u.id === username) && u.role === 'admin');
-  } else {
-    // Search by id OR name for supervisor/agronomist roles
-    user = Object.values(AFV.users).find(u => (u.id === username || u.name === username) && u.role === selectedRole);
-  }
-  
-  // Demo mode: accept any password for users with passwordHash (placeholder auth)
-  // In production, implement proper password hashing verification
-  if (!user) {
-    showToast('Wrong email or password', 'error');
-    return;
-  }
-  
-  // For demo purposes, allow login if user exists (password check relaxed)
-  // Real implementation should verify: user.passwordHash === hash(password)
-  if (user.passwordHash && user.passwordHash !== password) {
-    showToast('Wrong email or password', 'error');
-    return;
-  }
+  try {
+    // Try API login first
+    const response = await AFV_API.login(username, password);
+    
+    if (response.error) {
+      showToast(response.error, 'error');
+      return;
+    }
+    
+    if (response.user && response.token) {
+      // Store token for authenticated requests
+      localStorage.setItem('afv_token', response.token);
+      
+      // Map API user to local user format
+      const user = {
+        id: response.user.uid,
+        email: response.user.email,
+        name: response.user.display_name || response.user.email.split('@')[0],
+        role: response.user.role,
+        avatar: response.user.avatar
+      };
+      
+      // Verify role matches selected role
+      if (user.role !== selectedRole) {
+        showToast(`This account is a ${user.role}, not ${selectedRole}`, 'error');
+        return;
+      }
 
-  if (user.role !== selectedRole) {
-    showToast(`This account is a ${user.role}, not ${selectedRole}`, 'error');
-    return;
+      AFV.currentUser = user;
+      AFV.currentRole = user.role;
+      AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
+
+      navigateTo(user.role);
+      showToast(`Welcome, ${user.name}! 🌾`, 'success');
+    } else {
+      // Fallback to local authentication (demo mode)
+      throw new Error('API login failed');
+    }
+  } catch (err) {
+    // Fallback to local/demo authentication
+    console.log('API login failed, using demo auth');
+    
+    let user;
+    if (selectedRole === 'admin') {
+      user = Object.values(AFV.users).find(u => (u.email === username || u.id === username) && u.role === 'admin');
+    } else {
+      user = Object.values(AFV.users).find(u => (u.id === username || u.name === username) && u.role === selectedRole);
+    }
+    
+    if (!user) {
+      showToast('Wrong email or password', 'error');
+      return;
+    }
+    
+    if (user.passwordHash && user.passwordHash !== password) {
+      showToast('Wrong email or password', 'error');
+      return;
+    }
+
+    if (user.role !== selectedRole) {
+      showToast(`This account is a ${user.role}, not ${selectedRole}`, 'error');
+      return;
+    }
+
+    AFV.currentUser = user;
+    AFV.currentRole = user.role;
+    AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
+
+    navigateTo(user.role);
+    showToast(`Welcome, ${user.name}! 🌾`, 'success');
   }
-
-  AFV.currentUser = user;
-  AFV.currentRole = user.role;
-  AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
-
-  navigateTo(user.role);
-  showToast(`Welcome, ${user.name}! 🌾`, 'success');
 }
 
 function navigateTo(role) {
@@ -97,8 +146,69 @@ function navigateTo(role) {
     AgronomistDashboard.init();
   }
   
-  // Subscribe to Firebase real-time updates after login
-  subscribeToFirebaseUpdates();
+  startSync();
+}
+
+let syncInterval = null;
+let lastSyncHash = '';
+
+async function syncData() {
+  if (!AFV.currentUser) return;
+  try {
+    const greenhouses = await AFV_API.getGreenhouses();
+    const usersRes = await authFetch('/api/auth/users');
+    const users = usersRes.ok ? await usersRes.json() : [];
+    
+    // Quick hash comparison instead of full JSON.stringify
+    const dataHash = JSON.stringify({ greenhouses, users });
+    if (dataHash === lastSyncHash) return; // No changes, skip update
+    lastSyncHash = dataHash;
+    
+    let updated = false;
+    
+    if (greenhouses?.length > 0) {
+      const newGreenhouses = greenhouses.map(gh => ({
+        ...gh,
+        plantedDate: gh.plantedDate ? new Date(gh.plantedDate) : null,
+        expectedHarvest: gh.expectedHarvest ? new Date(gh.expectedHarvest) : null,
+        tasks: (gh.tasks || []).map(t => ({ ...t, completedAt: t.completedAt ? new Date(t.completedAt) : null }))
+      }));
+      
+      // Deep compare without full JSON.stringify
+      const oldCount = AFV.greenhouses?.length || 0;
+      if (oldCount !== newGreenhouses.length) {
+        AFV.greenhouses = newGreenhouses;
+        updated = true;
+      }
+    }
+    
+    if (users?.length > 0) {
+      AFV.allUsers = users;
+      updated = true;
+    }
+    
+    if (updated && AFV.currentRole === 'admin') {
+      AdminDashboard.refreshCurrentPage && AdminDashboard.refreshCurrentPage();
+    } else if (updated && AFV.currentRole === 'supervisor') {
+      SupervisorDashboard.refreshCurrentPage && SupervisorDashboard.refreshCurrentPage();
+    } else if (updated && AFV.currentRole === 'agronomist') {
+      AgronomistDashboard.refreshCurrentPage && AgronomistDashboard.refreshCurrentPage();
+    }
+  } catch (e) {
+    console.error('Sync error:', e);
+  }
+}
+
+function startSync() {
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(syncData, 30000);
+}
+
+function stopSync() {
+  if (syncInterval) {
+    clearInterval(syncInterval);
+    syncInterval = null;
+  }
 }
 
 function handleLogout() {
@@ -106,11 +216,10 @@ function handleLogout() {
   AFV.logActivity('🚪', `${userName} logged out`);
   AFV.currentUser = null;
   AFV.currentRole = null;
+  stopSync();
   
-  // Unsubscribe from Firebase real-time updates on logout
-  if (window.FirebaseSync) {
-    window.FirebaseSync.unsubscribeFromFirebaseUpdates();
-  }
+  // Clear auth token
+  localStorage.removeItem('afv_token');
   
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('login-screen').classList.add('active');
@@ -381,43 +490,7 @@ document.getElementById('forgot-password-modal')?.addEventListener('click', func
 });
 
 // Load saved state on init
-AFV.loadState().then(() => {
-  // Initialize Firebase after state is loaded
-  if (window.FirebaseSync) {
-    window.FirebaseSync.initFirebase();
-  }
-});
-
-// Handle Firebase remote updates - update UI when data changes on another device
-function handleFirebaseRemoteUpdate(remoteData) {
-  console.log('Received remote update from Firebase:', remoteData);
-  
-  // Apply the remote state to local AFV
-  AFV.applyLoadedState(remoteData);
-  
-  // Also save to localStorage as backup
-  localStorage.setItem('afv_state', JSON.stringify(remoteData));
-  
-  // Show notification about sync
-  showToast('🔄 Data synced from another device', 'success');
-  
-  // Re-render current page if logged in
-  if (AFV.currentRole === 'admin') {
-    AdminDashboard.refreshCurrentPage && AdminDashboard.refreshCurrentPage();
-  } else if (AFV.currentRole === 'supervisor') {
-    SupervisorDashboard.refreshCurrentPage && SupervisorDashboard.refreshCurrentPage();
-  } else if (AFV.currentRole === 'agronomist') {
-    AgronomistDashboard.refreshCurrentPage && AgronomistDashboard.refreshCurrentPage();
-  }
-}
-
-// Subscribe to Firebase updates after successful login
-function subscribeToFirebaseUpdates() {
-  if (window.FirebaseSync?.isFirebaseReady()) {
-    window.FirebaseSync.subscribeToFirebaseUpdates(handleFirebaseRemoteUpdate);
-    console.log('Subscribed to Firebase real-time updates');
-  }
-}
+AFV.loadState();
 
 // Auto-initialize feeding calendar if not set (default to today)
 if (!AFV.feedingProgram?.calendarStartDate) {

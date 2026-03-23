@@ -626,7 +626,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
   // ============================================
   async fetchUsersFromBackend() {
     try {
-      const res = await fetch('/api/auth/users');
+      const res = await authFetch('/api/auth/users');
       if (res.ok) {
         const users = await res.json();
         // Convert array to object keyed by uid
@@ -643,9 +643,8 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
   async createUserBackend(userData) {
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await authFetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
       });
       if (res.ok) {
@@ -666,7 +665,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         console.log('User not found locally, skipping delete:', uid);
         return true;
       }
-      const res = await fetch(`/api/auth/users/${uid}`, {
+      const res = await authFetch(`/api/auth/users/${uid}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -737,23 +736,20 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
       feedingProgram: this.feedingProgram
     }));
 
-    // Write empty state to Firebase if connected
-    // This prevents Firebase from restoring old data on the next load
-    if (window.FirebaseSync?.isFirebaseReady()) {
-      try {
-        await window.FirebaseSync.saveToFirebase(emptyState);
-        console.log('Firebase cleared successfully');
-      } catch (err) {
-        console.error('Firebase clear failed:', err);
-      }
-    }
-
     // Reset backend users (supervisors, agronomists, etc. will be removed)
     try {
-      await fetch('/api/auth/reset', { method: 'POST' });
+      await authFetch('/api/auth/reset', { method: 'POST' });
       console.log('Backend users reset successfully');
     } catch (err) {
       console.error('Backend user reset failed:', err);
+    }
+
+    // Full system reset (users, workers, greenhouses)
+    try {
+      await authFetch('/api/auth/reset-all', { method: 'POST' });
+      console.log('Full system reset successful');
+    } catch (err) {
+      console.error('Full system reset failed:', err);
     }
 
     console.log('System reset complete');
@@ -794,10 +790,6 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
       localStorage.setItem('afv_state', JSON.stringify(stateToSave));
       
-      // Try to save to Firebase (async, don't wait)
-      if (window.FirebaseSync?.isFirebaseReady()) {
-        window.FirebaseSync.saveToFirebase(stateToSave);
-      }
     } catch (e) {
       console.error('Error saving state:', e);
     }
@@ -807,22 +799,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
   // LOAD STATE
   // ============================================
   async loadState() {
-    // Try Firebase first if available
-    if (window.FirebaseSync) {
-      try {
-        const fbData = await window.FirebaseSync.loadFromFirebase();
-        if (fbData) {
-          this.applyLoadedState(fbData);
-          // Also save to localStorage as backup
-          localStorage.setItem('afv_state', JSON.stringify(fbData));
-          return;
-        }
-      } catch (e) {
-        console.error('Firebase load failed, falling back to localStorage:', e);
-      }
-    }
-    
-    // Fallback to localStorage
+    // Load from localStorage
     try {
       const saved = localStorage.getItem('afv_state');
       if (saved) {

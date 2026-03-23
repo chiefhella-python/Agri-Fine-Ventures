@@ -6,7 +6,7 @@ const AdminDashboard = {
   currentPage: 'overview',
   weatherData: null,
 
-  // Refresh current page (called when Firebase sync receives remote updates)
+  // Refresh current page
   refreshCurrentPage() {
     if (this.currentPage) {
       this.showPage(this.currentPage);
@@ -113,8 +113,7 @@ const AdminDashboard = {
 
   async fetchGreenhouses() {
     try {
-      const response = await fetch('/api/greenhouses');
-      const greenhouses = await response.json();
+      const greenhouses = await AFV_API.getGreenhouses();
       if (greenhouses && greenhouses.length > 0) {
         greenhouses.forEach(gh => {
           gh.plantedDate = gh.plantedDate ? new Date(gh.plantedDate) : null;
@@ -3361,11 +3360,7 @@ const AdminDashboard = {
       showToast('Greenhouse added successfully!', 'success');
       
       // Sync to backend
-      fetch('/api/greenhouses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGreenhouse)
-      }).catch(err => console.log('Backend sync error:', err));
+      AFV_API.createGreenhouse(newGreenhouse).catch(err => console.log('Backend sync error:', err));
     } else {
       // Update existing greenhouse - use string ID
       const existingGh = AFV.greenhouses.find(g => g.id === id);
@@ -3375,11 +3370,7 @@ const AdminDashboard = {
         AFV.save();
         
         // Sync to backend
-        fetch(`/api/greenhouses/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(existingGh)
-        }).catch(err => console.log('Backend sync error:', err));
+        AFV_API.updateGreenhouse(id, existingGh).catch(err => console.log('Backend sync error:', err));
       }
       AFV.logActivity('✏️', `Greenhouse updated: ${updates.name}`);
       showToast('Greenhouse updated successfully!', 'success');
@@ -3898,49 +3889,101 @@ const AdminDashboard = {
 
 
 
-// Workers added by supervisors
-AdminDashboard.renderSupervisorWorkers = function() {
-  const workers = AFV.workers || [];
+// Workers - Database backed (Admin & Supervisor)
+AdminDashboard.workersData = [];
+
+AdminDashboard.loadWorkers = async function() {
+  try {
+    this.workersData = await AFV_API.getWorkers();
+  } catch (e) {
+    console.error('Failed to load workers:', e);
+    this.workersData = [];
+  }
+};
+
+AdminDashboard.renderSupervisorWorkers = async function() {
+  await this.loadWorkers();
+  const workers = this.workersData || [];
+  const isAdmin = AFV.currentUser?.role === 'admin';
+  
   return `
     <div class="page-header">
       <div>
         <div class="page-title">Workers 👷</div>
-        <div class="page-subtitle">Manage workers</div>
+        <div class="page-subtitle">Track all workers, salary & transactions</div>
       </div>
       <div class="header-actions">
         <button onclick="AdminDashboard.openWorkerModal()" style="padding:8px 16px;background:var(--blue-water);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">➕ Add Worker</button>
       </div>
     </div>
     <div class="page-body">
+      <style>
+        .workers-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .workers-table th { background: var(--blue-deep); color: white; padding: 12px 8px; text-align: left; font-size: 0.8rem; }
+        .workers-table td { padding: 12px 8px; border-bottom: 1px solid var(--blue-pale); font-size: 0.85rem; }
+        .workers-table tr:hover { background: rgba(59,130,246,0.05); }
+        .workers-card { display: none; }
+        @media (max-width: 768px) {
+          .workers-table { display: none; }
+          .workers-card { display: block; margin-bottom: 12px; background: white; border: 1px solid var(--blue-pale); border-radius: 8px; padding: 14px; }
+          .workers-card-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+          .workers-card-label { font-weight: 600; color: var(--blue-deep); font-size: 0.75rem; }
+          .workers-card-value { color: var(--text-dark); font-size: 0.85rem; }
+          .workers-card-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+        }
+      </style>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-value">${workers.length}</div><div class="stat-label">Total Workers</div></div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div><div class="stat-value">KES ${workers.reduce((s,w) => s + (parseFloat(w.salary_paid) || 0), 0).toLocaleString()}</div><div class="stat-label">Total Paid</div></div></div>
       </div>
       ${workers.length === 0 ? '<p style="padding:20px;text-align:center;color:var(--text-light)">No workers added yet</p>' : ''}
-      <div class="stats-grid">
-        ${workers.map(w => {
-          const tasks = AFV.getTasksForWorker(w.id);
-          return `
-            <div class="card" style="text-align:center;border:1px solid var(--blue-pale)">
-              <div style="font-size:3rem;margin-bottom:8px">${w.avatar}</div>
-              <div style="font-weight:700;color:var(--blue-deep)">${w.name}</div>
-              <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:10px">Field Worker</div>
-              <div style="margin-bottom:10px">
-                ${w.assignedGH?.map(ghId => {
-                  const gh = AFV.greenhouses.find(g => g.id === ghId);
-                  return gh ? '<span class="badge badge-blue" style="margin:2px">' + gh.cropEmoji + '</span>' : '';
-                }).join('') || '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
-              </div>
-              <div style="background:rgba(59,130,246,0.1);border-radius:8px;padding:10px">
-                <div style="font-size:1.4rem;font-weight:800;color:var(--blue-water)">${tasks.length}</div>
-                <div style="font-size:0.72rem;color:var(--text-light)">Pending Tasks</div>
-              </div>
-              <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
-                <button onclick="AdminDashboard.openWorkerModal('${w.id}')" style="padding:6px 12px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">✏️ Edit</button>
-                <button onclick="AdminDashboard.deleteWorker('${w.id}')" style="padding:6px 12px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">🗑️</button>
-              </div>
-            </div>`;
-        }).join('')}
-      </div>
+      <!-- Desktop Table -->
+      <table class="workers-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Salary (KES)</th>
+            <th>Paid (KES)</th>
+            <th>Transaction Code</th>
+            ${isAdmin ? '<th>Actions</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${workers.map(w => `
+            <tr>
+              <td><strong>${w.name || '-'}</strong></td>
+              <td>${w.phone || '-'} ${w.email ? '<br><small style="color:var(--text-light)">' + w.email + '</small>' : ''}</td>
+              <td>${parseFloat(w.salary || 0).toLocaleString()}</td>
+              <td><strong>${parseFloat(w.salary_paid || 0).toLocaleString()}</strong></td>
+              <td><code style="font-size:0.75rem;background:var(--gray-100);padding:2px 6px;border-radius:4px">${w.transaction_code || '-'}</code></td>
+              ${isAdmin ? `
+                <td>
+                  <button onclick="AdminDashboard.openWorkerModal(${w.id})" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:4px">✏️</button>
+                  <button onclick="AdminDashboard.deleteWorker(${w.id})" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">🗑️</button>
+                </td>
+              ` : ''}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <!-- Mobile Cards -->
+      ${workers.map(w => `
+        <div class="workers-card">
+          <div class="workers-card-row"><span class="workers-card-label">Name</span><span class="workers-card-value">${w.name || '-'}</span></div>
+          <div class="workers-card-row"><span class="workers-card-label">Phone</span><span class="workers-card-value">${w.phone || '-'}</span></div>
+          <div class="workers-card-row"><span class="workers-card-label">Email</span><span class="workers-card-value">${w.email || '-'}</span></div>
+          <div class="workers-card-row"><span class="workers-card-label">Salary</span><span class="workers-card-value">KES ${parseFloat(w.salary || 0).toLocaleString()}</span></div>
+          <div class="workers-card-row"><span class="workers-card-label">Paid</span><span class="workers-card-value">KES ${parseFloat(w.salary_paid || 0).toLocaleString()}</span></div>
+          <div class="workers-card-row"><span class="workers-card-label">Transaction</span><span class="workers-card-value">${w.transaction_code || '-'}</span></div>
+          ${isAdmin ? `
+            <div class="workers-card-actions">
+              <button onclick="AdminDashboard.openWorkerModal(${w.id})" style="padding:8px 12px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">✏️ Edit</button>
+              <button onclick="AdminDashboard.deleteWorker(${w.id})" style="padding:8px 12px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">🗑️</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
     </div>
     ${this.getWorkerModalHtml()}
   `;
@@ -3950,28 +3993,51 @@ AdminDashboard.renderSupervisorWorkers = function() {
 AdminDashboard.getWorkerModalHtml = function() {
   return `
     <div id="worker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
-      <div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:450px;width:90%">
+      <div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto">
         <h2 style="font-family:'Playfair Display',serif;color:var(--blue-deep);margin:0 0 20px" id="worker-modal-title">Add Worker</h2>
         <form onsubmit="AdminDashboard.saveWorker(event)">
           <input type="hidden" id="worker-id">
           <div style="margin-bottom:16px">
-            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Name</label>
-            <input type="text" id="worker-name" required style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Worker name">
+            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Name *</label>
+            <input type="text" id="worker-name" required style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Full name">
           </div>
           <div style="margin-bottom:16px">
             <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Phone</label>
             <input type="tel" id="worker-phone" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., 0712345678">
           </div>
           <div style="margin-bottom:16px">
-            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assigned Greenhouses</label>
-            <select id="worker-gh" multiple style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem;height:100px">
-              ${AFV.greenhouses.map(gh => `<option value="${gh.id}">${gh.cropEmoji} ${gh.name}</option>`).join('')}
+            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email</label>
+            <input type="email" id="worker-email" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="email@example.com">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Salary (KES)</label>
+              <input type="number" id="worker-salary" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0" min="0">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Salary Paid (KES)</label>
+              <input type="number" id="worker-salary-paid" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="0" min="0">
+            </div>
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Transaction Code</label>
+            <input type="text" id="worker-transaction-code" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., TXN123456">
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Role</label>
+            <select id="worker-role" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem">
+              <option value="worker">Worker</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="casual">Casual</option>
             </select>
-            <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px">Hold Ctrl/Cmd to select multiple</div>
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Notes</label>
+            <textarea id="worker-notes" style="width:100%;padding:10px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);font-size:0.95rem;min-height:60px" placeholder="Additional notes..."></textarea>
           </div>
           <div style="display:flex;gap:10px">
             <button type="button" onclick="AdminDashboard.closeWorkerModal()" style="flex:1;padding:12px;background:var(--gray-100);color:var(--text-dark);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem">Cancel</button>
-            <button type="submit" style="flex:1;padding:12px;background:var(--blue-water);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">Save Worker</button>
+            <button type="submit" style="flex:1;padding:12px;background:var(--blue-water);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.95rem;font-weight:600">Save</button>
           </div>
         </form>
       </div>
@@ -3979,40 +4045,52 @@ AdminDashboard.getWorkerModalHtml = function() {
   `;
 };
 
-AdminDashboard.openWorkerModal = function(workerId = null) {
-  const modal = document.getElementById('worker-modal');
-  if (!modal) {
-    // Insert modal HTML
+AdminDashboard.openWorkerModal = async function(workerId = null) {
+  if (!document.getElementById('worker-modal')) {
     const div = document.createElement('div');
     div.innerHTML = this.getWorkerModalHtml();
     document.body.appendChild(div.firstElementChild);
   }
   
   const title = document.getElementById('worker-modal-title');
+  const idInput = document.getElementById('worker-id');
   const nameInput = document.getElementById('worker-name');
   const phoneInput = document.getElementById('worker-phone');
-  const ghSelect = document.getElementById('worker-gh');
-  const idInput = document.getElementById('worker-id');
+  const emailInput = document.getElementById('worker-email');
+  const salaryInput = document.getElementById('worker-salary');
+  const salaryPaidInput = document.getElementById('worker-salary-paid');
+  const txnCodeInput = document.getElementById('worker-transaction-code');
+  const roleInput = document.getElementById('worker-role');
+  const notesInput = document.getElementById('worker-notes');
+  
+  // Reload workers to ensure we have latest data
+  await this.loadWorkers();
   
   if (workerId) {
-    const worker = (AFV.workers || []).find(w => w.id == workerId);
+    const worker = this.workersData.find(w => w.id === workerId);
     if (worker) {
       title.textContent = 'Edit Worker';
       idInput.value = worker.id;
-      nameInput.value = worker.name;
+      nameInput.value = worker.name || '';
       phoneInput.value = worker.phone || '';
-      
-      // Select assigned greenhouses
-      Array.from(ghSelect.options).forEach(opt => {
-        opt.selected = worker.assignedGH?.includes(parseInt(opt.value));
-      });
+      emailInput.value = worker.email || '';
+      salaryInput.value = worker.salary || 0;
+      salaryPaidInput.value = worker.salary_paid || 0;
+      txnCodeInput.value = worker.transaction_code || '';
+      roleInput.value = worker.role || 'worker';
+      notesInput.value = worker.notes || '';
     }
   } else {
     title.textContent = 'Add Worker';
     idInput.value = '';
     nameInput.value = '';
     phoneInput.value = '';
-    Array.from(ghSelect.options).forEach(opt => opt.selected = false);
+    emailInput.value = '';
+    salaryInput.value = 0;
+    salaryPaidInput.value = 0;
+    txnCodeInput.value = '';
+    roleInput.value = 'worker';
+    notesInput.value = '';
   }
   
   document.getElementById('worker-modal').style.display = 'flex';
@@ -4023,48 +4101,48 @@ AdminDashboard.closeWorkerModal = function() {
   if (modal) modal.style.display = 'none';
 };
 
-AdminDashboard.saveWorker = function(e) {
+AdminDashboard.saveWorker = async function(e) {
   e.preventDefault();
   const id = document.getElementById('worker-id').value;
-  const name = document.getElementById('worker-name').value.trim();
-  const phone = document.getElementById('worker-phone').value.trim();
-  const ghSelect = document.getElementById('worker-gh');
-  const assignedGH = Array.from(ghSelect.selectedOptions).map(opt => parseInt(opt.value));
+  const data = {
+    name: document.getElementById('worker-name').value.trim(),
+    phone: document.getElementById('worker-phone').value.trim(),
+    email: document.getElementById('worker-email').value.trim(),
+    salary: parseFloat(document.getElementById('worker-salary').value) || 0,
+    salary_paid: parseFloat(document.getElementById('worker-salary-paid').value) || 0,
+    transaction_code: document.getElementById('worker-transaction-code').value.trim(),
+    role: document.getElementById('worker-role').value,
+    notes: document.getElementById('worker-notes').value.trim()
+  };
   
-  const avatars = ['👨‍🌾', '👩‍🌾', '👨‍💼', '👩‍💼', '👷', '👷‍♀️', '🧑‍🌾', '🧑‍💼'];
-  
-  if (id) {
-    // Edit existing
-    const worker = (AFV.workers || []).find(w => w.id == id);
-    if (worker) {
-      worker.name = name;
-      worker.phone = phone;
-      worker.assignedGH = assignedGH;
+  try {
+    if (id) {
+      await AFV_API.updateWorker(parseInt(id), data);
+      showToast('Worker updated!', 'success');
+    } else {
+      await AFV_API.createWorker(data);
+      showToast('Worker added!', 'success');
     }
-  } else {
-    // Add new
-    if (!AFV.workers) AFV.workers = [];
-    AFV.workers.push({
-      id: Date.now(),
-      name,
-      phone,
-      assignedGH,
-      avatar: avatars[Math.floor(Math.random() * avatars.length)]
-    });
+  } catch (err) {
+    console.error('Save worker error:', err);
+    showToast('Failed to save worker', 'error');
   }
   
-  AFV.saveState();
   this.closeWorkerModal();
-  showToast('Worker saved!', 'success');
   this.showPage('workers');
 };
 
-AdminDashboard.deleteWorker = function(workerId) {
+AdminDashboard.deleteWorker = async function(workerId) {
   if (!confirm('Are you sure you want to delete this worker?')) return;
   
-  AFV.workers = (AFV.workers || []).filter(w => w.id != workerId);
-  AFV.saveState();
-  showToast('Worker deleted!', 'success');
+  try {
+    await AFV_API.deleteWorker(workerId);
+    showToast('Worker deleted!', 'success');
+  } catch (err) {
+    console.error('Delete worker error:', err);
+    showToast('Failed to delete worker', 'error');
+  }
+  
   this.showPage('workers');
 };
 

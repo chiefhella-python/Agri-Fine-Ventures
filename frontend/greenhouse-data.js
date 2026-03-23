@@ -108,27 +108,19 @@
   // Initialize - load from API or use defaults
   AFV.initGreenhouses = async function() {
     try {
-      const response = await fetch('/api/greenhouses');
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.length > 0) {
-          this.greenhouses = data;
-          console.log('✅ Loaded greenhouses from server:', this.greenhouses.length);
-        } else {
-          this.greenhouses = defaultGreenhouses;
-          console.log('⚠️ Server returned empty, using defaults');
-        }
+      const greenhouses = await AFV_API.getGreenhouses();
+      if (greenhouses && greenhouses.length > 0) {
+        this.greenhouses = greenhouses;
+        console.log('✅ Loaded greenhouses from server:', this.greenhouses.length);
       } else {
         this.greenhouses = defaultGreenhouses;
-        console.log('⚠️ API error, using defaults');
+        console.log('⚠️ Server returned empty, using defaults');
       }
     } catch (err) {
       this.greenhouses = defaultGreenhouses;
-      console.log('⚠️ Network error, using defaults');
+      console.log('⚠️ API error, using defaults');
     }
-    this.save();
-    return this.greenhouses;
-  };
+  },
 
   // Save to localStorage
   AFV.save = function() {
@@ -248,14 +240,11 @@
   // Sync with server
   AFV.syncGreenhouses = async function() {
     try {
-      const response = await fetch('/api/greenhouses');
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.length > 0) {
-          this.greenhouses = data;
-          this.save();
-          return true;
-        }
+      const greenhouses = await AFV_API.getGreenhouses();
+      if (greenhouses && greenhouses.length > 0) {
+        this.greenhouses = greenhouses;
+        this.save();
+        return true;
       }
     } catch (err) {
       console.error('Sync error:', err);
