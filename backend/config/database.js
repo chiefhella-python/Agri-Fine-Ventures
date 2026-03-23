@@ -144,7 +144,7 @@ async function getAllUsers() {
              '{}'
            ) as assigned_gh_array
     FROM users u
-    LEFT JOIN supervisor_greenhouses sg ON u.uid = sg.supervisor_id
+    LEFT JOIN supervisor_greenhouses sg ON u.uid::text = sg.supervisor_id::text
     GROUP BY u.uid, u.email, u.password, u.display_name, u.role, u.avatar, u.image_url, u.assigned_gh, u.created_at
     ORDER BY u.created_at
   `);
@@ -176,7 +176,7 @@ async function getUserByEmail(email) {
              '{}'
            ) as assigned_gh_array
     FROM users u
-    LEFT JOIN supervisor_greenhouses sg ON u.uid = sg.supervisor_id
+    LEFT JOIN supervisor_greenhouses sg ON u.uid::text = sg.supervisor_id::text
     WHERE u.email = $1
     GROUP BY u.uid, u.email, u.password, u.display_name, u.role, u.avatar, u.image_url, u.assigned_gh, u.created_at
   `, [email]);
@@ -219,7 +219,7 @@ async function createUser(user) {
     if (assignedGH.length > 0) {
       for (const ghId of assignedGH) {
         await client.query(
-          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
           [user.uid, ghId]
         );
       }
@@ -526,13 +526,13 @@ async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
     await client.query('BEGIN');
     
     // Delete existing assignments
-    await client.query('DELETE FROM supervisor_greenhouses WHERE supervisor_id = $1', [supervisorId]);
+    await client.query('DELETE FROM supervisor_greenhouses WHERE supervisor_id::text = $1', [supervisorId]);
     
     // Insert new assignments
     if (greenhouseIds && greenhouseIds.length > 0) {
       for (const ghId of greenhouseIds) {
         await client.query(
-          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2)',
+          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid)',
           [supervisorId, ghId]
         );
       }
