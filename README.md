@@ -107,3 +107,4 @@ The system manages greenhouses growing:
 - **Frontend**: Vanilla JavaScript, HTML, CSS (PWA-ready)
 - **Backend**: Node.js, Express.js
 - **Storage**: In-memory (can be extended to database)
+"# agrifine-ventures" 
