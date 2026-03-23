@@ -666,7 +666,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
   async fetchUsersFromBackend() {
     try {
-      const res = await authFetch('/api/auth/users');
+      const res = await authFetch('/auth/users');
       if (res.ok) {
         const users = await res.json();
         this.users = {};
@@ -682,7 +682,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
   async createUserBackend(userData) {
     try {
-      const res = await authFetch('/api/auth/register', {
+      const res = await authFetch('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData)
       });
@@ -704,7 +704,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         console.log('User not found locally, skipping delete:', uid);
         return true;
       }
-      const res = await authFetch(`/api/auth/users/${uid}`, {
+      const res = await authFetch(`/auth/users/${uid}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -777,7 +777,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
     // Reset backend users (supervisors, agronomists, etc. will be removed)
     try {
-      await authFetch('/api/auth/reset', { method: 'POST' });
+      await authFetch('/auth/reset', { method: 'POST' });
       console.log('Backend users reset successfully');
     } catch (err) {
       console.error('Backend user reset failed:', err);
@@ -785,7 +785,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
     // Full system reset (users, workers, greenhouses)
     try {
-      await authFetch('/api/auth/reset-all', { method: 'POST' });
+      await authFetch('/auth/reset-all', { method: 'POST' });
       console.log('Full system reset successful');
     } catch (err) {
       console.error('Full system reset failed:', err);
