@@ -1551,10 +1551,10 @@ const AdminDashboard = {
                 <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.displayName || s.name || 'Unnamed'}</div>
                 <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Supervisor</div>
                 <div style="margin-bottom:10px">
-                  ${s.assignedGH?.map(ghId => {
+                  ${assignedGH && assignedGH.map ? assignedGH.map(ghId => {
                     const gh = AFV.greenhouses.find(g => g.id === ghId);
                     return gh ? `<span class="badge badge-green" style="margin:2px">${gh.cropEmoji} ${gh.name}</span>` : '';
-                  }).join('') || '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
+                  }).join('') : '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
                 </div>
                 <div style="background:var(--green-ultra-pale);border-radius:var(--radius-sm);padding:10px">
                   <div style="font-size:1.4rem;font-weight:800;color:var(--green-deep)">${tasks.length}</div>
@@ -1731,8 +1731,13 @@ const AdminDashboard = {
         }
         
         // Set greenhouse assignments
+        let assignedGH = worker.assignedGH;
+        if (typeof assignedGH === 'string') {
+          try { assignedGH = JSON.parse(assignedGH); } catch (e) { assignedGH = []; }
+        }
+        if (!Array.isArray(assignedGH)) assignedGH = [];
         document.querySelectorAll('.supervisor-gh-checkbox').forEach(cb => {
-          cb.checked = worker.assignedGH?.includes(cb.value);
+          cb.checked = assignedGH.includes(cb.value);
         });
       }
     } else {
