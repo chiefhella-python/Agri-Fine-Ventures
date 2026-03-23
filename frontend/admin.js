@@ -1542,7 +1542,7 @@ const AdminDashboard = {
                     <button onclick="AdminDashboard.deleteSupervisor('${s.uid || s.id}')" class="btn-icon" title="Delete worker" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
                   </div>
                 </div>
-                <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.name}</div>
+                <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.displayName || s.name || 'Unnamed'}</div>
                 <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Supervisor</div>
                 <div style="margin-bottom:10px">
                   ${s.assignedGH?.map(ghId => {
