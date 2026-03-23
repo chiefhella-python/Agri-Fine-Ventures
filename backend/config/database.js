@@ -169,18 +169,22 @@ async function getAllUsers() {
 
 // Get user by email
 async function getUserByEmail(email) {
-  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  const result = await pool.query(`
+    SELECT u.*, 
+           COALESCE(
+             ARRAY_AGG(sg.greenhouse_id) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
+             '{}'
+           ) as assigned_gh_array
+    FROM users u
+    LEFT JOIN supervisor_greenhouses sg ON u.uid = sg.supervisor_id
+    WHERE u.email = $1
+    GROUP BY u.uid, u.email, u.password, u.display_name, u.role, u.avatar, u.image_url, u.assigned_gh, u.created_at
+  `, [email]);
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
-  let assignedGH = row.assigned_gh;
-  if (assignedGH === null || assignedGH === undefined) {
+  let assignedGH = row.assigned_gh_array;
+  if (!assignedGH || !Array.isArray(assignedGH)) {
     assignedGH = [];
-  } else if (typeof assignedGH === 'string') {
-    try {
-      assignedGH = JSON.parse(assignedGH);
-    } catch (e) {
-      assignedGH = [];
-    }
   }
   return {
     uid: row.uid,
@@ -200,13 +204,35 @@ async function createUser(user) {
   const assignedGH = user.assignedGH && Array.isArray(user.assignedGH) 
     ? user.assignedGH 
     : [];
-  const result = await pool.query(
-    `INSERT INTO users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-     RETURNING *`,
-    [user.uid, user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
-  );
-  return result.rows[0];
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    const result = await client.query(
+      `INSERT INTO users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [user.uid, user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
+    );
+    
+    // Also add to junction table
+    if (assignedGH.length > 0) {
+      for (const ghId of assignedGH) {
+        await client.query(
+          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [user.uid, ghId]
+        );
+      }
+    }
+    
+    await client.query('COMMIT');
+    return result.rows[0];
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 // Delete user
