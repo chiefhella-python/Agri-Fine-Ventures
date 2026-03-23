@@ -65,12 +65,21 @@ async function handleLogin() {
       localStorage.setItem('afv_token', response.token);
       
       // Map API user to local user format
+      let assignedGH = response.user.assignedGH;
+      if (typeof assignedGH === 'string') {
+        try {
+          assignedGH = JSON.parse(assignedGH);
+        } catch (e) {
+          assignedGH = [];
+        }
+      }
       const user = {
         id: response.user.uid,
         email: response.user.email,
         name: response.user.display_name || response.user.email.split('@')[0],
         role: response.user.role,
-        avatar: response.user.avatar
+        avatar: response.user.avatar,
+        assignedGH: assignedGH || []
       };
       
       // Verify role matches selected role
