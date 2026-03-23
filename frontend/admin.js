@@ -103,12 +103,13 @@ const AdminDashboard = {
 
   init() {
     this.renderNav();
-    // Fetch greenhouses from backend first
-    this.fetchGreenhouses().then(() => {
+    // Fetch greenhouses and users from backend first
+    Promise.all([
+      this.fetchGreenhouses(),
+      AFV.fetchUsersFromBackend()
+    ]).then(() => {
       this.showPage('overview');
     });
-    // Sync users from backend
-    AFV.fetchUsersFromBackend();
   },
 
   async fetchGreenhouses() {
@@ -1524,7 +1525,12 @@ const AdminDashboard = {
           ${supervisors.map(s => {
             const name = s.displayName || s.name || s.id || 'Unnamed';
             const tasks = AFV.getTasksForWorker(s.id);
-            const assignedGH = s.assignedGH || [];
+            let assignedGH = s.assignedGH;
+            if (typeof assignedGH === 'string') {
+              try { assignedGH = JSON.parse(assignedGH); } catch (e) { assignedGH = []; }
+            } else if (!Array.isArray(assignedGH)) {
+              assignedGH = [];
+            }
             const totalAssigned = assignedGH.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => String(g.id) === String(ghId));
               return sum + (gh?.tasks?.length || 0);
