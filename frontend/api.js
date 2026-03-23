@@ -15,12 +15,13 @@ const getAuthHeader = () => {
 
 // Make authenticated request
 const authFetch = async (url, options = {}) => {
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
   const headers = {
     'Content-Type': 'application/json',
     ...getAuthHeader(),
     ...options.headers
   };
-  return fetch(url, { ...options, headers });
+  return fetch(fullUrl, { ...options, headers });
 };
 
 const AFV_API = {
@@ -55,7 +56,7 @@ const AFV_API = {
   // Greenhouses
   async getGreenhouses() {
     try {
-      const response = await authFetch(`${API_BASE}/greenhouses`);
+      const response = await authFetch('/greenhouses');
       return await response.json();
     } catch (error) {
       console.error('Error fetching greenhouses:', error);
@@ -64,12 +65,12 @@ const AFV_API = {
   },
 
   async getGreenhouse(id) {
-    const response = await authFetch(`${API_BASE}/greenhouses/${id}`);
+    const response = await authFetch(`/greenhouses/${id}`);
     return response.json();
   },
 
   async createGreenhouse(data) {
-    const response = await authFetch(`${API_BASE}/greenhouses`, {
+    const response = await authFetch('/greenhouses', {
       method: 'POST',
       body: JSON.stringify(data)
     });
@@ -77,7 +78,7 @@ const AFV_API = {
   },
 
   async updateGreenhouse(id, data) {
-    const response = await authFetch(`${API_BASE}/greenhouses/${id}`, {
+    const response = await authFetch(`/greenhouses/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     });
@@ -85,7 +86,7 @@ const AFV_API = {
   },
 
   async deleteGreenhouse(id) {
-    const response = await authFetch(`${API_BASE}/greenhouses/${id}`, {
+    const response = await authFetch(`/greenhouses/${id}`, {
       method: 'DELETE'
     });
     return response.json();
@@ -93,50 +94,49 @@ const AFV_API = {
 
   // Sensors
   async getSensorReadings(greenhouseId, limit = 50) {
-    const response = await fetch(`${API_BASE}/sensors/${greenhouseId}?limit=${limit}`);
+    const response = await authFetch(`/sensors/${greenhouseId}?limit=${limit}`);
     return response.json();
   },
 
   async getLatestReadings(greenhouseId) {
-    const response = await fetch(`${API_BASE}/sensors/${greenhouseId}/latest`);
+    const response = await authFetch(`/sensors/${greenhouseId}/latest`);
     return response.json();
   },
 
   async submitSensorReading(greenhouseId, sensors) {
-    const response = await fetch(`${API_BASE}/sensors/${greenhouseId}`, {
+    const response = await authFetch(`/sensors/${greenhouseId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sensors })
     });
     return response.json();
   },
 
   async getSensorAnalytics(greenhouseId) {
-    const response = await fetch(`${API_BASE}/sensors/${greenhouseId}/analytics`);
+    const response = await authFetch(`/sensors/${greenhouseId}/analytics`);
     return response.json();
   },
 
   async getSensorHistory(greenhouseId, sensorType, limit = 100) {
-    const url = new URL(`${API_BASE}/sensors/${greenhouseId}/history`);
+    const url = new URL(`/sensors/${greenhouseId}/history`, API_BASE);
     if (sensorType) url.searchParams.append('sensorType', sensorType);
     url.searchParams.append('limit', limit);
-    const response = await fetch(url);
+    const response = await authFetch(url.pathname + url.search);
     return response.json();
   },
 
   // Admin
   async getStats() {
-    const response = await fetch(`${API_BASE}/admin/stats`);
+    const response = await authFetch('/admin/stats');
     return response.json();
   },
 
   async getSettings() {
-    const response = await fetch(`${API_BASE}/admin/settings`);
+    const response = await authFetch('/admin/settings');
     return response.json();
   },
 
   async updateSettings(settings) {
-    const response = await fetch(`${API_BASE}/admin/settings`, {
+    const response = await authFetch('/admin/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings)
@@ -145,14 +145,13 @@ const AFV_API = {
   },
 
   async getLogs(limit = 100) {
-    const response = await fetch(`${API_BASE}/admin/logs?limit=${limit}`);
+    const response = await authFetch(`/admin/logs?limit=${limit}`);
     return response.json();
   },
 
   async createLog(type, message, data) {
-    const response = await fetch(`${API_BASE}/admin/logs`, {
+    const response = await authFetch('/admin/logs', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, message, data })
     });
     return response.json();
@@ -164,8 +163,12 @@ const AFV_API = {
   // Workers
   async getWorkers() {
     try {
-      const response = await fetch(`${API_BASE}/workers`);
-      return await response.json();
+      const res = await authFetch('/workers');
+      if (!res.ok) {
+        console.error('Workers fetch failed:', res.status);
+        return [];
+      }
+      return await res.json();
     } catch (error) {
       console.error('Error fetching workers:', error);
       return [];
@@ -173,30 +176,28 @@ const AFV_API = {
   },
 
   async getWorker(id) {
-    const response = await fetch(`${API_BASE}/workers/${id}`);
+    const response = await authFetch(`/workers/${id}`);
     return response.json();
   },
 
   async createWorker(data) {
-    const response = await fetch(`${API_BASE}/workers`, {
+    const response = await authFetch('/workers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return response.json();
   },
 
   async updateWorker(id, data) {
-    const response = await fetch(`${API_BASE}/workers/${id}`, {
+    const response = await authFetch(`/workers/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return response.json();
   },
 
   async deleteWorker(id) {
-    const response = await fetch(`${API_BASE}/workers/${id}`, {
+    const response = await authFetch(`/workers/${id}`, {
       method: 'DELETE'
     });
     return response.json();

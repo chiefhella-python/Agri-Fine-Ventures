@@ -629,7 +629,11 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     if (!token) return [];
 
     try {
-      const res = await fetch('/api/greenhouses', {
+      const apiBase = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api'
+        : 'https://agri-fine-ventures-production.up.railway.app/api';
+      
+      const res = await fetch(`${apiBase}/greenhouses`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
