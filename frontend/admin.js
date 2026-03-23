@@ -1636,7 +1636,65 @@ const AdminDashboard = {
   },
 
   openSupervisorModal(workerId = null) {
-    const modal = document.getElementById('supervisor-modal');
+    let modal = document.getElementById('supervisor-modal');
+    
+    if (!modal) {
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="supervisor-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+          <div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+              <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="supervisor-modal-title">Add New Supervisor</h2>
+              <button onclick="AdminDashboard.closeSupervisorModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
+            </div>
+            <form id="supervisor-form" onsubmit="AdminDashboard.saveSupervisor(event)">
+              <input type="hidden" id="supervisor-id">
+              <input type="hidden" id="supervisor-role" value="supervisor">
+              <div style="margin-bottom:16px">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Username (Login ID)</label>
+                <input type="text" id="supervisor-username" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker1">
+              </div>
+              <div style="margin-bottom:16px">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Display Name</label>
+                <input type="text" id="supervisor-name" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., John Doe">
+              </div>
+              <div style="margin-bottom:16px">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
+                <input type="password" id="supervisor-password" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Leave blank to keep current">
+              </div>
+              <div style="margin-bottom:16px">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assign Greenhouses</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  ${(AFV.greenhouses || []).map(gh => `
+                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--green-ultra-pale);border-radius:6px;cursor:pointer">
+                      <input type="checkbox" class="supervisor-gh-checkbox" value="${gh.id}"> ${gh.cropEmoji} ${gh.name}
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+              <div style="margin-bottom:16px">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Avatar</label>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  ${['👨', '👩', '👴', '👵', '🧑', '👱', '👨‍🦰', '👩‍🦰', '👨‍🦱', '👩‍🦱'].map(emoji => `
+                    <label style="cursor:pointer">
+                      <input type="radio" name="supervisor-avatar" value="${emoji}" style="display:none">
+                      <span class="avatar-option" style="display:inline-block;width:40px;height:40px;line-height:40px;text-align:center;font-size:1.5rem;border:2px solid var(--green-pale);border-radius:50%">${emoji}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+              <div style="margin-bottom:16px">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Image URL (Optional)</label>
+                <input type="url" id="supervisor-image-url" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="https://...">
+                <div id="supervisor-image-preview" style="margin-top:8px"></div>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%;padding:12px;font-size:1rem">Save Supervisor</button>
+            </form>
+          </div>
+        </div>
+      `);
+      modal = document.getElementById('supervisor-modal');
+    }
+    
     const title = document.getElementById('supervisor-modal-title');
     const form = document.getElementById('supervisor-form');
     
