@@ -146,11 +146,14 @@ async function getUserByEmail(email) {
 
 // Create user
 async function createUser(user) {
+  const assignedGH = user.assignedGH && Array.isArray(user.assignedGH) 
+    ? user.assignedGH 
+    : [];
   const result = await pool.query(
     `INSERT INTO users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
-    [user.uid, user.email, user.password, user.displayName, user.role, user.avatar, user.imageUrl, user.assignedGH]
+    [user.uid, user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
   );
   return result.rows[0];
 }

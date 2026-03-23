@@ -156,7 +156,7 @@ async function syncData() {
   if (!AFV.currentUser) return;
   try {
     const greenhouses = await AFV.fetchGreenhouses();
-    const usersRes = await authFetch('/api/auth/users');
+    const usersRes = await authFetch('/auth/users');
     const users = usersRes.ok ? await usersRes.json() : [];
     
     // Quick hash comparison instead of full JSON.stringify
