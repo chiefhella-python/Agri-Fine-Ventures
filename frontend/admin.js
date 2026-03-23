@@ -1844,12 +1844,16 @@ const AdminDashboard = {
           AFV.logActivity('✏️', `Worker username changed from ${id} to ${username}: ${name}`);
           showToast(`Worker username changed to "${username}"!`, 'success');
         } else {
-          // Just update fields
+          // Update fields
           AFV.users[id].name = name;
           AFV.users[id].password = password;
           AFV.users[id].avatar = avatar;
           AFV.users[id].imageUrl = imageUrl;
           AFV.users[id].assignedGH = assignedGH;
+          
+          // Update in backend
+          await AFV.updateUserGreenhouses(id, assignedGH);
+          
           AFV.logActivity('✏️', `Worker updated: ${name}`);
           showToast(`Worker "${name}" updated successfully!`, 'success');
         }

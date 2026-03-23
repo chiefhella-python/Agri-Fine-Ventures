@@ -210,4 +210,22 @@ router.post('/reset-all', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// PUT /api/auth/users/:uid/greenhouses - Update supervisor greenhouse assignments
+router.put('/users/:uid/greenhouses', authenticate, requireAdmin, async (req, res) => {
+  const { uid } = req.params;
+  const { greenhouseIds } = req.body;
+  
+  if (!Array.isArray(greenhouseIds)) {
+    return res.status(400).json({ error: 'greenhouseIds must be an array' });
+  }
+  
+  try {
+    await db.updateSupervisorGreenhouses(uid, greenhouseIds);
+    res.json({ message: 'Supervisor greenhouses updated', assignedGH: greenhouseIds });
+  } catch (err) {
+    console.error('Update supervisor greenhouses error:', err);
+    res.status(500).json({ error: 'Failed to update assignments' });
+  }
+});
+
 module.exports = router;

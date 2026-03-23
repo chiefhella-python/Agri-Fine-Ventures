@@ -707,6 +707,23 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     }
   },
 
+  async updateUserGreenhouses(uid, greenhouseIds) {
+    try {
+      const res = await authFetch(`/auth/users/${uid}/greenhouses`, {
+        method: 'PUT',
+        body: JSON.stringify({ greenhouseIds })
+      });
+      if (res.ok) {
+        await this.fetchUsersFromBackend();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to update user greenhouses:', err);
+      return false;
+    }
+  },
+
   async deleteUserBackend(uid) {
     try {
       // Check if user exists locally first

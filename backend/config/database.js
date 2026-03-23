@@ -78,6 +78,21 @@ async function initializeDatabase() {
       // Column might already exist or be added by another process
     }
     
+    // Create supervisor_greenhouses junction table if not exists
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS supervisor_greenhouses (
+        id SERIAL PRIMARY KEY,
+        supervisor_id VARCHAR(255) NOT NULL,
+        greenhouse_id VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(supervisor_id, greenhouse_id)
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_supervisor_greenhouses_supervisor ON supervisor_greenhouses(supervisor_id)
+    `);
+    console.log('✅ PostgreSQL: supervisor_greenhouses table ready');
+    
     // Create admin user if not exists (with hashed password)
     const adminExists = await client.query('SELECT * FROM users WHERE uid = $1', ['admin']);
     if (adminExists.rows.length === 0) {
@@ -122,17 +137,21 @@ async function initializeDatabase() {
 
 // Get all users
 async function getAllUsers() {
-  const result = await pool.query('SELECT * FROM users ORDER BY created_at');
+  const result = await pool.query(`
+    SELECT u.*, 
+           COALESCE(
+             ARRAY_AGG(sg.greenhouse_id) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
+             '{}'
+           ) as assigned_gh_array
+    FROM users u
+    LEFT JOIN supervisor_greenhouses sg ON u.uid = sg.supervisor_id
+    GROUP BY u.uid, u.email, u.password, u.display_name, u.role, u.avatar, u.image_url, u.assigned_gh, u.created_at
+    ORDER BY u.created_at
+  `);
   return result.rows.map(row => {
-    let assignedGH = row.assigned_gh;
-    if (assignedGH === null || assignedGH === undefined) {
+    let assignedGH = row.assigned_gh_array;
+    if (!assignedGH || !Array.isArray(assignedGH)) {
       assignedGH = [];
-    } else if (typeof assignedGH === 'string') {
-      try {
-        assignedGH = JSON.parse(assignedGH);
-      } catch (e) {
-        assignedGH = [];
-      }
     }
     return {
       uid: row.uid,
@@ -474,6 +493,36 @@ async function deleteWorker(id) {
   return result.rows[0] || null;
 }
 
+// Update supervisor greenhouse assignments
+async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // Delete existing assignments
+    await client.query('DELETE FROM supervisor_greenhouses WHERE supervisor_id = $1', [supervisorId]);
+    
+    // Insert new assignments
+    if (greenhouseIds && greenhouseIds.length > 0) {
+      for (const ghId of greenhouseIds) {
+        await client.query(
+          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2)',
+          [supervisorId, ghId]
+        );
+      }
+    }
+    
+    await client.query('COMMIT');
+    return true;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error updating supervisor greenhouses:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   pool,
   initializeDatabase,
@@ -495,5 +544,6 @@ module.exports = {
   getWorkerById,
   createWorker,
   updateWorker,
-  deleteWorker
+  deleteWorker,
+  updateSupervisorGreenhouses
 };
