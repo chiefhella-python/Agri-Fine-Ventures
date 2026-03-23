@@ -102,7 +102,6 @@ router.post('/register', [
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
     const uid = email.split('@')[0];
-    console.log('Creating user:', { uid, email, role, displayName });
     
     const newUser = {
       uid: uid,
@@ -115,8 +114,7 @@ router.post('/register', [
       imageUrl: ''
     };
     
-    const created = await db.createUser(newUser);
-    console.log('User created:', created);
+    await db.createUser(newUser);
     
     const { password: _, ...userWithoutPassword } = newUser;
     const token = generateToken(newUser);
@@ -127,8 +125,8 @@ router.post('/register', [
       expiresIn: 3600
     });
    } catch (err) {
-    console.error('Register error:', err.message, err.stack);
-    res.status(500).json({ error: 'Server error: ' + err.message });
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
