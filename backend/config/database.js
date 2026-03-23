@@ -140,7 +140,7 @@ async function getAllUsers() {
   const result = await pool.query(`
     SELECT u.*, 
            COALESCE(
-             ARRAY_AGG(sg.greenhouse_id) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
+             ARRAY_AGG(sg.greenhouse_id::text) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
              '{}'
            ) as assigned_gh_array
     FROM users u
@@ -172,7 +172,7 @@ async function getUserByEmail(email) {
   const result = await pool.query(`
     SELECT u.*, 
            COALESCE(
-             ARRAY_AGG(sg.greenhouse_id) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
+             ARRAY_AGG(sg.greenhouse_id::text) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
              '{}'
            ) as assigned_gh_array
     FROM users u
