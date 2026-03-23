@@ -108,7 +108,7 @@
   // Initialize - load from API or use defaults
   AFV.initGreenhouses = async function() {
     try {
-      const greenhouses = await AFV_API.getGreenhouses();
+      const greenhouses = await AFV.fetchGreenhouses();
       if (greenhouses && greenhouses.length > 0) {
         this.greenhouses = greenhouses;
         console.log('✅ Loaded greenhouses from server:', this.greenhouses.length);
@@ -240,7 +240,7 @@
   // Sync with server
   AFV.syncGreenhouses = async function() {
     try {
-      const greenhouses = await AFV_API.getGreenhouses();
+      const greenhouses = await AFV.fetchGreenhouses();
       if (greenhouses && greenhouses.length > 0) {
         this.greenhouses = greenhouses;
         this.save();

@@ -155,7 +155,7 @@ let lastSyncHash = '';
 async function syncData() {
   if (!AFV.currentUser) return;
   try {
-    const greenhouses = await AFV_API.getGreenhouses();
+    const greenhouses = await AFV.fetchGreenhouses();
     const usersRes = await authFetch('/api/auth/users');
     const users = usersRes.ok ? await usersRes.json() : [];
     

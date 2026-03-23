@@ -48,24 +48,9 @@ const SupervisorDashboard = {
   },
 
   async fetchGreenhouses() {
-    try {
-      const greenhouses = await AFV_API.getGreenhouses();
-      if (greenhouses && greenhouses.length > 0) {
-        greenhouses.forEach(gh => {
-          gh.plantedDate = gh.plantedDate ? new Date(gh.plantedDate) : null;
-          gh.expectedHarvest = gh.expectedHarvest ? new Date(gh.expectedHarvest) : null;
-          if (gh.tasks) {
-            gh.tasks.forEach(task => {
-              task.dueDate = task.dueDate ? new Date(task.dueDate) : null;
-              task.completedAt = task.completedAt ? new Date(task.completedAt) : null;
-            });
-          }
-        });
-        AFV.greenhouses = greenhouses;
-        console.log('Supervisor loaded greenhouses:', greenhouses.length);
-      }
-    } catch (error) {
-      console.error('Error fetching greenhouses:', error);
+    const greenhouses = await AFV.fetchGreenhouses();
+    if (greenhouses && greenhouses.length > 0) {
+      console.log('Supervisor loaded greenhouses:', greenhouses.length);
     }
   },
 

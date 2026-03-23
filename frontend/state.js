@@ -624,12 +624,47 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
   // ============================================
   // USER SYNC WITH BACKEND
   // ============================================
+  async fetchGreenhouses() {
+    const token = localStorage.getItem('afv_token');
+    if (!token) return [];
+
+    try {
+      const res = await fetch('/api/greenhouses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      this.greenhouses = data.map(gh => ({
+        id: gh.id,
+        name: gh.name,
+        crop: gh.crop || '',
+        variety: gh.variety || '',
+        cropEmoji: gh.cropEmoji || '🏡',
+        plants: gh.plants || 0,
+        area: gh.area || '',
+        location: gh.location || '',
+        plantedDate: gh.plantedDate ? new Date(gh.plantedDate) : null,
+        expectedHarvest: gh.expectedHarvest ? new Date(gh.expectedHarvest) : null,
+        status: gh.status || 'active',
+        environment: gh.environment || { temp: '', humidity: '', ph: '', ec: '' },
+        notes: gh.notes || '',
+        tasks: gh.tasks || [],
+        sensors: gh.sensors || [],
+        gradePrices: gh.gradePrices || { grade1: 0, grade2: 0, grade3: 0, reject: 0 }
+      }));
+
+      return this.greenhouses;
+    } catch (err) {
+      console.error('Failed to fetch greenhouses:', err);
+      return [];
+    }
+  },
+
   async fetchUsersFromBackend() {
     try {
       const res = await authFetch('/api/auth/users');
       if (res.ok) {
         const users = await res.json();
-        // Convert array to object keyed by uid
         this.users = {};
         users.forEach(u => {
           this.users[u.uid] = { ...u, passwordHash: u.password };
