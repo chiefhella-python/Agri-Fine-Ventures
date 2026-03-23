@@ -671,7 +671,15 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
         const users = await res.json();
         this.users = {};
         users.forEach(u => {
-          this.users[u.uid] = { ...u, passwordHash: u.password };
+          let assignedGH = u.assignedGH;
+          if (typeof assignedGH === 'string') {
+            try {
+              assignedGH = JSON.parse(assignedGH);
+            } catch (e) {
+              assignedGH = [];
+            }
+          }
+          this.users[u.uid] = { ...u, assignedGH, passwordHash: u.password };
         });
         console.log('Users synced from backend:', Object.keys(this.users));
       }
