@@ -1531,11 +1531,13 @@ const AdminDashboard = {
             } else if (!Array.isArray(assignedGH)) {
               assignedGH = [];
             }
-            const totalAssigned = assignedGH.reduce((sum, ghId) => {
+            // Handle assignedGH as array of objects {id, name} or array of strings
+            const assignedGHIds = assignedGH.map(gh => gh.id || gh);
+            const totalAssigned = assignedGHIds.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => String(g.id) === String(ghId));
               return sum + (gh?.tasks?.length || 0);
             }, 0);
-            const doneAssigned = assignedGH.reduce((sum, ghId) => {
+            const doneAssigned = assignedGHIds.reduce((sum, ghId) => {
               const gh = AFV.greenhouses.find(g => String(g.id) === String(ghId));
               return sum + (gh?.tasks?.filter(t => t.completed).length || 0);
             }, 0);
@@ -1551,9 +1553,10 @@ const AdminDashboard = {
                 <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.displayName || s.name || 'Unnamed'}</div>
                 <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Supervisor</div>
                 <div style="margin-bottom:10px">
-                  ${assignedGH && assignedGH.map ? assignedGH.map(ghId => {
-                    const gh = AFV.greenhouses.find(g => g.id === ghId);
-                    return gh ? `<span class="badge badge-green" style="margin:2px">${gh.cropEmoji} ${gh.name}</span>` : '';
+                  ${assignedGH && assignedGH.length > 0 ? assignedGH.map(gh => {
+                    const ghId = gh.id || gh;
+                    const ghName = gh.name || ghId;
+                    return `<span class="badge badge-green" style="margin:2px">${ghName}</span>`;
                   }).join('') : '<span style="font-size:0.75rem;color:var(--text-light)">No assignments</span>'}
                 </div>
                 <div style="background:var(--green-ultra-pale);border-radius:var(--radius-sm);padding:10px">
