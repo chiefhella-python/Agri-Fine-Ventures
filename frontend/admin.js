@@ -1876,16 +1876,7 @@ const AdminDashboard = {
       });
       
       if (success) {
-        // Add to local users as well
-        AFV.users[username] = {
-          id: username,
-          name: name,
-          role: 'supervisor',
-          password: password,
-          avatar: avatar,
-          imageUrl: imageUrl,
-          assignedGH: assignedGH
-        };
+        // Users are synced from backend in createUserBackend
         AFV.logActivity('➕', `New supervisor added: ${name}`);
         showToast(`Supervisor "${name}" added successfully!`, 'success');
       } else {
