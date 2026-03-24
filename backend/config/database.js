@@ -140,7 +140,7 @@ async function getAllUsers() {
   const result = await pool.query(`
     SELECT
       u.id,
-      u.name,
+      u.full_name,
       u.email,
       u.role,
       COALESCE(
@@ -159,7 +159,7 @@ async function getAllUsers() {
       ON g.id = sg.greenhouse_id
     GROUP BY
       u.id,
-      u.name,
+      u.full_name,
       u.email,
       u.role
     ORDER BY u.id;
@@ -172,7 +172,7 @@ async function getAllUsers() {
     return {
       uid: row.id,
       email: row.email,
-      displayName: row.name,
+      displayName: row.full_name,
       role: row.role,
       assignedGH: assignedGH,
     };
