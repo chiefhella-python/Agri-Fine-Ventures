@@ -138,31 +138,43 @@ async function initializeDatabase() {
 // Get all users
 async function getAllUsers() {
   const result = await pool.query(`
-    SELECT u.*, 
-           COALESCE(
-             ARRAY_AGG(sg.greenhouse_id::text) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
-             '{}'
-           ) as assigned_gh_array
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      u.role,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', g.id,
+            'name', g.name
+          )
+        ) FILTER (WHERE g.id IS NOT NULL),
+        '[]'
+      ) AS assigned_greenhouses
     FROM users u
-    LEFT JOIN supervisor_greenhouses sg ON u.uid::text = sg.supervisor_id::text
-    GROUP BY u.uid, u.email, u.password, u.display_name, u.role, u.avatar, u.image_url, u.assigned_gh, u.created_at
-    ORDER BY u.created_at
+    LEFT JOIN supervisor_greenhouses sg
+      ON sg.supervisor_id = u.id
+    LEFT JOIN greenhouses g
+      ON g.id = sg.greenhouse_id
+    GROUP BY
+      u.id,
+      u.name,
+      u.email,
+      u.role
+    ORDER BY u.id;
   `);
   return result.rows.map(row => {
-    let assignedGH = row.assigned_gh_array;
+    let assignedGH = row.assigned_greenhouses;
     if (!assignedGH || !Array.isArray(assignedGH)) {
       assignedGH = [];
     }
     return {
-      uid: row.uid,
+      uid: row.id,
       email: row.email,
-      password: row.password,
-      displayName: row.display_name,
+      displayName: row.name,
       role: row.role,
-      avatar: row.avatar,
-      imageUrl: row.image_url,
       assignedGH: assignedGH,
-      createdAt: row.created_at
     };
   });
 }
