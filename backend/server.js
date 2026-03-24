@@ -144,10 +144,17 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   
   // Initialize PostgreSQL database (optional - server works without it)
+  // Use timeout to prevent startup delays
+  const initTimeout = setTimeout(() => {
+    console.log('⚠️ Database init timeout - continuing without full init');
+  }, 5000);
+  
   if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('[YOUR-PASSWORD]')) {
     try {
-      await db.initializeDatabase();
-      await db.initializeGreenhouses();
+      await Promise.race([
+        Promise.all([db.initializeDatabase(), db.initializeGreenhouses()]),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+      ]);
       console.log('✅ Database initialized');
     } catch (err) {
       console.log('⚠️ Database connection failed:', err.message);
@@ -155,6 +162,8 @@ app.listen(PORT, '0.0.0.0', async () => {
   } else {
     console.log('⚠️ DATABASE_URL not configured - running without database');
   }
+  
+  clearTimeout(initTimeout);
   
   // Test Supabase connection if credentials provided
   if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && !process.env.SUPABASE_URL.includes('[YOUR-')) {
