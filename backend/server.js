@@ -44,7 +44,21 @@ app.use(helmet({
   }
 }));
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl requests)
+    // In production, allow the Railway domain
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'https://agri-fine-ventures-production.up.railway.app'
+    ];
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now
+    }
+  },
   credentials: true
 }));
 
