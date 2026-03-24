@@ -1716,10 +1716,11 @@ const AdminDashboard = {
       const worker = AFV.users[workerId];
       if (worker) {
         title.textContent = 'Edit Supervisor';
-        document.getElementById('supervisor-id').value = worker.id;
-        document.getElementById('supervisor-username').value = worker.id;
-        document.getElementById('supervisor-name').value = worker.name;
-        document.getElementById('supervisor-password').value = worker.password;
+        const uid = worker.uid || worker.id;
+        document.getElementById('supervisor-id').value = uid;
+        document.getElementById('supervisor-username').value = uid;
+        document.getElementById('supervisor-name').value = worker.displayName || worker.name || '';
+        document.getElementById('supervisor-password').value = '';
         document.getElementById('supervisor-image-url').value = worker.imageUrl || '';
         
         // Show existing image preview
@@ -1740,8 +1741,10 @@ const AdminDashboard = {
           try { assignedGH = JSON.parse(assignedGH); } catch (e) { assignedGH = []; }
         }
         if (!Array.isArray(assignedGH)) assignedGH = [];
+        // Handle object format {id, name} or string format
+        const assignedGHIds = assignedGH.map(gh => gh.id || gh);
         document.querySelectorAll('.supervisor-gh-checkbox').forEach(cb => {
-          cb.checked = assignedGH.includes(cb.value);
+          cb.checked = assignedGHIds.includes(cb.value);
         });
       }
     } else {
