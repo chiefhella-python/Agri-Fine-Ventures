@@ -2662,6 +2662,7 @@ const AdminDashboard = {
 
   dismissAlert(index) {
     AFV.alerts.splice(index, 1);
+    localStorage.setItem('afv_alerts', JSON.stringify(AFV.alerts));
     this.showPage('alerts');
   },
 
