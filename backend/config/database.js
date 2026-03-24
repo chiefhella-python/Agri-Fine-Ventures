@@ -154,7 +154,7 @@ async function getAllUsers() {
       ) AS assigned_greenhouses
     FROM public.users u
     LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id = u.uid
+      ON sg.supervisor_id::uuid = u.uid::uuid
     LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
@@ -204,7 +204,7 @@ async function getUserByEmail(email) {
       ) AS assigned_greenhouses
     FROM public.users u
     LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id = u.uid
+      ON sg.supervisor_id::uuid = u.uid::uuid
     LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     WHERE u.email = $1
@@ -257,7 +257,7 @@ async function createUser(user) {
     if (assignedGH.length > 0) {
       for (const ghId of assignedGH) {
         await client.query(
-          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
           [user.uid, ghId]
         );
       }
@@ -564,13 +564,13 @@ async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
     await client.query('BEGIN');
     
     // Delete existing assignments
-    await client.query('DELETE FROM public.supervisor_greenhouses WHERE supervisor_id::text = $1', [supervisorId]);
+    await client.query('DELETE FROM public.supervisor_greenhouses WHERE supervisor_id::uuid = $1::uuid', [supervisorId]);
     
     // Insert new assignments
     if (greenhouseIds && greenhouseIds.length > 0) {
       for (const ghId of greenhouseIds) {
         await client.query(
-          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2)',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid)',
           [supervisorId, ghId]
         );
       }
