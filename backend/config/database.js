@@ -171,6 +171,7 @@ async function getAllUsers() {
     }
     return {
       uid: row.id,
+      name: row.display_name,
       email: row.email,
       displayName: row.display_name,
       role: row.role,
@@ -218,6 +219,7 @@ async function getUserByEmail(email) {
   const row = result.rows[0];
   return {
     uid: row.id,
+    name: row.display_name,
     email: row.email,
     password: row.password,
     displayName: row.display_name,
