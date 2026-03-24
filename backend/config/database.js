@@ -140,9 +140,11 @@ async function getAllUsers() {
   const result = await pool.query(`
     SELECT
       u.id,
-      u.display_name,
       u.email,
+      u.display_name,
       u.role,
+      u.avatar,
+      u.image_url,
       COALESCE(
         json_agg(
           json_build_object(
@@ -151,31 +153,35 @@ async function getAllUsers() {
           )
         ) FILTER (WHERE g.id IS NOT NULL),
         '[]'
-      ) AS assigned_greenhouses
-    FROM public.users u
-    LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id::uuid = u.id
-    LEFT JOIN public.greenhouses g
+      ) AS greenhouses
+    FROM users u
+    LEFT JOIN supervisor_greenhouses sg
+      ON sg.supervisor_id = u.id::uuid
+    LEFT JOIN greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
       u.id,
-      u.display_name,
       u.email,
-      u.role
-    ORDER BY u.display_name;
+      u.display_name,
+      u.role,
+      u.avatar,
+      u.image_url
+    ORDER BY u.created_at DESC;
   `);
   return result.rows.map(row => {
-    let assignedGH = row.assigned_greenhouses;
-    if (!assignedGH || !Array.isArray(assignedGH)) {
-      assignedGH = [];
+    let greenhouses = row.greenhouses;
+    if (!greenhouses || !Array.isArray(greenhouses)) {
+      greenhouses = [];
     }
     return {
       uid: row.id,
-      name: row.display_name,
       email: row.email,
+      name: row.display_name,
       displayName: row.display_name,
       role: row.role,
-      assignedGH: assignedGH,
+      avatar: row.avatar,
+      imageUrl: row.image_url,
+      assignedGH: greenhouses,
     };
   });
 }
@@ -186,8 +192,8 @@ async function getUserByEmail(email) {
     `
     SELECT
       u.id,
-      u.display_name,
       u.email,
+      u.display_name,
       u.password,
       u.role,
       u.avatar,
@@ -201,17 +207,17 @@ async function getUserByEmail(email) {
           )
         ) FILTER (WHERE g.id IS NOT NULL),
         '[]'
-      ) AS assigned_greenhouses
-    FROM public.users u
-    LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id::uuid = u.id
-    LEFT JOIN public.greenhouses g
+      ) AS greenhouses
+    FROM users u
+    LEFT JOIN supervisor_greenhouses sg
+      ON sg.supervisor_id = u.id::uuid
+    LEFT JOIN greenhouses g
       ON g.id = sg.greenhouse_id
     WHERE u.email = $1
     GROUP BY
       u.id,
-      u.display_name,
       u.email,
+      u.display_name,
       u.password,
       u.role,
       u.avatar,
@@ -232,7 +238,7 @@ async function getUserByEmail(email) {
     role: row.role,
     avatar: row.avatar,
     imageUrl: row.image_url,
-    assignedGH: row.assigned_greenhouses || [],
+    assignedGH: row.greenhouses || [],
     createdAt: row.created_at
   };
 }
