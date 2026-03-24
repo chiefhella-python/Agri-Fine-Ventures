@@ -74,7 +74,7 @@ router.post('/register', [
     return res.status(400).json({ errors: errors.array() });
   }
   
-  const { email, password, role, displayName, assignedGH } = req.body;
+  const { email, password, role, displayName, assignedGH, uid: providedUid } = req.body;
   
   // Validate role is required and must be valid
   if (!role || !['user', 'supervisor', 'agronomist', 'admin'].includes(role)) {
@@ -101,7 +101,8 @@ router.post('/register', [
     // Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
-    const uid = email.split('@')[0];
+    // Use provided uid or extract from email
+    const uid = providedUid || email.split('@')[0];
     
     const newUser = {
       uid: uid,

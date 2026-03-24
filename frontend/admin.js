@@ -1879,6 +1879,8 @@ const AdminDashboard = {
         // Users are synced from backend in createUserBackend
         AFV.logActivity('➕', `New supervisor added: ${name}`);
         showToast(`Supervisor "${name}" added successfully!`, 'success');
+        // Refresh users from backend
+        await AFV.fetchUsersFromBackend();
       } else {
         showToast('Failed to create supervisor. Username/email may already exist.', 'error');
         return;
