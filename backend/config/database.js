@@ -169,32 +169,32 @@ async function getAllUsers() {
 
 // Get user by email
 async function getUserByEmail(email) {
-  const result = await pool.query(`
-    SELECT u.*, 
-           COALESCE(
-             ARRAY_AGG(sg.greenhouse_id::text) FILTER (WHERE sg.greenhouse_id IS NOT NULL),
-             '{}'
-           ) as assigned_gh_array
-    FROM users u
-    LEFT JOIN supervisor_greenhouses sg ON u.uid::text = sg.supervisor_id::text
-    WHERE u.email = $1
-    GROUP BY u.uid, u.email, u.password, u.display_name, u.role, u.avatar, u.image_url, u.assigned_gh, u.created_at
-  `, [email]);
+  const result = await pool.query(
+    `
+    SELECT
+      id,
+      email,
+      password,
+      role,
+      display_name
+    FROM users
+    WHERE email = $1
+    LIMIT 1
+    `,
+    [email]
+  );
+
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
-  let assignedGH = row.assigned_gh_array;
-  if (!assignedGH || !Array.isArray(assignedGH)) {
-    assignedGH = [];
-  }
   return {
-    uid: row.uid,
+    uid: row.id,
     email: row.email,
     password: row.password,
     displayName: row.display_name,
     role: row.role,
     avatar: row.avatar,
     imageUrl: row.image_url,
-    assignedGH: assignedGH,
+    assignedGH: [],
     createdAt: row.created_at
   };
 }
