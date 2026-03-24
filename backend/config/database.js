@@ -43,7 +43,7 @@ async function initializeDatabase() {
   try {
     // Create users table if not exists
     await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS public.users (
         uid VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
@@ -60,18 +60,18 @@ async function initializeDatabase() {
     
     // Add index for role-based queries
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)
+      CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role)
     `);
     
     // Add index for email lookups
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+      CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email)
     `);
     
     // Add assigned_gh column if it doesn't exist (for supervisors/agronomists)
     try {
       await client.query(`
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS assigned_gh TEXT[]
+        ALTER TABLE public.users ADD COLUMN IF NOT EXISTS assigned_gh TEXT[]
       `);
       console.log('✅ PostgreSQL: added assigned_gh column');
     } catch (e) {
@@ -80,7 +80,7 @@ async function initializeDatabase() {
     
     // Create supervisor_greenhouses junction table if not exists
     await client.query(`
-      CREATE TABLE IF NOT EXISTS supervisor_greenhouses (
+      CREATE TABLE IF NOT EXISTS public.supervisor_greenhouses (
         id SERIAL PRIMARY KEY,
         supervisor_id VARCHAR(255) NOT NULL,
         greenhouse_id VARCHAR(255) NOT NULL,
@@ -89,16 +89,16 @@ async function initializeDatabase() {
       )
     `);
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_supervisor_greenhouses_supervisor ON supervisor_greenhouses(supervisor_id)
+      CREATE INDEX IF NOT EXISTS idx_supervisor_greenhouses_supervisor ON public.supervisor_greenhouses(supervisor_id)
     `);
     console.log('✅ PostgreSQL: supervisor_greenhouses table ready');
     
     // Create admin user if not exists (with hashed password)
-    const adminExists = await client.query('SELECT * FROM users WHERE uid = $1', ['admin']);
+    const adminExists = await client.query('SELECT * FROM public.users WHERE uid = $1', ['admin']);
     if (adminExists.rows.length === 0) {
       const hashedPassword = await bcrypt.hash('1234', SALT_ROUNDS);
       await client.query(
-        `INSERT INTO users (uid, email, password, display_name, role, avatar, image_url)
+        `INSERT INTO public.users (uid, email, password, display_name, role, avatar, image_url)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         ['admin', 'agrifineventures@gmail.com', hashedPassword, 'Admin', 'admin', '👑', '']
       );
@@ -107,7 +107,7 @@ async function initializeDatabase() {
     
     // Create workers table if not exists
     await client.query(`
-      CREATE TABLE IF NOT EXISTS workers (
+      CREATE TABLE IF NOT EXISTS public.workers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         phone VARCHAR(50),
@@ -124,7 +124,7 @@ async function initializeDatabase() {
     
     // Add index for name search
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_workers_name ON workers(name)
+      CREATE INDEX IF NOT EXISTS idx_workers_name ON public.workers(name)
     `);
     
     console.log('✅ PostgreSQL: Database initialized successfully');
@@ -152,10 +152,10 @@ async function getAllUsers() {
         ) FILTER (WHERE g.id IS NOT NULL),
         '[]'
       ) AS assigned_greenhouses
-    FROM users u
-    LEFT JOIN supervisor_greenhouses sg
+    FROM public.users u
+    LEFT JOIN public.supervisor_greenhouses sg
       ON sg.supervisor_id = u.id
-    LEFT JOIN greenhouses g
+    LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
       u.id,
@@ -198,10 +198,10 @@ async function getUserByEmail(email) {
         ) FILTER (WHERE g.id IS NOT NULL),
         '[]'
       ) AS assigned_greenhouses
-    FROM users u
-    LEFT JOIN supervisor_greenhouses sg
+    FROM public.users u
+    LEFT JOIN public.supervisor_greenhouses sg
       ON sg.supervisor_id = u.id
-    LEFT JOIN greenhouses g
+    LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     WHERE u.email = $1
     GROUP BY
@@ -239,7 +239,7 @@ async function createUser(user) {
     await client.query('BEGIN');
     
     const result = await client.query(
-      `INSERT INTO users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
+      `INSERT INTO public.users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [user.uid, user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
@@ -249,7 +249,7 @@ async function createUser(user) {
     if (assignedGH.length > 0) {
       for (const ghId of assignedGH) {
         await client.query(
-          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
           [user.uid, ghId]
         );
       }
@@ -270,7 +270,7 @@ async function deleteUser(uid) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const result = await client.query('DELETE FROM users WHERE uid = $1 RETURNING *', [uid]);
+    const result = await client.query('DELETE FROM public.users WHERE uid = $1 RETURNING *', [uid]);
     await client.query('COMMIT');
     return result.rows[0];
   } catch (err) {
@@ -284,10 +284,10 @@ async function deleteUser(uid) {
 // Reset all users (keep only admin)
 async function resetUsers() {
   // Delete all non-admin users
-  await pool.query('DELETE FROM users WHERE role != $1', ['admin']);
+  await pool.query('DELETE FROM public.users WHERE role != $1', ['admin']);
   
   // Ensure admin exists
-  const adminExists = await pool.query('SELECT * FROM users WHERE uid = $1', ['admin']);
+  const adminExists = await pool.query('SELECT * FROM public.users WHERE uid = $1', ['admin']);
   if (adminExists.rows.length === 0) {
     const hashedPassword = await bcrypt.hash('1234', SALT_ROUNDS);
     await pool.query(
@@ -300,17 +300,17 @@ async function resetUsers() {
 
 // Reset all workers
 async function resetWorkers() {
-  await pool.query('DELETE FROM workers');
+  await pool.query('DELETE FROM public.workers');
 }
 
 // Reset all greenhouses and recreate defaults
 async function resetGreenhouses() {
-  await pool.query('DELETE FROM greenhouses');
+  await pool.query('DELETE FROM public.greenhouses');
   
   // Recreate 5 default greenhouses
   for (let i = 1; i <= 5; i++) {
     await pool.query(
-      `INSERT INTO greenhouses (id, name, crop_emoji, plants, status, environment, tasks, sensors, grade_prices)
+      `INSERT INTO public.greenhouses (id, name, crop_emoji, plants, status, environment, tasks, sensors, grade_prices)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [`gh_${i}`, `Greenhouse ${i}`, '🏡', 0, 'active', '{"temp": "", "humidity": "", "ph": "", "ec": ""}', '[]', '[]', '{"grade1": 0, "grade2": 0, "grade3": 0, "reject": 0}']
     );
@@ -326,21 +326,21 @@ async function resetAll() {
 
 // Get greenhouse by ID
 async function getGreenhouseById(id) {
-  const result = await pool.query('SELECT * FROM greenhouses WHERE id = $1', [id]);
+  const result = await pool.query('SELECT * FROM public.greenhouses WHERE id = $1', [id]);
   if (result.rows.length === 0) return null;
   return parseGreenhouseRow(result.rows[0]);
 }
 
 // Get all greenhouses
 async function getAllGreenhouses() {
-  const result = await pool.query('SELECT * FROM greenhouses ORDER BY created_at');
+  const result = await pool.query('SELECT * FROM public.greenhouses ORDER BY created_at');
   return result.rows.map(parseGreenhouseRow);
 }
 
 // Create greenhouse
 async function createGreenhouse(greenhouse) {
   const result = await pool.query(
-    `INSERT INTO greenhouses (id, name, crop, variety, crop_emoji, plants, area, location, planted_date, expected_harvest, status, environment, notes, tasks, sensors, grade_prices)
+    `INSERT INTO public.greenhouses (id, name, crop, variety, crop_emoji, plants, area, location, planted_date, expected_harvest, status, environment, notes, tasks, sensors, grade_prices)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      RETURNING *`,
     [
@@ -368,7 +368,7 @@ async function createGreenhouse(greenhouse) {
 // Update greenhouse
 async function updateGreenhouse(id, updates) {
   const result = await pool.query(
-    `UPDATE greenhouses SET 
+    `UPDATE public.greenhouses SET 
        name = COALESCE($2, name),
        crop = COALESCE($3, crop),
        variety = COALESCE($4, variety),
@@ -412,7 +412,7 @@ async function updateGreenhouse(id, updates) {
 
 // Delete greenhouse
 async function deleteGreenhouse(id) {
-  const result = await pool.query('DELETE FROM greenhouses WHERE id = $1 RETURNING *', [id]);
+  const result = await pool.query('DELETE FROM public.greenhouses WHERE id = $1 RETURNING *', [id]);
   return result.rows[0] || null;
 }
 
@@ -421,7 +421,7 @@ async function initializeGreenhouses() {
   const client = await pool.connect();
   try {
     await client.query(`
-      CREATE TABLE IF NOT EXISTS greenhouses (
+      CREATE TABLE IF NOT EXISTS public.greenhouses (
         id VARCHAR(255) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         crop VARCHAR(255) DEFAULT '',
@@ -443,11 +443,11 @@ async function initializeGreenhouses() {
       )
     `);
 
-    const existing = await client.query('SELECT COUNT(*) FROM greenhouses');
+    const existing = await client.query('SELECT COUNT(*) FROM public.greenhouses');
     if (parseInt(existing.rows[0].count) === 0) {
       for (let i = 1; i <= 5; i++) {
         await client.query(
-          `INSERT INTO greenhouses (id, name, crop_emoji, plants, status, environment, tasks, sensors, grade_prices)
+          `INSERT INTO public.greenhouses (id, name, crop_emoji, plants, status, environment, tasks, sensors, grade_prices)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
           [`gh_${i}`, `Greenhouse ${i}`, '🏡', 0, 'active', '{"temp": "", "humidity": "", "ph": "", "ec": ""}', '[]', '[]', '{"grade1": 0, "grade2": 0, "grade3": 0, "reject": 0}']
         );
@@ -487,18 +487,18 @@ function parseGreenhouseRow(row) {
 
 // Workers CRUD
 async function getAllWorkers() {
-  const result = await pool.query('SELECT * FROM workers ORDER BY created_at DESC');
+  const result = await pool.query('SELECT * FROM public.workers ORDER BY created_at DESC');
   return result.rows;
 }
 
 async function getWorkerById(id) {
-  const result = await pool.query('SELECT * FROM workers WHERE id = $1', [id]);
+  const result = await pool.query('SELECT * FROM public.workers WHERE id = $1', [id]);
   return result.rows[0] || null;
 }
 
 async function createWorker(worker) {
   const result = await pool.query(
-    `INSERT INTO workers (name, phone, email, salary, salary_paid, transaction_code, role, notes)
+    `INSERT INTO public.workers (name, phone, email, salary, salary_paid, transaction_code, role, notes)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
@@ -517,7 +517,7 @@ async function createWorker(worker) {
 
 async function updateWorker(id, updates) {
   const result = await pool.query(
-    `UPDATE workers SET 
+    `UPDATE public.workers SET 
        name = COALESCE($2, name),
        phone = COALESCE($3, phone),
        email = COALESCE($4, email),
@@ -545,7 +545,7 @@ async function updateWorker(id, updates) {
 }
 
 async function deleteWorker(id) {
-  const result = await pool.query('DELETE FROM workers WHERE id = $1 RETURNING *', [id]);
+  const result = await pool.query('DELETE FROM public.workers WHERE id = $1 RETURNING *', [id]);
   return result.rows[0] || null;
 }
 
@@ -556,13 +556,13 @@ async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
     await client.query('BEGIN');
     
     // Delete existing assignments
-    await client.query('DELETE FROM supervisor_greenhouses WHERE supervisor_id::text = $1', [supervisorId]);
+    await client.query('DELETE FROM public.supervisor_greenhouses WHERE supervisor_id::text = $1', [supervisorId]);
     
     // Insert new assignments
     if (greenhouseIds && greenhouseIds.length > 0) {
       for (const ghId of greenhouseIds) {
         await client.query(
-          'INSERT INTO supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid)',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid)',
           [supervisorId, ghId]
         );
       }
