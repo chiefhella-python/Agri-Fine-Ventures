@@ -172,14 +172,32 @@ async function getUserByEmail(email) {
   const result = await pool.query(
     `
     SELECT
-      id,
-      email,
-      password,
-      role,
-      display_name
-    FROM users
-    WHERE email = $1
-    LIMIT 1
+      u.id,
+      u.display_name,
+      u.email,
+      u.password,
+      u.role,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', g.id,
+            'name', g.name
+          )
+        ) FILTER (WHERE g.id IS NOT NULL),
+        '[]'
+      ) AS assigned_greenhouses
+    FROM users u
+    LEFT JOIN supervisor_greenhouses sg
+      ON sg.supervisor_id = u.id
+    LEFT JOIN greenhouses g
+      ON g.id = sg.greenhouse_id
+    WHERE u.email = $1
+    GROUP BY
+      u.id,
+      u.display_name,
+      u.email,
+      u.password,
+      u.role
     `,
     [email]
   );
@@ -194,7 +212,7 @@ async function getUserByEmail(email) {
     role: row.role,
     avatar: row.avatar,
     imageUrl: row.image_url,
-    assignedGH: [],
+    assignedGH: row.assigned_greenhouses || [],
     createdAt: row.created_at
   };
 }
