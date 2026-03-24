@@ -139,7 +139,7 @@ async function initializeDatabase() {
 async function getAllUsers() {
   const result = await pool.query(`
     SELECT
-      u.id,
+      u.uid,
       u.display_name,
       u.email,
       u.role,
@@ -154,15 +154,15 @@ async function getAllUsers() {
       ) AS assigned_greenhouses
     FROM public.users u
     LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id = u.id
+      ON sg.supervisor_id = u.uid
     LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
-      u.id,
+      u.uid,
       u.display_name,
       u.email,
       u.role
-    ORDER BY u.id;
+    ORDER BY u.uid;
   `);
   return result.rows.map(row => {
     let assignedGH = row.assigned_greenhouses;
@@ -170,7 +170,7 @@ async function getAllUsers() {
       assignedGH = [];
     }
     return {
-      uid: row.id,
+      uid: row.uid,
       name: row.display_name,
       email: row.email,
       displayName: row.display_name,
@@ -185,11 +185,14 @@ async function getUserByEmail(email) {
   const result = await pool.query(
     `
     SELECT
-      u.id,
+      u.uid,
       u.display_name,
       u.email,
       u.password,
       u.role,
+      u.avatar,
+      u.image_url,
+      u.created_at,
       COALESCE(
         json_agg(
           json_build_object(
@@ -201,16 +204,19 @@ async function getUserByEmail(email) {
       ) AS assigned_greenhouses
     FROM public.users u
     LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id = u.id
+      ON sg.supervisor_id = u.uid
     LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     WHERE u.email = $1
     GROUP BY
-      u.id,
+      u.uid,
       u.display_name,
       u.email,
       u.password,
-      u.role
+      u.role,
+      u.avatar,
+      u.image_url,
+      u.created_at
     `,
     [email]
   );
@@ -218,7 +224,7 @@ async function getUserByEmail(email) {
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
   return {
-    uid: row.id,
+    uid: row.uid,
     name: row.display_name,
     email: row.email,
     password: row.password,
@@ -251,7 +257,7 @@ async function createUser(user) {
     if (assignedGH.length > 0) {
       for (const ghId of assignedGH) {
         await client.query(
-          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
           [user.uid, ghId]
         );
       }
@@ -564,7 +570,7 @@ async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
     if (greenhouseIds && greenhouseIds.length > 0) {
       for (const ghId of greenhouseIds) {
         await client.query(
-          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid)',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2)',
           [supervisorId, ghId]
         );
       }
