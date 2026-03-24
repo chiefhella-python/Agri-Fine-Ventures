@@ -2636,14 +2636,7 @@ const AdminDashboard = {
   },
 
   renderAlerts() {
-    const alerts = [
-      { level: 'critical', icon: '🚨', title: 'Vapor Gard Stock Critical', desc: 'Only 2L remaining. GH5 requires application urgently. Reorder immediately.', time: '2 hours ago' },
-      { level: 'critical', icon: '🚨', title: 'Abamectin Running Out', desc: 'Pest control chemical at 3L. If spider mites are confirmed in GH1, stock will be insufficient.', time: '3 hours ago' },
-      { level: 'warning', icon: '⚠️', title: 'GH2 Magnesium Deficiency', desc: 'Dr. Grace Njeri flagged Mg deficiency signs. Foliar spray task pending since yesterday.', time: '5 hours ago' },
-      { level: 'warning', icon: '⚠️', title: 'Mancozeb Low Stock', desc: 'Only 12kg remaining. Fungicide schedule for GH3 coming up next week.', time: '1 day ago' },
-      { level: 'info', icon: '💧', title: 'GH4 Drip Rate Adjustment', desc: 'New transplants may need increased irrigation in coming days as temperatures rise.', time: '1 day ago' },
-      { level: 'info', icon: '🌡️', title: 'Temperature Spike Yesterday', desc: 'GH4 reached 29°C at 2pm. Vents auto-opened. Monitor during peak afternoon hours.', time: '1 day ago' },
-    ];
+    const alerts = AFV.alerts || [];
     return `
       <div class="page-header">
         <div>
@@ -2652,7 +2645,7 @@ const AdminDashboard = {
         </div>
       </div>
       <div class="page-body">
-        ${alerts.map(a => `
+        ${alerts.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--text-light)">✅ No alerts</div>' : alerts.map((a, index) => `
           <div style="display:flex;gap:14px;padding:16px;background:${a.level==='critical'?'rgba(214,48,49,0.05)':a.level==='warning'?'rgba(225,112,85,0.05)':'rgba(9,132,227,0.05)'};border:1.5px solid ${a.level==='critical'?'rgba(214,48,49,0.2)':a.level==='warning'?'rgba(225,112,85,0.2)':'rgba(9,132,227,0.15)'};border-radius:var(--radius-md);margin-bottom:12px">
             <div style="font-size:1.8rem;flex-shrink:0">${a.icon}</div>
             <div style="flex:1">
@@ -2660,11 +2653,16 @@ const AdminDashboard = {
               <div style="font-size:0.85rem;color:var(--text-dark);line-height:1.5">${a.desc}</div>
               <div style="font-size:0.72rem;color:var(--text-light);margin-top:6px">🕐 ${a.time}</div>
             </div>
-            <button style="align-self:flex-start;font-size:0.75rem;padding:4px 12px;background:transparent;border:1px solid var(--green-pale);border-radius:6px;cursor:pointer;color:var(--text-light)">Dismiss</button>
+            <button onclick="AdminDashboard.dismissAlert(${index})" style="align-self:flex-start;font-size:0.75rem;padding:4px 12px;background:transparent;border:1px solid var(--green-pale);border-radius:6px;cursor:pointer;color:var(--text-light)">Dismiss</button>
           </div>`).join('')}
       </div>
       
     `;
+  },
+
+  dismissAlert(index) {
+    AFV.alerts.splice(index, 1);
+    this.showPage('alerts');
   },
 
   renderActivityLog() {
