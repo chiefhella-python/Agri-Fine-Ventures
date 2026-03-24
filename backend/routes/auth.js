@@ -74,7 +74,7 @@ router.post('/register', [
     return res.status(400).json({ errors: errors.array() });
   }
   
-  const { email, password, role, displayName, assignedGH, uid: providedUid } = req.body;
+  const { email, password, role, displayName, assignedGH } = req.body;
   
   // Validate role is required and must be valid
   if (!role || !['user', 'supervisor', 'agronomist', 'admin'].includes(role)) {
@@ -101,14 +101,10 @@ router.post('/register', [
     // Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
-    // Use provided uid or extract from email
-    const uid = providedUid || email.split('@')[0];
-    
     const newUser = {
-      uid: uid,
       email,
       password: hashedPassword,
-      displayName: displayName || uid,
+      displayName: displayName || email.split('@')[0],
       role: role,
       assignedGH: assignedGH || [],
       avatar: role === 'supervisor' ? '👨‍🌾' : role === 'agronomist' ? '🔬' : '👤',
@@ -179,16 +175,16 @@ router.post('/reset', authenticate, requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/auth/users/:uid - Delete a user
-router.delete('/users/:uid', authenticate, requireAdmin, async (req, res) => {
-  const { uid } = req.params;
+router.delete('/users/:id', authenticate, requireAdmin, async (req, res) => {
+  const { id } = req.params;
   
   try {
     // Prevent deleting admin
-    if (uid === 'admin') {
+    if (id === 'admin') {
       return res.status(400).json({ error: 'Cannot delete admin' });
     }
     
-    const deleted = await db.deleteUser(uid);
+    const deleted = await db.deleteUser(id);
     if (!deleted) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -211,9 +207,9 @@ router.post('/reset-all', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /api/auth/users/:uid/greenhouses - Update supervisor greenhouse assignments
-router.put('/users/:uid/greenhouses', authenticate, requireAdmin, async (req, res) => {
-  const { uid } = req.params;
+// PUT /api/auth/users/:id/greenhouses - Update supervisor greenhouse assignments
+router.put('/users/:id/greenhouses', authenticate, requireAdmin, async (req, res) => {
+  const { id } = req.params;
   const { greenhouseIds } = req.body;
   
   if (!Array.isArray(greenhouseIds)) {
@@ -221,7 +217,7 @@ router.put('/users/:uid/greenhouses', authenticate, requireAdmin, async (req, re
   }
   
   try {
-    await db.updateSupervisorGreenhouses(uid, greenhouseIds);
+    await db.updateSupervisorGreenhouses(id, greenhouseIds);
     res.json({ message: 'Supervisor greenhouses updated', assignedGH: greenhouseIds });
   } catch (err) {
     console.error('Update supervisor greenhouses error:', err);

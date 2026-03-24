@@ -139,7 +139,7 @@ async function initializeDatabase() {
 async function getAllUsers() {
   const result = await pool.query(`
     SELECT
-      u.uid,
+      u.id,
       u.display_name,
       u.email,
       u.role,
@@ -154,15 +154,15 @@ async function getAllUsers() {
       ) AS assigned_greenhouses
     FROM public.users u
     LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id::uuid = u.uid::uuid
+      ON sg.supervisor_id::uuid = u.id
     LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
-      u.uid,
+      u.id,
       u.display_name,
       u.email,
       u.role
-    ORDER BY u.uid;
+    ORDER BY u.display_name;
   `);
   return result.rows.map(row => {
     let assignedGH = row.assigned_greenhouses;
@@ -170,7 +170,7 @@ async function getAllUsers() {
       assignedGH = [];
     }
     return {
-      uid: row.uid,
+      uid: row.id,
       name: row.display_name,
       email: row.email,
       displayName: row.display_name,
@@ -185,7 +185,7 @@ async function getUserByEmail(email) {
   const result = await pool.query(
     `
     SELECT
-      u.uid,
+      u.id,
       u.display_name,
       u.email,
       u.password,
@@ -204,12 +204,12 @@ async function getUserByEmail(email) {
       ) AS assigned_greenhouses
     FROM public.users u
     LEFT JOIN public.supervisor_greenhouses sg
-      ON sg.supervisor_id::uuid = u.uid::uuid
+      ON sg.supervisor_id::uuid = u.id
     LEFT JOIN public.greenhouses g
       ON g.id = sg.greenhouse_id
     WHERE u.email = $1
     GROUP BY
-      u.uid,
+      u.id,
       u.display_name,
       u.email,
       u.password,
@@ -224,7 +224,7 @@ async function getUserByEmail(email) {
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
   return {
-    uid: row.uid,
+    uid: row.id,
     name: row.display_name,
     email: row.email,
     password: row.password,
@@ -247,24 +247,26 @@ async function createUser(user) {
     await client.query('BEGIN');
     
     const result = await client.query(
-      `INSERT INTO public.users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO public.users (email, password, display_name, role, avatar, image_url, assigned_gh)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [user.uid, user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
+      [user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
     );
+    
+    const newUser = result.rows[0];
     
     // Also add to junction table
     if (assignedGH.length > 0) {
       for (const ghId of assignedGH) {
         await client.query(
           'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
-          [user.uid, ghId]
+          [newUser.id, ghId]
         );
       }
     }
     
     await client.query('COMMIT');
-    return result.rows[0];
+    return newUser;
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -274,11 +276,11 @@ async function createUser(user) {
 }
 
 // Delete user
-async function deleteUser(uid) {
+async function deleteUser(id) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const result = await client.query('DELETE FROM public.users WHERE uid = $1 RETURNING *', [uid]);
+    const result = await client.query('DELETE FROM public.users WHERE id = $1::uuid RETURNING *', [id]);
     await client.query('COMMIT');
     return result.rows[0];
   } catch (err) {
