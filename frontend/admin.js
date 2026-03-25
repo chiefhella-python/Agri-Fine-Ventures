@@ -1619,6 +1619,10 @@ const AdminDashboard = {
               <input type="password" id="supervisor-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
             </div>
             <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email</label>
+              <input type="email" id="supervisor-email" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker@example.com">
+            </div>
+            <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assigned Greenhouses</label>
               <div style="display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto">
                 ${AFV.greenhouses.map(gh => `
@@ -1798,12 +1802,19 @@ const AdminDashboard = {
     const username = document.getElementById('supervisor-username').value.trim();
     const name = document.getElementById('supervisor-name').value.trim();
     const password = document.getElementById('supervisor-password').value.trim();
+    const email = document.getElementById('supervisor-email').value.trim();
     const avatar = document.querySelector('input[name="supervisor-avatar"]:checked')?.value || '👨‍🌾';
     const imageUrl = document.getElementById('supervisor-image-url').value || '';
     const assignedGH = Array.from(document.querySelectorAll('.supervisor-gh-checkbox:checked')).map(cb => cb.value);
     
-    if (!username || !name || !password) {
+    if (!username || !name || !password || !email) {
       showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    // Validate email format
+    if (!email.includes('@')) {
+      showToast('Please enter a valid email address', 'error');
       return;
     }
     
@@ -1868,7 +1879,7 @@ const AdminDashboard = {
     } else {
       // Add new supervisor - create via backend API
       const success = await AFV.createUserBackend({
-        email: `${username}@agrifine.com`,
+        email: email,
         password: password,
         username: username,
         displayName: name,
@@ -1987,6 +1998,10 @@ const AdminDashboard = {
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
               <input type="password" id="agronomist-password" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
             </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email</label>
+              <input type="email" id="agronomist-email" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., agronomist@example.com">
+            </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
               <button type="button" onclick="AdminDashboard.closeAgronomistModal()" style="padding:10px 20px;background:#e8d5e8;color:#9b59b6;border:none;border-radius:var(--radius-sm);cursor:pointer">Cancel</button>
               <button type="submit" style="padding:10px 24px;background:#9b59b6;color:white;border:none;border-radius:var(--radius-sm);cursor:pointer">💾 Save Agronomist</button>
@@ -2085,11 +2100,18 @@ const AdminDashboard = {
     const username = document.getElementById('agronomist-username').value.trim();
     const name = document.getElementById('agronomist-name').value.trim();
     const password = document.getElementById('agronomist-password').value.trim();
+    const email = document.getElementById('agronomist-email').value.trim();
     const avatar = document.querySelector('input[name="agronomist-avatar"]:checked')?.value || '🔬';
     const imageUrl = document.getElementById('agronomist-image-url').value || '';
     
-    if (!username || !name || !password) {
+    if (!username || !name || !password || !email) {
       showToast('Please fill in all required fields', 'error');
+      return;
+    }
+    
+    // Validate email format
+    if (!email.includes('@')) {
+      showToast('Please enter a valid email address', 'error');
       return;
     }
     
@@ -2144,8 +2166,9 @@ const AdminDashboard = {
     } else {
       // Add new agronomist - create via backend API
       const success = await AFV.createUserBackend({
-        email: `${username}@agrifine.com`,
+        email: email,
         password: password,
+        username: username,
         displayName: name,
         role: 'agronomist'
       });
