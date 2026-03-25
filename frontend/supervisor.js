@@ -344,10 +344,11 @@ const SupervisorDashboard = {
           const gh = AFV.greenhouses.find(g => g.id === ghId);
           if (!gh) return '';
           const daysPlanted = Math.floor((new Date() - gh.plantedDate)/(1000*60*60*24));
-          const daysToHarvest = Math.ceil((gh.expectedHarvest - new Date())/(1000*60*60*24));
+          const expectedHarvest = gh.expectedHarvest ? new Date(gh.expectedHarvest) : null;
+          const daysToHarvest = expectedHarvest ? Math.ceil((expectedHarvest - new Date())/(1000*60*60*24)) : null;
           
           // Calculate growth stage
-          const totalCycle = Math.ceil((gh.expectedHarvest - gh.plantedDate) / (1000*60*60*24));
+          const totalCycle = (expectedHarvest && gh.plantedDate) ? Math.ceil((expectedHarvest - gh.plantedDate) / (1000*60*60*24)) : null;
           const cycleProgress = Math.min(100, Math.round((daysPlanted / totalCycle) * 100));
           
           let stage = '🌱 Seedling';
@@ -355,9 +356,11 @@ const SupervisorDashboard = {
           if (daysPlanted > 20) { stage = '🌿 Vegetative'; stageColor = '#228b22'; }
           if (daysPlanted > 35) { stage = '🌸 Flowering'; stageColor = '#da70d6'; }
           if (daysPlanted > 50) { stage = '🍅 Fruiting'; stageColor = '#ff6347'; }
-          if (daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
+          if (totalCycle && daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
           
-          const expectedMonth = gh.expectedHarvest.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
+          const expectedMonth = gh.expectedHarvest 
+            ? new Date(gh.expectedHarvest).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' }) 
+            : 'Not scheduled';
           
           // Performance score
           const perfScore = AFV.getPerformanceScore(gh);
@@ -381,7 +384,7 @@ const SupervisorDashboard = {
                       <div style="font-size:0.68rem;color:var(--text-light)">Age</div>
                     </div>
                     <div style="background:var(--green-ultra-pale);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:${daysToHarvest<40?'var(--orange-warn)':'var(--green-deep)'}">${daysToHarvest}d</div>
+                      <div style="font-weight:700;color:${daysToHarvest && daysToHarvest < 40 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${daysToHarvest !== null ? daysToHarvest + 'd' : '—'}</div>
                       <div style="font-size:0.68rem;color:var(--text-light)">To Harvest</div>
                     </div>
                     <div style="background:${stageColor}15;padding:8px 12px;border-radius:var(--radius-sm);text-align:center;border:1px solid ${stageColor}30">

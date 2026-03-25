@@ -172,7 +172,7 @@ Agri-Fine Ventures is a modern greenhouse farm in Kenya managing:
 ## GREENHOUSES & CROPS
 ${this.greenhouses.map(gh => `### ${gh.name}
 - Crop: ${gh.crop} (${gh.variety})
-- Planted: ${gh.plantedDate.toLocaleDateString()}, Harvest: ${gh.expectedHarvest.toLocaleDateString()}
+- Planted: ${gh.plantedDate ? new Date(gh.plantedDate).toLocaleDateString() : 'Not set'}, Harvest: ${gh.expectedHarvest ? new Date(gh.expectedHarvest).toLocaleDateString() : 'Not scheduled'}
 - Area: ${gh.area}, Plants: ${gh.plants}
 - Environment: Temp ${gh.environment?.temp || 'N/A'}, Humidity ${gh.environment?.humidity || 'N/A'}, pH ${gh.environment?.ph || 'N/A'}, EC ${gh.environment?.ec || 'N/A'}
 - Price: KES ${gh.pricePerKg}/kg | Notes: ${gh.notes || 'None'}
