@@ -73,13 +73,22 @@ async function handleLogin() {
           assignedGH = [];
         }
       }
+      // Normalize assignedGH: backend returns [{id, name}] objects, frontend expects plain IDs
+      if (Array.isArray(assignedGH)) {
+        assignedGH = assignedGH.map(item => {
+          if (typeof item === 'object' && item !== null) return item.id;
+          return item;
+        }).filter(Boolean);
+      } else {
+        assignedGH = [];
+      }
       const user = {
         id: response.user.uid,
         email: response.user.email,
         name: response.user.display_name || response.user.email.split('@')[0],
         role: response.user.role,
         avatar: response.user.avatar,
-        assignedGH: assignedGH || []
+        assignedGH: assignedGH
       };
       
       // Verify role matches selected role

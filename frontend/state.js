@@ -696,6 +696,15 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
               assignedGH = [];
             }
           }
+          // Normalize assignedGH: backend returns [{id, name}] objects, frontend expects plain IDs
+          if (Array.isArray(assignedGH)) {
+            assignedGH = assignedGH.map(item => {
+              if (typeof item === 'object' && item !== null) return item.id;
+              return item;
+            }).filter(Boolean);
+          } else {
+            assignedGH = [];
+          }
           this.users[u.uid] = { ...u, assignedGH, passwordHash: u.password };
         });
         console.log('Users synced from backend:', Object.keys(this.users));

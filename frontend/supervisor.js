@@ -6,9 +6,9 @@ const SupervisorDashboard = {
   currentPage: 'mygreenhouses',
 
   // Refresh current page
-  refreshCurrentPage() {
+  async refreshCurrentPage() {
     if (this.currentPage) {
-      this.showPage(this.currentPage);
+      await this.showPage(this.currentPage);
       console.log('SupervisorDashboard: Refreshed page after remote sync');
     }
   },
@@ -301,7 +301,16 @@ const SupervisorDashboard = {
 
   renderMyGreenhouses() {
     const user = AFV.currentUser;
-    const assignedGH = user.assignedGH || [];
+    // Normalize assignedGH: ensure it's an array of ID strings (not objects)
+    let assignedGH = user.assignedGH || [];
+    if (Array.isArray(assignedGH)) {
+      assignedGH = assignedGH.map(item => {
+        if (typeof item === 'object' && item !== null) return item.id;
+        return item;
+      }).filter(Boolean);
+    } else {
+      assignedGH = [];
+    }
     console.log('Rendering MyGreenhouses - assignedGH:', assignedGH);
     console.log('AFV.greenhouses:', AFV.greenhouses);
     
@@ -411,7 +420,16 @@ const SupervisorDashboard = {
 
   renderHarvest() {
     const user = AFV.currentUser;
-    const assignedGH = user.assignedGH || [];
+    // Normalize assignedGH: ensure it's an array of ID strings (not objects)
+    let assignedGH = user.assignedGH || [];
+    if (Array.isArray(assignedGH)) {
+      assignedGH = assignedGH.map(item => {
+        if (typeof item === 'object' && item !== null) return item.id;
+        return item;
+      }).filter(Boolean);
+    } else {
+      assignedGH = [];
+    }
     console.log('Supervisor assignedGH:', assignedGH);
     console.log('AFV.greenhouses IDs:', AFV.greenhouses?.map(g => g.id));
     const greenhouses = AFV.greenhouses.filter(g => assignedGH.includes(g.id));

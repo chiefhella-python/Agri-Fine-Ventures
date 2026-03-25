@@ -7,9 +7,9 @@ const AdminDashboard = {
   weatherData: null,
 
   // Refresh current page
-  refreshCurrentPage() {
+  async refreshCurrentPage() {
     if (this.currentPage) {
-      this.showPage(this.currentPage);
+      await this.showPage(this.currentPage);
       console.log('AdminDashboard: Refreshed page after remote sync');
     }
   },
@@ -2346,8 +2346,8 @@ const AdminDashboard = {
     }
   },
 
-  refreshCurrentPage() {
-    this.showPage(this.currentPage);
+  async refreshCurrentPage() {
+    await this.showPage(this.currentPage);
   },
 
   renderAgroReports() {
