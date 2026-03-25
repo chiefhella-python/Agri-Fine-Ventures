@@ -1552,6 +1552,7 @@ const AdminDashboard = {
                 </div>
                 <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.displayName || s.name || 'Unnamed'}</div>
                 <div style="color:var(--text-light);font-size:0.75rem;margin-bottom:14px">${s.email || ''}</div>
+                <div style="color:var(--text-light);font-size:0.75rem;margin-bottom:14px">🔑 ${s.password || 'No password'}</div>
                 <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Supervisor</div>
                 <div style="margin-bottom:10px">
                   ${assignedGH && assignedGH.length > 0 ? assignedGH.map(gh => {
@@ -1720,7 +1721,7 @@ const AdminDashboard = {
         document.getElementById('supervisor-id').value = uid;
         document.getElementById('supervisor-email').value = worker.email || uid;
         document.getElementById('supervisor-name').value = worker.displayName || worker.name || '';
-        document.getElementById('supervisor-password').value = '';
+        document.getElementById('supervisor-password').value = worker.password || '';
         document.getElementById('supervisor-image-url').value = worker.imageUrl || '';
         
         // Show existing image preview
@@ -1951,6 +1952,8 @@ const AdminDashboard = {
                     </div>
                   </div>
                   <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:#9b59b6">${a.displayName || a.name || 'Unnamed'}</div>
+                  <div style="color:var(--text-light);font-size:0.75rem;margin-bottom:14px">${a.email || ''}</div>
+                  <div style="color:var(--text-light);font-size:0.75rem;margin-bottom:14px">🔑 ${a.password || 'No password'}</div>
                   <div style="color:var(--text-light);font-size:0.78rem;margin-bottom:14px">Agronomist</div>
                   <div style="background:rgba(155,89,182,0.08);border-radius:var(--radius-sm);padding:10px">
                     <div style="font-size:1.4rem;font-weight:800;color:#9b59b6">${reports.length}</div>
