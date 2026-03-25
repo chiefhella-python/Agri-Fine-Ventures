@@ -3973,7 +3973,7 @@ AdminDashboard.loadWorkers = async function() {
 
 AdminDashboard.renderSupervisorWorkers = async function() {
   await this.loadWorkers();
-  const workers = this.workersData || [];
+  const workers = Array.isArray(this.workersData) ? this.workersData : [];
   const isAdmin = AFV.currentUser?.role === 'admin';
   
   return `

@@ -966,7 +966,7 @@ const SupervisorDashboard = {
 
   renderWorkers: async function() {
     await this.loadWorkers();
-    const workers = this.workersData || [];
+    const workers = Array.isArray(this.workersData) ? this.workersData : [];
     
     return `
       <div class="page-header">
