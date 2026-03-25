@@ -125,9 +125,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root endpoint
+// Root endpoint - health check for hosting platforms
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  res.send("Agri-Fine Ventures API is running ✅");
 });
 
 // For SPA routing - serve index.html for any non-API routes that don't match static files
