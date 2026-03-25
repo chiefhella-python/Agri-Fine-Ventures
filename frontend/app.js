@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================ AUTH
 
 async function handleLogin() {
+  const loginBtn = document.querySelector('.login-btn');
   const username = document.getElementById('login-username')?.value?.trim();
   const password = document.getElementById('login-password')?.value?.trim();
   const roleBtn = document.querySelector('.role-btn.active');
@@ -49,6 +50,11 @@ async function handleLogin() {
   if (!username || !password) {
     showToast('Please enter email and password', 'error');
     return;
+  }
+
+  if (loginBtn) {
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span>Logging in...</span>';
   }
 
   try {
@@ -139,6 +145,11 @@ async function handleLogin() {
 
     navigateTo(user.role);
     showToast(`Welcome, ${user.name}! 🌾`, 'success');
+  } finally {
+    if (loginBtn) {
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '<span>Enter Farm Dashboard</span><span class="btn-arrow">→</span>';
+    }
   }
 }
 
