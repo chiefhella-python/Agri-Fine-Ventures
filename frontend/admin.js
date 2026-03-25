@@ -1619,10 +1619,6 @@ const AdminDashboard = {
               <input type="password" id="supervisor-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
             </div>
             <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email</label>
-              <input type="email" id="supervisor-email" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker@example.com">
-            </div>
-            <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assigned Greenhouses</label>
               <div style="display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto">
                 ${AFV.greenhouses.map(gh => `
@@ -1995,10 +1991,6 @@ const AdminDashboard = {
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
               <input type="password" id="agronomist-password" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
-            </div>
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email</label>
-              <input type="email" id="agronomist-email" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., agronomist@example.com">
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
               <button type="button" onclick="AdminDashboard.closeAgronomistModal()" style="padding:10px 20px;background:#e8d5e8;color:#9b59b6;border:none;border-radius:var(--radius-sm);cursor:pointer">Cancel</button>
