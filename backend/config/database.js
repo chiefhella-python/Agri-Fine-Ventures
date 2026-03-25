@@ -349,7 +349,29 @@ async function getGreenhouseById(id) {
 
 // Get all greenhouses
 async function getAllGreenhouses() {
-  const result = await pool.query('SELECT * FROM public.greenhouses ORDER BY created_at');
+  const result = await pool.query(`
+    SELECT 
+      g.*,
+      EXTRACT(DAY FROM NOW() - g.planted_date)::INTEGER AS age_days,
+      EXTRACT(DAY FROM g.expected_harvest - NOW())::INTEGER AS days_to_harvest
+    FROM public.greenhouses g
+    ORDER BY g.created_at
+  `);
+  return result.rows.map(parseGreenhouseRow);
+}
+
+// Get greenhouses for supervisor
+async function getSupervisorGreenhouses(supervisorId) {
+  const result = await pool.query(`
+    SELECT 
+      g.*,
+      EXTRACT(DAY FROM NOW() - g.planted_date)::INTEGER AS age_days,
+      EXTRACT(DAY FROM g.expected_harvest - NOW())::INTEGER AS days_to_harvest
+    FROM public.greenhouses g
+    INNER JOIN public.supervisor_greenhouses sg ON sg.greenhouse_id = g.id
+    WHERE sg.supervisor_id = $1
+    ORDER BY g.created_at
+  `, [supervisorId]);
   return result.rows.map(parseGreenhouseRow);
 }
 
@@ -490,6 +512,8 @@ function parseGreenhouseRow(row) {
     location: row.location,
     plantedDate: row.planted_date,
     expectedHarvest: row.expected_harvest,
+    ageDays: row.age_days,
+    daysToHarvest: row.days_to_harvest,
     status: row.status,
     environment: typeof row.environment === 'string' ? JSON.parse(row.environment) : row.environment,
     notes: row.notes,
@@ -608,6 +632,7 @@ module.exports = {
   resetGreenhouses,
   resetAll,
   getAllGreenhouses,
+  getSupervisorGreenhouses,
   getGreenhouseById,
   createGreenhouse,
   updateGreenhouse,

@@ -343,13 +343,13 @@ const SupervisorDashboard = {
         ${assignedGH.map(ghId => {
           const gh = AFV.greenhouses.find(g => g.id === ghId);
           if (!gh) return '';
-          const daysPlanted = Math.floor((new Date() - gh.plantedDate)/(1000*60*60*24));
+          const daysPlanted = gh.ageDays != null ? gh.ageDays : (gh.plantedDate ? Math.floor((new Date() - new Date(gh.plantedDate))/(1000*60*60*24)) : null);
           const expectedHarvest = gh.expectedHarvest ? new Date(gh.expectedHarvest) : null;
-          const daysToHarvest = expectedHarvest ? Math.ceil((expectedHarvest - new Date())/(1000*60*60*24)) : null;
+          const daysToHarvest = gh.daysToHarvest != null ? gh.daysToHarvest : (expectedHarvest ? Math.ceil((expectedHarvest - new Date())/(1000*60*60*24)) : null);
           
           // Calculate growth stage
-          const totalCycle = (expectedHarvest && gh.plantedDate) ? Math.ceil((expectedHarvest - gh.plantedDate) / (1000*60*60*24)) : null;
-          const cycleProgress = Math.min(100, Math.round((daysPlanted / totalCycle) * 100));
+          const totalCycle = (expectedHarvest && gh.plantedDate) ? Math.ceil((expectedHarvest - new Date(gh.plantedDate)) / (1000*60*60*24)) : null;
+          const cycleProgress = (totalCycle && daysPlanted != null) ? Math.min(100, Math.round((daysPlanted / totalCycle) * 100)) : 0;
           
           let stage = '🌱 Seedling';
           let stageColor = '#6b8e23';
@@ -380,11 +380,11 @@ const SupervisorDashboard = {
                   </div>
                   <div style="display:flex;gap:10px;flex-wrap:wrap">
                     <div style="background:var(--green-ultra-pale);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:var(--green-deep)">${daysPlanted}d</div>
+                      <div style="font-weight:700;color:var(--green-deep)">${daysPlanted != null ? daysPlanted + 'd' : '—'}</div>
                       <div style="font-size:0.68rem;color:var(--text-light)">Age</div>
                     </div>
                     <div style="background:var(--green-ultra-pale);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:${daysToHarvest && daysToHarvest < 40 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${daysToHarvest !== null ? daysToHarvest + 'd' : '—'}</div>
+                      <div style="font-weight:700;color:${daysToHarvest != null && daysToHarvest < 40 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${daysToHarvest !== null ? daysToHarvest + 'd' : '—'}</div>
                       <div style="font-size:0.68rem;color:var(--text-light)">To Harvest</div>
                     </div>
                     <div style="background:${stageColor}15;padding:8px 12px;border-radius:var(--radius-sm);text-align:center;border:1px solid ${stageColor}30">
@@ -396,7 +396,7 @@ const SupervisorDashboard = {
               </div>
               <div style="margin-top:14px">
                 <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-light);margin-bottom:4px">
-                  <span>Growth Cycle (${totalCycle} days)</span>
+                  <span>Growth Cycle (${totalCycle != null ? totalCycle : '—'} days)</span>
                   <span>${cycleProgress}%</span>
                 </div>
                 <div style="background:linear-gradient(90deg,#6b8e23,#228b22,#da70d6,#ff6347,#ffd700);height:6px;border-radius:3px;position:relative">

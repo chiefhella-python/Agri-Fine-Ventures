@@ -8,10 +8,15 @@ const router = express.Router();
 const db = require('../config/database');
 const { authenticate, requireAdmin, requireSupervisorOrAdmin } = require('../middleware/auth');
 
-// GET /api/greenhouses - Get all greenhouses
+// GET /api/greenhouses - Get all greenhouses (admin) or assigned (supervisor)
 router.get('/', authenticate, async (req, res) => {
   try {
-    const greenhouses = await db.getAllGreenhouses();
+    let greenhouses;
+    if (req.user.role === 'supervisor') {
+      greenhouses = await db.getSupervisorGreenhouses(req.user.uid);
+    } else {
+      greenhouses = await db.getAllGreenhouses();
+    }
     res.json(greenhouses);
   } catch (err) {
     console.error('Get greenhouses error:', err);

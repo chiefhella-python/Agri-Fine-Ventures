@@ -733,8 +733,8 @@ const AdminDashboard = {
   renderGHDetail(gh) {
     const progress = AFV.getOverallProgress ? AFV.getOverallProgress(gh) : 0;
     const status = AFV.getGHStatus ? AFV.getGHStatus(gh) : { cls: 'status-empty', label: 'Not Planted' };
-    const daysPlanted = gh.plantedDate ? Math.floor((new Date() - new Date(gh.plantedDate)) / (1000*60*60*24)) : 0;
-    const daysToHarvest = gh.expectedHarvest ? Math.ceil((new Date(gh.expectedHarvest) - new Date()) / (1000*60*60*24)) : 0;
+    const daysPlanted = gh.ageDays != null ? gh.ageDays : (gh.plantedDate ? Math.floor((new Date() - new Date(gh.plantedDate)) / (1000*60*60*24)) : 0);
+    const daysToHarvest = gh.daysToHarvest != null ? gh.daysToHarvest : (gh.expectedHarvest ? Math.ceil((new Date(gh.expectedHarvest) - new Date()) / (1000*60*60*24)) : 0);
     const pendingTasks = gh.tasks ? gh.tasks.filter(t => !t.completed) : [];
     const doneTasks = gh.tasks ? gh.tasks.filter(t => t.completed) : [];
     
@@ -2414,7 +2414,7 @@ const AdminDashboard = {
                 <div class="gh-progress-bar" style="height:10px">
                   <div class="gh-progress-fill" style="width:${progresses[i]}%;background:${i===0?'linear-gradient(90deg,#e17055,#fd79a8)':i===1?'linear-gradient(90deg,#d63031,#e17055)':i===2?'linear-gradient(90deg,#0984e3,#74b9ff)':i===3?'linear-gradient(90deg,#fdcb6e,#e17055)':'linear-gradient(90deg,#6c5ce7,#a29bfe)'}"></div>
                 </div>
-                <div style="font-size:0.72rem;color:var(--text-light);margin-top:2px">${gh.crop || '-'} · ${(gh.plants || 0).toLocaleString()} plants · ${gh.expectedHarvest ? Math.ceil((new Date(gh.expectedHarvest) - new Date()) / (1000*60*60*24)) + ' days to harvest' : 'No harvest date'}</div>
+                <div style="font-size:0.72rem;color:var(--text-light);margin-top:2px">${gh.crop || '-'} · ${(gh.plants || 0).toLocaleString()} plants · ${gh.daysToHarvest != null ? (gh.daysToHarvest > 0 ? gh.daysToHarvest + ' days to harvest' : 'Harvested') : (gh.expectedHarvest ? Math.ceil((new Date(gh.expectedHarvest) - new Date()) / (1000*60*60*24)) + ' days to harvest' : 'No harvest date')}</div>
               </div>`).join('')}
           </div>
           <div class="card">
