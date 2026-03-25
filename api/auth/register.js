@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password, role, displayName, assignedGH } = req.body;
+  const { email, password, role, displayName, assignedGH, username } = req.body;
 
   if (!email || !password || !role) {
     return res.status(400).json({ error: 'Email, password, and role are required' });
@@ -30,12 +30,13 @@ module.exports = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const uid = `user_${Date.now()}`;
+    const displayNameToUse = username && username.trim() ? username : (displayName || email.split('@')[0]);
     const avatar = role === 'supervisor' ? '👨‍🌾' : role === 'agronomist' ? '🔬' : '👤';
 
     const result = await pool.query(
       `INSERT INTO users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [uid, email, hashedPassword, displayName || email.split('@')[0], role, avatar, '', assignedGH || []]
+      [uid, email, hashedPassword, displayNameToUse, role, avatar, '', assignedGH || []]
     );
 
     const user = result.rows[0];

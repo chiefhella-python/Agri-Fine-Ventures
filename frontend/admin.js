@@ -1870,6 +1870,7 @@ const AdminDashboard = {
       const success = await AFV.createUserBackend({
         email: `${username}@agrifine.com`,
         password: password,
+        username: username,
         displayName: name,
         role: 'supervisor',
         assignedGH: assignedGH

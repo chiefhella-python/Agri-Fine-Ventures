@@ -74,7 +74,7 @@ router.post('/register', [
     return res.status(400).json({ errors: errors.array() });
   }
   
-  const { email, password, role, displayName, assignedGH } = req.body;
+  const { email, password, role, displayName, assignedGH, username } = req.body;
   
   // Validate role is required and must be valid
   if (!role || !['user', 'supervisor', 'agronomist', 'admin'].includes(role)) {
@@ -85,6 +85,9 @@ router.post('/register', [
   if ((role === 'supervisor' || role === 'agronomist') && (!displayName || displayName.trim() === '')) {
     return res.status(400).json({ error: 'Display name is required for supervisors and agronomists' });
   }
+  
+  // Use username if provided, otherwise fallback to displayName
+  const displayNameToUse = username && username.trim() ? username : (displayName || email.split('@')[0]);
   
   // Validate role is supervisor or agronomist when assigning greenhouses
   if (assignedGH && assignedGH.length > 0 && role !== 'supervisor' && role !== 'agronomist') {
@@ -104,7 +107,7 @@ router.post('/register', [
     const newUser = {
       email,
       password: hashedPassword,
-      displayName: displayName || email.split('@')[0],
+      displayName: displayNameToUse,
       role: role,
       assignedGH: assignedGH || [],
       avatar: role === 'supervisor' ? '👨‍🌾' : role === 'agronomist' ? '🔬' : '👤',
