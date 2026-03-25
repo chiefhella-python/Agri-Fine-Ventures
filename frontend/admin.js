@@ -1580,63 +1580,6 @@ const AdminDashboard = {
           }).join('')}
         </div>
       </div>
-      <div id="supervisor-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
-        <div class="modal-content" style="background:white;border-radius:var(--radius-md);padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h2 style="font-family:'Playfair Display',serif;color:var(--green-deep);margin:0" id="supervisor-modal-title">Add New Supervisor</h2>
-            <button onclick="AdminDashboard.closeSupervisorModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light)">×</button>
-          </div>
-          <form id="supervisor-form" onsubmit="AdminDashboard.saveSupervisor(event)">
-            <input type="hidden" id="supervisor-id">
-            <input type="hidden" id="supervisor-role" value="supervisor">
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email (Login ID)</label>
-              <input type="email" id="supervisor-email" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker@example.com">
-            </div>
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Full Name</label>
-              <input type="text" id="supervisor-name" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Enter worker's full name">
-            </div>
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Avatar</label>
-              <div id="supervisor-avatar-options" style="display:flex;gap:8px;flex-wrap:wrap">
-                ${avatars.map(a => `<label style="cursor:pointer"><input type="radio" name="worker-avatar" value="${a}" style="display:none"><div class="avatar-option" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:2px solid var(--green-pale);border-radius:50%;transition:all 0.2s">${a}</div></label>`).join('')}
-              </div>
-            </div>
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Or Upload Photo</label>
-              <input type="file" id="supervisor-image-input" accept="image/*" onchange="AdminDashboard.handleWorkerImageUpload(this)" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem;background:white">
-              <input type="hidden" id="supervisor-image-url">
-              <div id="supervisor-image-preview" style="margin-top:10px"></div>
-            </div>
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Password</label>
-              <input type="password" id="supervisor-password" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="Login password (default: 1234)">
-            </div>
-            <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Assigned Greenhouses</label>
-              <div style="display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto">
-                ${AFV.greenhouses.map(gh => `
-                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)">
-                    <input type="checkbox" class="supervisor-gh-checkbox" value="${gh.id}" style="width:18px;height:18px">
-                    <span style="font-size:1.2rem">${gh.cropEmoji}</span>
-                    <span style="font-size:0.9rem;font-weight:500">${gh.name}</span>
-                  </label>
-                `).join('')}
-              </div>
-            </div>
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
-              <button type="button" onclick="AdminDashboard.closeSupervisorModal()" class="btn-secondary" style="padding:10px 20px">Cancel</button>
-              <button type="submit" class="btn-primary" style="padding:10px 24px">💾 Save Supervisor</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <style>
-        .avatar-option:hover { transform: scale(1.1); }
-        input[name="worker-avatar"]:checked + .avatar-option { border-color: var(--green-fresh); background: var(--green-ultra-pale); }
-      </style>
-      
     `;
   },
 
@@ -1702,6 +1645,11 @@ const AdminDashboard = {
     
     const title = document.getElementById('supervisor-modal-title');
     const form = document.getElementById('supervisor-form');
+    
+    if (!form) {
+      console.error('Supervisor form not found in modal');
+      return;
+    }
     
     form.reset();
     document.querySelectorAll('.avatar-option').forEach(el => el.style.borderColor = 'var(--green-pale)');
