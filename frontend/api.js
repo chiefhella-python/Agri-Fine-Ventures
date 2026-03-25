@@ -3,9 +3,9 @@
 // Connects frontend to backend API
 // ============================================
 
-const API_BASE =  window.location.hostname === 'localhost' 
+const API_BASE = (window.API_BASE) || (window.location.hostname === 'localhost' 
   ? 'http://localhost:3000/api'
-  : 'https://agri-fine-ventures-production.up.railway.app/api';
+  : 'https://agri-fine-ventures-production.up.railway.app/api');
 
 // Get auth token from localStorage
 const getAuthHeader = () => {

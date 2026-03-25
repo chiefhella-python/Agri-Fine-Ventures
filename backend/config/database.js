@@ -253,8 +253,8 @@ async function createUser(user) {
     await client.query('BEGIN');
     
     const result = await client.query(
-      `INSERT INTO public.users (email, password, display_name, role, avatar, image_url, assigned_gh)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO public.users (uid, email, password, display_name, role, avatar, image_url, assigned_gh)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [user.email, user.password, user.displayName, user.role, user.avatar || '👤', user.imageUrl || '', assignedGH]
     );
