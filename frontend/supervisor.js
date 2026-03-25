@@ -343,20 +343,21 @@ const SupervisorDashboard = {
         ${assignedGH.map(ghId => {
           const gh = AFV.greenhouses.find(g => g.id === ghId);
           if (!gh) return '';
-          const daysPlanted = gh.ageDays != null ? gh.ageDays : (gh.plantedDate ? Math.floor((new Date() - new Date(gh.plantedDate))/(1000*60*60*24)) : null);
+          const plantedDate = gh.plantedDate ? new Date(gh.plantedDate) : null;
           const expectedHarvest = gh.expectedHarvest ? new Date(gh.expectedHarvest) : null;
-          const daysToHarvest = gh.daysToHarvest != null ? gh.daysToHarvest : (expectedHarvest ? Math.ceil((expectedHarvest - new Date())/(1000*60*60*24)) : null);
+          const daysPlanted = (gh.ageDays != null) ? gh.ageDays : (plantedDate ? Math.floor((new Date() - plantedDate)/(1000*60*60*24)) : null);
+          const daysToHarvest = (gh.daysToHarvest != null) ? gh.daysToHarvest : (expectedHarvest ? Math.ceil((expectedHarvest - new Date())/(1000*60*60*24)) : null);
           
           // Calculate growth stage
-          const totalCycle = (expectedHarvest && gh.plantedDate) ? Math.ceil((expectedHarvest - new Date(gh.plantedDate)) / (1000*60*60*24)) : null;
+          const totalCycle = (expectedHarvest && plantedDate) ? Math.ceil((expectedHarvest - plantedDate) / (1000*60*60*24)) : null;
           const cycleProgress = (totalCycle && daysPlanted != null) ? Math.min(100, Math.round((daysPlanted / totalCycle) * 100)) : 0;
           
           let stage = '🌱 Seedling';
           let stageColor = '#6b8e23';
-          if (daysPlanted > 20) { stage = '🌿 Vegetative'; stageColor = '#228b22'; }
-          if (daysPlanted > 35) { stage = '🌸 Flowering'; stageColor = '#da70d6'; }
-          if (daysPlanted > 50) { stage = '🍅 Fruiting'; stageColor = '#ff6347'; }
-          if (totalCycle && daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
+          if (daysPlanted != null && daysPlanted > 20) { stage = '🌿 Vegetative'; stageColor = '#228b22'; }
+          if (daysPlanted != null && daysPlanted > 35) { stage = '🌸 Flowering'; stageColor = '#da70d6'; }
+          if (daysPlanted != null && daysPlanted > 50) { stage = '🍅 Fruiting'; stageColor = '#ff6347'; }
+          if (totalCycle && daysPlanted != null && daysPlanted >= totalCycle - 7) { stage = '🎯 Harvest Ready'; stageColor = '#ffd700'; }
           
           const expectedMonth = gh.expectedHarvest 
             ? new Date(gh.expectedHarvest).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' }) 
@@ -380,12 +381,12 @@ const SupervisorDashboard = {
                   </div>
                   <div style="display:flex;gap:10px;flex-wrap:wrap">
                     <div style="background:var(--green-ultra-pale);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:var(--green-deep)">${daysPlanted != null ? daysPlanted + 'd' : '—'}</div>
-                      <div style="font-size:0.68rem;color:var(--text-light)">Age</div>
+                      <div style="font-weight:700;color:var(--green-deep)">${gh.plantedDate ? new Date(gh.plantedDate).toLocaleDateString('en-KE', {day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
+                      <div style="font-size:0.68rem;color:var(--text-light)">Date Planted</div>
                     </div>
                     <div style="background:var(--green-ultra-pale);padding:8px 12px;border-radius:var(--radius-sm);text-align:center">
-                      <div style="font-weight:700;color:${daysToHarvest != null && daysToHarvest < 40 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${daysToHarvest !== null ? daysToHarvest + 'd' : '—'}</div>
-                      <div style="font-size:0.68rem;color:var(--text-light)">To Harvest</div>
+                      <div style="font-weight:700;color:${daysToHarvest != null && daysToHarvest < 40 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${gh.expectedHarvest ? new Date(gh.expectedHarvest).toLocaleDateString('en-KE', {day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
+                      <div style="font-size:0.68rem;color:var(--text-light)">Harvest Date</div>
                     </div>
                     <div style="background:${stageColor}15;padding:8px 12px;border-radius:var(--radius-sm);text-align:center;border:1px solid ${stageColor}30">
                       <div style="font-weight:700;color:${stageColor};font-size:0.85rem">${stage}</div>
@@ -396,7 +397,7 @@ const SupervisorDashboard = {
               </div>
               <div style="margin-top:14px">
                 <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-light);margin-bottom:4px">
-                  <span>Growth Cycle (${totalCycle != null ? totalCycle : '—'} days)</span>
+                  <span>Growth Progress</span>
                   <span>${cycleProgress}%</span>
                 </div>
                 <div style="background:linear-gradient(90deg,#6b8e23,#228b22,#da70d6,#ff6347,#ffd700);height:6px;border-radius:3px;position:relative">
@@ -405,10 +406,6 @@ const SupervisorDashboard = {
                 <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-light);margin-top:2px">
                   <span>🌱</span><span>🌿</span><span>🌸</span><span>🍅</span><span>🎯</span>
                 </div>
-              </div>
-              <div style="margin-top:10px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,165,0,0.1));padding:8px 12px;border-radius:var(--radius-sm);border-left:3px solid #ffd700;display:inline-block">
-                <span style="font-size:0.7rem;color:var(--text-light)">🌾 Expected Harvest:</span>
-                <span style="font-weight:700;color:var(--green-deep);margin-left:6px">${expectedMonth}</span>
               </div>
               <div style="margin-top:14px;background:rgba(9,132,227,0.05);border-radius:var(--radius-sm);padding:12px;border-left:3px solid var(--blue-water)">
                 <div style="font-size:0.72rem;font-weight:700;color:var(--blue-water);margin-bottom:3px">NOTES FROM MANAGER</div>

@@ -733,8 +733,6 @@ const AdminDashboard = {
   renderGHDetail(gh) {
     const progress = AFV.getOverallProgress ? AFV.getOverallProgress(gh) : 0;
     const status = AFV.getGHStatus ? AFV.getGHStatus(gh) : { cls: 'status-empty', label: 'Not Planted' };
-    const daysPlanted = gh.ageDays != null ? gh.ageDays : (gh.plantedDate ? Math.floor((new Date() - new Date(gh.plantedDate)) / (1000*60*60*24)) : 0);
-    const daysToHarvest = gh.daysToHarvest != null ? gh.daysToHarvest : (gh.expectedHarvest ? Math.ceil((new Date(gh.expectedHarvest) - new Date()) / (1000*60*60*24)) : 0);
     const pendingTasks = gh.tasks ? gh.tasks.filter(t => !t.completed) : [];
     const doneTasks = gh.tasks ? gh.tasks.filter(t => t.completed) : [];
     
@@ -743,8 +741,8 @@ const AdminDashboard = {
     const varietyLabel = gh.variety ? gh.variety : '';
     const areaLabel = gh.area ? gh.area + ' ha' : '-';
     const plantsLabel = gh.plants ? gh.plants.toLocaleString() + ' plants' : '0 plants';
-    const plantedLabel = gh.plantedDate ? new Date(gh.plantedDate).toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'}) : 'Not set';
-    const harvestLabel = daysToHarvest > 0 ? daysToHarvest + ' days' : (daysToHarvest < 0 ? 'Harvested' : 'Not set');
+    const plantedLabel = gh.plantedDate ? new Date(gh.plantedDate).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}) : 'Not set';
+    const harvestLabel = gh.expectedHarvest ? new Date(gh.expectedHarvest).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}) : 'Not set';
     const tempLabel = gh.environment?.temp || '-';
     const humidityLabel = gh.environment?.humidity || '-';
     const notesLabel = gh.notes || 'No notes yet';
@@ -771,16 +769,12 @@ const AdminDashboard = {
             </div>
             <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
               <div style="background:var(--green-ultra-pale);padding:8px 14px;border-radius:var(--radius-sm)">
-                <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Planted</div>
+                <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Date Planted</div>
                 <div style="font-size:0.9rem;font-weight:600;color:var(--green-deep)">${plantedLabel}</div>
               </div>
               <div style="background:var(--green-ultra-pale);padding:8px 14px;border-radius:var(--radius-sm)">
-                <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Age</div>
-                <div style="font-size:0.9rem;font-weight:600;color:var(--green-deep)">${daysPlanted} days</div>
-              </div>
-              <div style="background:var(--green-ultra-pale);padding:8px 14px;border-radius:var(--radius-sm)">
-                <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Harvest in</div>
-                <div style="font-size:0.9rem;font-weight:600;color:${daysToHarvest < 30 && daysToHarvest > 0 ? 'var(--orange-warn)' : 'var(--green-deep)'}">${harvestLabel}</div>
+                <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Harvest Date</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--green-deep)">${harvestLabel}</div>
               </div>
               <div style="background:rgba(9,132,227,0.08);padding:8px 14px;border-radius:var(--radius-sm)">
                 <div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase">Temp</div>
