@@ -975,3 +975,5 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     }
   }
 };
+
+window.AFV = AFV;
