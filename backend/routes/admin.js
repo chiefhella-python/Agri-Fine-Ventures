@@ -144,6 +144,12 @@ router.post('/backup', authenticate, requireAdmin, (req, res) => {
   });
 });
 
+// DELETE /api/admin/logs - Clear system logs (Admin only)
+router.delete('/logs', authenticate, requireAdmin, (req, res) => {
+  adminData.logs = [];
+  res.json({ message: 'All logs cleared' });
+});
+
 // POST /api/admin/cleanup - Clean up old data (Admin only)
 router.post('/cleanup', authenticate, requireAdmin, (req, res) => {
   const { days = 30 } = req.body;

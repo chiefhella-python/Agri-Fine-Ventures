@@ -319,18 +319,23 @@ async function resetWorkers() {
   await pool.query('DELETE FROM public.workers');
 }
 
-// Reset all greenhouses and recreate defaults
+// Reset all greenhouses - clear per-greenhouse data but keep greenhouse records
 async function resetGreenhouses() {
-  await pool.query('DELETE FROM public.greenhouses');
-  
-  // Recreate 5 default greenhouses
-  for (let i = 1; i <= 5; i++) {
-    await pool.query(
-      `INSERT INTO public.greenhouses (id, name, crop_emoji, plants, status, environment, tasks, sensors, grade_prices)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [`gh_${i}`, `Greenhouse ${i}`, '🏡', 0, 'active', '{"temp": "", "humidity": "", "ph": "", "ec": ""}', '[]', '[]', '{"grade1": 0, "grade2": 0, "grade3": 0, "reject": 0}']
-    );
-  }
+  await pool.query(`
+    UPDATE public.greenhouses 
+    SET planted_date = NULL,
+        expected_harvest = NULL,
+        status = 'inactive',
+        crop = '',
+        variety = '',
+        plants = 0,
+        environment = '{"temp": "", "humidity": "", "ph": "", "ec": ""}',
+        notes = '',
+        tasks = '[]',
+        sensors = '[]',
+        grade_prices = '{"grade1": 0, "grade2": 0, "grade3": 0, "reject": 0}',
+        updated_at = CURRENT_TIMESTAMP
+  `);
 }
 
 // Full system reset

@@ -203,7 +203,7 @@ router.delete('/users/:id', authenticate, requireAdmin, async (req, res) => {
 router.post('/reset-all', authenticate, requireAdmin, async (req, res) => {
   try {
     await db.resetAll();
-    res.json({ message: 'Full system reset complete. All users, workers, and greenhouses have been reset.' });
+    res.json({ message: 'System reset complete. Workers deleted, greenhouse data cleared (greenhouses preserved).' });
   } catch (err) {
     console.error('Reset all error:', err);
     res.status(500).json({ error: 'Reset failed' });

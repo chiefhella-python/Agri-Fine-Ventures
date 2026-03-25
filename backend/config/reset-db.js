@@ -4,7 +4,7 @@ const { resetGreenhouses, resetUsers } = require('./database');
 async function resetDB() {
   try {
     await resetUsers();          // resets users
-    await resetGreenhouses();    // resets 5 default greenhouses
+    await resetGreenhouses();    // clears greenhouse data (keeps records)
     console.log('✅ Database reset successfully');
     process.exit(0);
   } catch (err) {
