@@ -15,15 +15,8 @@ const SupervisorDashboard = {
 
   init() {
     try {
-      // Make SupervisorDashboard globally accessible
       window.SupervisorDashboard = this;
-      
       this.renderNav();
-      // Fetch greenhouses from backend and wait
-      this.fetchGreenhouses().then(() => {
-        this.showPage('mygreenhouses');
-      });
-      // Add harvest modal to body
       if(!document.getElementById('supervisor-harvest-modal')) {
         const modal = document.createElement('div');
         modal.id = 'supervisor-harvest-modal';
@@ -33,10 +26,13 @@ const SupervisorDashboard = {
         modal.style.inset = '0';
         modal.style.background = 'rgba(0,0,0,0.5)';
         modal.style.zIndex = '1000';
-        modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Grade</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" class="btn-secondary" style="flex:1">Cancel</button><button type="submit" class="btn-primary" style="flex:1">Save</button></div></form></div>`;
+        modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Grade</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" rows="3" placeholder="Optional notes..." style="width:100%;padding:10px"></textarea></div><button type="submit" class="btn-primary" style="width:100%;background:linear-gradient(135deg,var(--green-forest),var(--green-fresh))">💾 Save Harvest</button></form><button onclick="SupervisorDashboard.closeHarvestModal()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid var(--text-light);border-radius:var(--radius-sm);cursor:pointer">Cancel</button></div>`;
         document.body.appendChild(modal);
       }
-      this.showPage('mygreenhouses');
+      document.getElementById('supervisor-content').innerHTML = '<div style="text-align:center;padding:40px">Loading greenhouses...</div>';
+      this.fetchGreenhouses().then(async () => {
+        await this.showPage('mygreenhouses');
+      });
     } catch (error) {
       console.error('SupervisorDashboard.init() error:', error);
       // Render a basic error message in the content area
@@ -126,7 +122,7 @@ const SupervisorDashboard = {
     `;
   },
 
-  showPage(page) {
+  async showPage(page) {
     this.currentPage = page;
     document.querySelectorAll('#supervisor-nav .nav-item').forEach(b => b.classList.remove('active'));
     const btn = document.querySelector(`#supervisor-nav [data-page="${page}"]`);
@@ -137,7 +133,7 @@ const SupervisorDashboard = {
       case 'harvest': content.innerHTML = this.renderHarvest(); break;
       case 'sales': content.innerHTML = this.renderSales(); break;
       case 'guide': content.innerHTML = this.renderGuide(); break;
-      case 'workers': content.innerHTML = this.renderWorkers(); break;
+      case 'workers': content.innerHTML = await this.renderWorkers(); break;
       case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); break;
       case 'pending-tasks': content.innerHTML = this.renderPendingTasks(); break;
       case 'completed-tasks': content.innerHTML = this.renderCompletedTasks(); break;
@@ -305,6 +301,28 @@ const SupervisorDashboard = {
 
   renderMyGreenhouses() {
     const user = AFV.currentUser;
+    const assignedGH = user.assignedGH || [];
+    console.log('Rendering MyGreenhouses - assignedGH:', assignedGH);
+    console.log('AFV.greenhouses:', AFV.greenhouses);
+    
+    if (assignedGH.length === 0) {
+      return `
+        <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
+          <div>
+            <div class="page-title" style="color:white">My Greenhouses 🏡</div>
+            <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Your assigned production units</div>
+          </div>
+        </div>
+        <div class="page-body">
+          <div style="text-align:center;padding:40px">
+            <div style="font-size:3rem;margin-bottom:16px">🏡</div>
+            <div style="font-size:1.1rem;color:var(--text-dark);margin-bottom:8px">No Greenhouses Assigned</div>
+            <div style="font-size:0.85rem;color:var(--text-light)">Contact admin to assign greenhouses to your account</div>
+          </div>
+        </div>
+      `;
+    }
+    
     return `
       <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
         <div>
@@ -313,7 +331,7 @@ const SupervisorDashboard = {
         </div>
       </div>
       <div class="page-body">
-        ${(user.assignedGH || []).map(ghId => {
+        ${assignedGH.map(ghId => {
           const gh = AFV.greenhouses.find(g => g.id === ghId);
           if (!gh) return '';
           const daysPlanted = Math.floor((new Date() - gh.plantedDate)/(1000*60*60*24));
@@ -425,6 +443,10 @@ const SupervisorDashboard = {
       }
       html += `</tbody></table></div></div>`;
     });
+    
+    if (greenhouses.length === 0) {
+      html += `<div style="text-align:center;padding:40px"><div style="font-size:3rem;margin-bottom:16px">🌾</div><div style="font-size:1.1rem;color:var(--text-dark);margin-bottom:8px">No Greenhouses to Harvest</div><div style="font-size:0.85rem;color:var(--text-light)">Contact admin to assign greenhouses to your account</div></div>`;
+    }
     
     html += `</div>`;
     
