@@ -38,6 +38,8 @@ router.post('/', authenticate, requireSupervisorOrAdmin, async (req, res) => {
   try {
     const { name, phone, email, salary, salary_paid, transaction_code, role, notes } = req.body;
     
+    console.log('Creating worker:', req.body);
+    
     if (!name) {
       return res.status(400).json({ error: 'Worker name is required' });
     }
@@ -53,11 +55,14 @@ router.post('/', authenticate, requireSupervisorOrAdmin, async (req, res) => {
       notes
     };
     
+    console.log('Worker data to insert:', newWorker);
+    
     const created = await db.createWorker(newWorker);
+    console.log('Worker created:', created);
     res.status(201).json(created);
   } catch (err) {
     console.error('Create worker error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 
