@@ -1595,8 +1595,8 @@ const AdminDashboard = {
             <input type="hidden" id="supervisor-id">
             <input type="hidden" id="supervisor-role" value="supervisor">
             <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Username (Login ID)</label>
-              <input type="text" id="supervisor-username" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker1">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email (Login ID)</label>
+              <input type="email" id="supervisor-email" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker@example.com">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Full Name</label>
@@ -1664,8 +1664,8 @@ const AdminDashboard = {
               <input type="hidden" id="supervisor-id">
               <input type="hidden" id="supervisor-role" value="supervisor">
               <div style="margin-bottom:16px">
-                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Username (Login ID)</label>
-                <input type="text" id="supervisor-username" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker1">
+                <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email (Login ID)</label>
+                <input type="email" id="supervisor-email" required style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., worker@example.com">
               </div>
               <div style="margin-bottom:16px">
                 <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Display Name</label>
@@ -1722,7 +1722,7 @@ const AdminDashboard = {
         title.textContent = 'Edit Supervisor';
         const uid = worker.uid || worker.id;
         document.getElementById('supervisor-id').value = uid;
-        document.getElementById('supervisor-username').value = uid;
+        document.getElementById('supervisor-email').value = worker.email || uid;
         document.getElementById('supervisor-name').value = worker.displayName || worker.name || '';
         document.getElementById('supervisor-password').value = '';
         document.getElementById('supervisor-image-url').value = worker.imageUrl || '';
@@ -1799,15 +1799,14 @@ const AdminDashboard = {
   async saveSupervisor(e) {
     e.preventDefault();
     const id = document.getElementById('supervisor-id').value;
-    const username = document.getElementById('supervisor-username').value.trim();
+    const email = document.getElementById('supervisor-email').value.trim();
     const name = document.getElementById('supervisor-name').value.trim();
     const password = document.getElementById('supervisor-password').value.trim();
-    const email = document.getElementById('supervisor-email').value.trim();
     const avatar = document.querySelector('input[name="supervisor-avatar"]:checked')?.value || '👨‍🌾';
     const imageUrl = document.getElementById('supervisor-image-url').value || '';
     const assignedGH = Array.from(document.querySelectorAll('.supervisor-gh-checkbox:checked')).map(cb => cb.value);
     
-    if (!username || !name || !password || !email) {
+    if (!email || !name || !password) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
@@ -1817,31 +1816,31 @@ const AdminDashboard = {
       showToast('Please enter a valid email address', 'error');
       return;
     }
-    
-    // Check if username already exists in frontend
-    if (username !== id && AFV.users[username]) {
-      showToast('Username already exists. Please choose a different one.', 'error');
+
+    // Check if email already exists in frontend
+    if (AFV.users[email]) {
+      showToast('Email already exists. Please choose a different one.', 'error');
       return;
     }
     
     if (id) {
       // Edit existing worker (local only for now)
       if (AFV.users[id]) {
-        // If username changed, need to create new user and update references
-        if (username !== id) {
+        // If email changed, need to create new user and update references
+        if (email !== id) {
           // Update any references in greenhouses tasks
           AFV.greenhouses.forEach(gh => {
             if (gh.tasks) {
               gh.tasks.forEach(task => {
                 if (task.completedBy === id) {
-                  task.completedBy = username;
+                  task.completedBy = email;
                 }
               });
             }
           });
           
-          // Create new user with new username
-          AFV.users[username] = {
+          // Create new user with new email
+          AFV.users[email] = {
             id: username,
             name: name,
             role: 'supervisor',
@@ -1853,14 +1852,14 @@ const AdminDashboard = {
           
           // Update current user if it's the same worker
           if (AFV.currentUser?.id === id) {
-            AFV.currentUser = AFV.users[username];
+            AFV.currentUser = AFV.users[email];
             AFV.currentRole = 'supervisor';
           }
           
           // Delete old user
           delete AFV.users[id];
-          AFV.logActivity('✏️', `Worker username changed from ${id} to ${username}: ${name}`);
-          showToast(`Worker username changed to "${username}"!`, 'success');
+          AFV.logActivity('✏️', `Worker email changed from ${id} to ${email}: ${name}`);
+          showToast(`Worker email changed to "${email}"!`, 'success');
         } else {
           // Update fields
           AFV.users[id].name = name;
@@ -1881,7 +1880,6 @@ const AdminDashboard = {
       const success = await AFV.createUserBackend({
         email: email,
         password: password,
-        username: username,
         displayName: name,
         role: 'supervisor',
         assignedGH: assignedGH
@@ -1975,8 +1973,8 @@ const AdminDashboard = {
           <form id="agronomist-form" onsubmit="AdminDashboard.saveAgronomist(event)">
             <input type="hidden" id="agronomist-id">
             <div style="margin-bottom:16px">
-              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Username (Login ID)</label>
-              <input type="text" id="agronomist-username" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., agronomist1">
+              <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Email (Login ID)</label>
+              <input type="email" id="agronomist-email" required style="width:100%;padding:10px;border:1px solid #e8d5e8;border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., agronomist@example.com">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Full Name</label>
@@ -2040,7 +2038,7 @@ const AdminDashboard = {
       if (agronomist) {
         title.textContent = 'Edit Agronomist';
         document.getElementById('agronomist-id').value = agronomist.id;
-        document.getElementById('agronomist-username').value = agronomist.id;
+        document.getElementById('agronomist-email').value = agronomist.email || agronomist.id;
         document.getElementById('agronomist-name').value = agronomist.name;
         document.getElementById('agronomist-password').value = agronomist.password;
         document.getElementById('agronomist-image-url').value = agronomist.imageUrl || '';
@@ -2097,14 +2095,13 @@ const AdminDashboard = {
   async saveAgronomist(e) {
     e.preventDefault();
     const id = document.getElementById('agronomist-id').value;
-    const username = document.getElementById('agronomist-username').value.trim();
+    const email = document.getElementById('agronomist-email').value.trim();
     const name = document.getElementById('agronomist-name').value.trim();
     const password = document.getElementById('agronomist-password').value.trim();
-    const email = document.getElementById('agronomist-email').value.trim();
     const avatar = document.querySelector('input[name="agronomist-avatar"]:checked')?.value || '🔬';
     const imageUrl = document.getElementById('agronomist-image-url').value || '';
     
-    if (!username || !name || !password || !email) {
+    if (!email || !name || !password) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
@@ -2115,17 +2112,17 @@ const AdminDashboard = {
       return;
     }
     
-    // Check if username already exists in frontend
-    if (username !== id && AFV.users[username]) {
-      showToast('Username already exists. Please choose a different one.', 'error');
+    // Check if email already exists in frontend
+    if (AFV.users[email]) {
+      showToast('Email already exists. Please choose a different one.', 'error');
       return;
     }
     
     if (id) {
       // Edit existing agronomist (local only for now)
       if (AFV.users[id]) {
-        // If username changed, need to create new user and update references
-        if (username !== id) {
+        // If email changed, need to create new user and update references
+        if (email !== id) {
           // Update any references in agronomist reports
           AFV.agronomistReports.forEach(report => {
             if (report.authorId === id) {
@@ -2133,9 +2130,9 @@ const AdminDashboard = {
             }
           });
           
-          // Create new user with new username
-          AFV.users[username] = {
-            id: username,
+          // Create new user with new email
+          AFV.users[email] = {
+            id: email,
             name: name,
             role: 'agronomist',
             password: password,
@@ -2145,14 +2142,14 @@ const AdminDashboard = {
           
           // Update current user if it's the same agronomist
           if (AFV.currentUser?.id === id) {
-            AFV.currentUser = AFV.users[username];
+            AFV.currentUser = AFV.users[email];
             AFV.currentRole = 'agronomist';
           }
           
           // Delete old user
           delete AFV.users[id];
-          AFV.logActivity('✏️', `Agronomist username changed from ${id} to ${username}: ${name}`);
-          showToast(`Agronomist username changed to "${username}"!`, 'success');
+          AFV.logActivity('✏️', `Agronomist email changed from ${id} to ${email}: ${name}`);
+          showToast(`Agronomist email changed to "${email}"!`, 'success');
         } else {
           // Just update fields
           AFV.users[id].name = name;
@@ -2168,15 +2165,14 @@ const AdminDashboard = {
       const success = await AFV.createUserBackend({
         email: email,
         password: password,
-        username: username,
         displayName: name,
         role: 'agronomist'
       });
       
       if (success) {
         // Add to local users as well
-        AFV.users[username] = {
-          id: username,
+        AFV.users[email] = {
+          id: email,
           name: name,
           role: 'agronomist',
           password: password,
@@ -2186,7 +2182,7 @@ const AdminDashboard = {
         AFV.logActivity('➕', `New agronomist added: ${name}`);
         showToast(`Agronomist "${name}" added successfully!`, 'success');
       } else {
-        showToast('Failed to create agronomist. Username may already exist.', 'error');
+        showToast('Failed to create agronomist. Email may already exist.', 'error');
         return;
       }
     }
