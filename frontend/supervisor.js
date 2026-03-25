@@ -459,7 +459,7 @@ const SupervisorDashboard = {
         html += `<tr><td colspan="5" style="text-align:center;color:var(--text-light)">No harvests recorded</td></tr>`;
       } else {
         records.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
-          html += `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.quantity} ${r.unit}</td><td><span style="color:${r.quality==='grade1'?'var(--green-fresh)':r.quality==='grade2'?'var(--blue-water)':r.quality==='grade3'?'var(--orange-warn)':'var(--red-alert)'}">${r.quality==='grade1'?'⭐ Grade 1':r.quality==='grade2'?'⭐⭐ Grade 2':r.quality==='grade3'?'⭐⭐⭐ Grade 3':'❌ Reject'}</span></td><td>${r.notes||'-'}</td><td><button onclick="SupervisorDashboard.deleteHarvest('${gh.id}',${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`;
+          html += `<tr><td>${r.date ? new Date(r.date).toLocaleDateString() : '—'}</td><td>${r.quantity} ${r.unit}</td><td><span style="color:${r.quality==='grade1'?'var(--green-fresh)':r.quality==='grade2'?'var(--blue-water)':r.quality==='grade3'?'var(--orange-warn)':'var(--red-alert)'}">${r.quality==='grade1'?'⭐ Grade 1':r.quality==='grade2'?'⭐⭐ Grade 2':r.quality==='grade3'?'⭐⭐⭐ Grade 3':'❌ Reject'}</span></td><td>${r.notes||'-'}</td><td><button onclick="SupervisorDashboard.deleteHarvest('${gh.id}',${r.id})" style="background:var(--red-alert);color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">🗑️</button></td></tr>`;
         });
       }
       html += `</tbody></table></div></div>`;
@@ -1964,7 +1964,7 @@ const SupervisorDashboard = {
               <div style="padding:16px;border:1px solid var(--blue-pale);border-radius:var(--radius-sm);margin-bottom:12px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                   <div style="font-weight:600">📅 ${reportWeek}</div>
-                  <div style="font-size:0.75rem;color:var(--text-light)">Submitted ${new Date(r.submittedAt).toLocaleDateString('en-KE')}</div>
+                  <div style="font-size:0.75rem;color:var(--text-light)">Submitted ${r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('en-KE') : '—'}</div>
                 </div>
                 <div style="font-size:0.85rem;margin-bottom:6px"><strong>Summary:</strong> ${r.summary}</div>
                 ${r.challenges ? `<div style="font-size:0.85rem;margin-bottom:6px"><strong>Challenges:</strong> ${r.challenges}</div>` : ''}
