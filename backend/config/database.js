@@ -265,8 +265,8 @@ async function createUser(user) {
     if (assignedGH.length > 0) {
       for (const ghId of assignedGH) {
         await client.query(
-          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING',
-          [newUser.id, ghId]
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [newUser.uid, ghId]
         );
       }
     }
@@ -601,13 +601,13 @@ async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
     await client.query('BEGIN');
     
     // Delete existing assignments
-    await client.query('DELETE FROM public.supervisor_greenhouses WHERE supervisor_id::uuid = $1::uuid', [supervisorId]);
+    await client.query('DELETE FROM public.supervisor_greenhouses WHERE supervisor_id = $1', [supervisorId]);
     
     // Insert new assignments
     if (greenhouseIds && greenhouseIds.length > 0) {
       for (const ghId of greenhouseIds) {
         await client.query(
-          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1::uuid, $2::uuid)',
+          'INSERT INTO public.supervisor_greenhouses (supervisor_id, greenhouse_id) VALUES ($1, $2)',
           [supervisorId, ghId]
         );
       }
