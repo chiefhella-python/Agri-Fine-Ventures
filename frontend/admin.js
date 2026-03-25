@@ -1838,7 +1838,7 @@ const AdminDashboard = {
           
           // Create new user with new email
           AFV.users[email] = {
-            id: username,
+            id: email,
             name: name,
             role: 'supervisor',
             password: password,
@@ -2121,7 +2121,7 @@ const AdminDashboard = {
           // Update any references in agronomist reports
           AFV.agronomistReports.forEach(report => {
             if (report.authorId === id) {
-              report.authorId = username;
+              report.authorId = email;
             }
           });
           
