@@ -21,8 +21,11 @@ const SupervisorDashboard = {
       this.renderNav();
       this.createHarvestModal();
       document.getElementById('supervisor-content').innerHTML = '<div style="text-align:center;padding:40px">Loading greenhouses...</div>';
-      this.fetchGreenhouses().then(async () => {
-        await this.showPage('mygreenhouses');
+      // Fetch users from backend to ensure fresh data
+      AFV.fetchUsersFromBackend().then(() => {
+        this.fetchGreenhouses().then(async () => {
+          await this.showPage('mygreenhouses');
+        });
       });
     } catch (error) {
       console.error('SupervisorDashboard.init() error:', error);

@@ -20,7 +20,10 @@ const AgronomistDashboard = {
     window.AgronomistDashboard = this;
     
     this.renderNav();
-    this.showPage('overview');
+    // Fetch users from backend first to ensure fresh data
+    AFV.fetchUsersFromBackend().then(() => {
+      this.showPage('overview');
+    });
   },
 
   renderNav() {

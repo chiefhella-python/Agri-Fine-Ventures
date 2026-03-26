@@ -105,6 +105,10 @@ async function handleLogin() {
 
       AFV.currentUser = user;
       AFV.currentRole = user.role;
+      
+      // Refresh users from backend to ensure we have latest data
+      await AFV.fetchUsersFromBackend();
+      
       AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
 
       navigateTo(user.role);
@@ -141,6 +145,10 @@ async function handleLogin() {
 
     AFV.currentUser = user;
     AFV.currentRole = user.role;
+    
+    // Refresh users from backend to ensure we have latest data
+    await AFV.fetchUsersFromBackend();
+    
     AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
 
     navigateTo(user.role);
