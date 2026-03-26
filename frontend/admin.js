@@ -5,6 +5,15 @@
 const AdminDashboard = {
   currentPage: 'overview',
   weatherData: null,
+  pageCache: new Map(),
+  isNavigating: false,
+  lastNavTime: 0,
+
+  saveState() {
+    this.saveState();
+    // Clear page cache when data changes to force re-render
+    this.pageCache.clear();
+  },
 
   // Refresh current page
   async refreshCurrentPage() {
@@ -235,6 +244,12 @@ const AdminDashboard = {
   },
 
   async showPage(page) {
+    // Debounce rapid navigation
+    const now = Date.now();
+    if (now - this.lastNavTime < 100) return;
+    this.lastNavTime = now;
+    this.isNavigating = true;
+    
     this.currentPage = page;
     // Make AdminDashboard globally accessible
     window.AdminDashboard = this;
@@ -243,35 +258,44 @@ const AdminDashboard = {
     if (btn) btn.classList.add('active');
     const content = document.getElementById('admin-content');
     
+    // Use cache for pages that don't need live data
+    const cachedPages = ['greenhouses', 'categories', 'supervisors', 'workers', 'agronomists', 'analytics', 'revenue', 'receipts', 'harvest', 'schedule', 'alerts', 'activity-log', 'feeding', 'password-resets', 'settings'];
+    if (cachedPages.includes(page) && this.pageCache.has(page)) {
+      content.innerHTML = this.pageCache.get(page);
+      this.isNavigating = false;
+      return;
+    }
+    
     // Skip heavy operations during page switch - just render directly
     switch(page) {
       case 'overview': 
         content.innerHTML = this.renderOverview(); 
         break;
       case 'live-status': content.innerHTML = this.renderLiveStatus(); this.attachLiveStatusEvents(); break;
-      case 'greenhouses': content.innerHTML = this.renderGreenhouses(); break;
+      case 'greenhouses': content.innerHTML = this.renderGreenhouses(); this.pageCache.set('greenhouses', content.innerHTML); break;
       case 'tasks': content.innerHTML = this.renderAllTasks(); this.attachPageEvents('tasks'); break;
       case 'task-management': content.innerHTML = this.renderTaskManagement(); break;
       case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); break;
-      case 'categories': content.innerHTML = this.renderCategories(); break;
+      case 'categories': content.innerHTML = this.renderCategories(); this.pageCache.set('categories', content.innerHTML); break;
       case 'orders': content.innerHTML = this.renderOrders(); break;
-      case 'supervisors': content.innerHTML = this.renderSupervisors(); break;
-      case 'workers': content.innerHTML = await this.renderSupervisorWorkers(); break;
-      case 'agronomists': content.innerHTML = this.renderAgronomists(); this.attachAgronomistEvents(); break;
+      case 'supervisors': content.innerHTML = this.renderSupervisors(); this.pageCache.set('supervisors', content.innerHTML); break;
+      case 'workers': content.innerHTML = await this.renderSupervisorWorkers(); this.pageCache.set('workers', content.innerHTML); break;
+      case 'agronomists': content.innerHTML = this.renderAgronomists(); this.attachAgronomistEvents(); this.pageCache.set('agronomists', content.innerHTML); break;
       case 'agro-reports': content.innerHTML = this.renderAgroReports(); break;
       case 'reports-inbox': content.innerHTML = this.renderReportsInbox(); this.attachPageEvents('reports-inbox'); break;
-      case 'analytics': content.innerHTML = this.renderAnalytics(); break;
+      case 'analytics': content.innerHTML = this.renderAnalytics(); this.pageCache.set('analytics', content.innerHTML); break;
       case 'inventory': content.innerHTML = this.renderInventory(); break;
-      case 'revenue': content.innerHTML = this.renderRevenue(); break;
-      case 'receipts': content.innerHTML = this.renderReceipts(); break;
-      case 'harvest': content.innerHTML = this.renderHarvest(); break;
-      case 'schedule': content.innerHTML = this.renderSchedule(); break;
-      case 'alerts': content.innerHTML = this.renderAlerts(); break;
-      case 'activity-log': content.innerHTML = this.renderActivityLog(); break;
-      case 'feeding': content.innerHTML = this.renderFeedingProgram(); this.attachFeedingEvents(); break;
-      case 'password-resets': content.innerHTML = this.renderPasswordResets(); break;
-      case 'settings': content.innerHTML = this.renderSettings(); break;
+      case 'revenue': content.innerHTML = this.renderRevenue(); this.pageCache.set('revenue', content.innerHTML); break;
+      case 'receipts': content.innerHTML = this.renderReceipts(); this.pageCache.set('receipts', content.innerHTML); break;
+      case 'harvest': content.innerHTML = this.renderHarvest(); this.pageCache.set('harvest', content.innerHTML); break;
+      case 'schedule': content.innerHTML = this.renderSchedule(); this.pageCache.set('schedule', content.innerHTML); break;
+      case 'alerts': content.innerHTML = this.renderAlerts(); this.pageCache.set('alerts', content.innerHTML); break;
+      case 'activity-log': content.innerHTML = this.renderActivityLog(); this.pageCache.set('activity-log', content.innerHTML); break;
+      case 'feeding': content.innerHTML = this.renderFeedingProgram(); this.attachFeedingEvents(); this.pageCache.set('feeding', content.innerHTML); break;
+      case 'password-resets': content.innerHTML = this.renderPasswordResets(); this.pageCache.set('password-resets', content.innerHTML); break;
+      case 'settings': content.innerHTML = this.renderSettings(); this.pageCache.set('settings', content.innerHTML); break;
     }
+    this.isNavigating = false;
   },
 
   renderOverview() {
@@ -1162,8 +1186,9 @@ const AdminDashboard = {
         task.assignedTo = null;
         task.assignedBy = null;
         AFV.logActivity('📋', `Task "${task.name}" unassigned in ${gh.name}`);
-        AFV.saveState();
+        this.saveState();
         showToast('Task unassigned', 'success');
+        AdminDashboard.clearCache();
         this.showPage('assign-tasks');
       }
     }
@@ -1174,8 +1199,8 @@ const AdminDashboard = {
     const gh = AFV.greenhouses.find(g => g.id === ghId || g.id == ghId);
     if (gh) {
       gh.tasks = gh.tasks.filter(t => t.id != taskId && t.id !== taskId);
-      AFV.logActivity('🗑️', `Task deleted from ${gh.name}`);
-      AFV.saveState();
+        AFV.logActivity('🗑️', `Task deleted from ${gh.name}`);
+        this.saveState();
       showToast('Task deleted', 'success');
       this.showPage('task-management');
     }
@@ -1277,7 +1302,7 @@ const AdminDashboard = {
       AFV.taskCategories.push(name);
     }
     
-    AFV.saveState();
+    this.saveState();
     
     // Close modal
     const modal = document.getElementById('category-modal');
@@ -1293,7 +1318,7 @@ const AdminDashboard = {
     const idx = AFV.taskCategories.indexOf(category);
     if (idx > -1) {
       AFV.taskCategories.splice(idx, 1);
-      AFV.saveState();
+      this.saveState();
       showToast('Category deleted!', 'success');
       this.showPage('categories');
     }
@@ -1463,7 +1488,7 @@ const AdminDashboard = {
     };
     
     AFV.harvestOrders.push(newOrder);
-    AFV.saveState();
+    this.saveState();
     
     const modal = document.getElementById('order-modal');
     if (modal) modal.remove();
@@ -1479,7 +1504,7 @@ const AdminDashboard = {
     if (order) {
       order.status = 'completed';
       order.completedAt = new Date();
-      AFV.saveState();
+      this.saveState();
       showToast('Harvest order completed!', 'success');
       this.showPage('orders');
     }
@@ -1491,7 +1516,7 @@ const AdminDashboard = {
     const idx = AFV.harvestOrders.findIndex(o => o.id == orderId);
     if (idx > -1) {
       AFV.harvestOrders.splice(idx, 1);
-      AFV.saveState();
+      this.saveState();
       showToast('Harvest order deleted!', 'success');
       this.showPage('orders');
     }
@@ -1878,7 +1903,7 @@ const AdminDashboard = {
     }
     
     delete AFV.users[workerId];
-    AFV.saveState();
+    this.saveState();
     AFV.logActivity('🗑️', `Worker deleted: ${workerName}`);
     showToast(`Worker "${workerName}" has been deleted`, 'success');
     this.showPage('supervisors');
@@ -2303,7 +2328,7 @@ const AdminDashboard = {
       r.acknowledged = true;
       r.acknowledgedAt = new Date();
       r.acknowledgedBy = AFV.currentUser?.name || 'Admin';
-      AFV.saveState();
+      this.saveState();
       AFV.logActivity('✅', `Agronomist report acknowledged by ${AFV.currentUser?.name || 'Admin'}`);
       showToast('Report acknowledged successfully', 'success');
       this.refreshCurrentPage();
@@ -2863,7 +2888,7 @@ const AdminDashboard = {
       request.newPassword = newPassword;
       request.resolvedBy = AFV.currentUser.name;
       
-      AFV.saveState();
+      this.saveState();
       showToast(`Password reset for ${request.userName}!`, 'success');
       this.showPage('password-resets');
     }
@@ -2911,7 +2936,7 @@ const AdminDashboard = {
       if (newPassword) {
         adminUser.password = newPassword;
       }
-      AFV.saveState();
+      this.saveState();
       showToast('Account settings updated successfully!', 'success');
     }
   },
@@ -3635,7 +3660,7 @@ const AdminDashboard = {
       const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.id == workerId);
       const workerName = worker?.name || 'Worker';
       
-      AFV.saveState();
+      this.saveState();
       AFV.logActivity('📋', `Task "${task.title || task.name}" assigned to ${workerName} by Admin`);
       
       showToast(`Task assigned to ${workerName}!`, 'success');
@@ -3669,7 +3694,7 @@ const AdminDashboard = {
     }
     
     // Save state after task modification
-    AFV.saveState();
+    this.saveState();
     
     this.closeTaskModal();
     this.showPage(this.currentPage);
@@ -3695,7 +3720,7 @@ const AdminDashboard = {
       const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.id == workerId);
       const workerName = worker?.name || 'Worker';
       AFV.logActivity('📋', `Task "${task.title || task.name}" assigned to ${workerName} by Admin`);
-      AFV.saveState();
+      this.saveState();
       showToast('Task assigned successfully!', 'success');
       this.showPage(this.currentPage);
     }
@@ -3718,7 +3743,7 @@ const AdminDashboard = {
         const deletedTask = gh.tasks[taskIndex];
         gh.tasks.splice(taskIndex, 1);
         AFV.logActivity('🗑️', `Task "${deletedTask.title || deletedTask.name}" deleted from ${gh.name}`);
-        AFV.saveState();
+        this.saveState();
         showToast('Task deleted successfully!', 'success');
         this.closeTaskModal();
         this.showPage(this.currentPage);
@@ -3744,7 +3769,7 @@ const AdminDashboard = {
     }
     
     // Save state after task update
-    AFV.saveState();
+    this.saveState();
     
     this.showPage(this.currentPage);
   },
@@ -4242,7 +4267,7 @@ AdminDashboard.saveInventory = function(e) {
   }
   
   // Save state after inventory update
-  AFV.saveState();
+  this.saveState();
   
   this.closeInventoryModal();
   this.showPage('inventory');
@@ -4258,7 +4283,7 @@ AdminDashboard.deleteInventory = function(itemId) {
   
   AFV.inventory = AFV.inventory.filter(i => i.id !== itemId);
   AFV.logActivity('🗑️', `Inventory deleted: ${item.name}`);
-  AFV.saveState();
+  this.saveState();
   showToast(`"${item.name}" has been deleted`, 'success');
   this.showPage('inventory');
 };
@@ -4282,7 +4307,7 @@ AdminDashboard.reorderItem = function(itemId) {
   item.onOrder = true;
   item.orderQty = reorderQty;
   item.orderDate = new Date();
-  AFV.saveState();
+  this.saveState();
   
   this.showPage('inventory');
 };
@@ -4317,7 +4342,7 @@ AdminDashboard.saveRevenue = function(e) {
   e.preventDefault();
   if(!AFV.revenue) AFV.revenue = [];
   AFV.revenue.push({ id: Date.now(), source: document.getElementById('revenue-source').value, product: document.getElementById('revenue-product').value, amount: parseFloat(document.getElementById('revenue-amount').value), date: new Date(document.getElementById('revenue-date').value) });
-  AFV.saveState();
+  this.saveState();
   this.closeRevenueModal();
   this.showPage('revenue');
 };
@@ -4325,7 +4350,7 @@ AdminDashboard.saveRevenue = function(e) {
 AdminDashboard.deleteRevenue = function(id) {
   if(!confirm('Delete this record?')) return;
   AFV.revenue = (AFV.revenue||[]).filter(r => r.id !== id);
-  AFV.saveState();
+  this.saveState();
   this.showPage('revenue');
 };
 
@@ -4420,7 +4445,7 @@ AdminDashboard.saveReceipt = function(e) {
       recordedBy: 'admin'
     };
     AFV.receipts.push(newReceipt);
-    AFV.saveState();
+    this.saveState();
     AFV.logActivity('🧾', `Receipt added: ${product} - KES ${amount.toLocaleString()}`);
     showToast('Receipt added successfully!', 'success');
   } else {
@@ -4435,7 +4460,7 @@ AdminDashboard.saveReceipt = function(e) {
     receipt.transactionCode = transactionCode;
     receipt.imageUrl = imageUrl;
     
-    AFV.saveState();
+    this.saveState();
     AFV.logActivity('✏️', `Receipt updated: ${receipt.product} - KES ${receipt.amount.toLocaleString()}`);
     showToast('Receipt updated successfully!', 'success');
   }
@@ -4447,7 +4472,7 @@ AdminDashboard.saveReceipt = function(e) {
 AdminDashboard.deleteReceipt = function(id) {
   if (!confirm('Are you sure you want to delete this receipt?')) return;
   AFV.receipts = AFV.receipts.filter(r => r.id !== id);
-  AFV.saveState();
+  this.saveState();
   AFV.logActivity('🗑️', 'Receipt deleted');
   showToast('Receipt deleted', 'success');
   this.showPage('receipts');
@@ -4615,7 +4640,7 @@ AdminDashboard.saveHarvest = function(e) {
     });
   }
   
-  AFV.saveState();
+  this.saveState();
   this.closeHarvestModal();
   this.showPage('harvest');
 };
@@ -4624,7 +4649,7 @@ AdminDashboard.deleteHarvest = function(ghId, recordId) {
   if(!confirm('Delete this harvest record?')) return;
   if(AFV.harvest[ghId]) {
     AFV.harvest[ghId] = AFV.harvest[ghId].filter(r => r.id !== recordId);
-    AFV.saveState();
+    this.saveState();
     this.showPage('harvest');
   }
 };

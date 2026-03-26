@@ -4,6 +4,8 @@
 
 const SupervisorDashboard = {
   currentPage: 'mygreenhouses',
+  pageCache: new Map(),
+  lastNavTime: 0,
 
   // Refresh current page
   async refreshCurrentPage() {
@@ -122,28 +124,46 @@ const SupervisorDashboard = {
     `;
   },
 
+  saveState() {
+    this.saveState();
+    this.pageCache.clear();
+  },
+
   async showPage(page) {
+    // Debounce rapid navigation
+    const now = Date.now();
+    if (now - this.lastNavTime < 100) return;
+    this.lastNavTime = now;
+    
     this.currentPage = page;
     document.querySelectorAll('#supervisor-nav .nav-item').forEach(b => b.classList.remove('active'));
     const btn = document.querySelector(`#supervisor-nav [data-page="${page}"]`);
     if (btn) btn.classList.add('active');
     const content = document.getElementById('supervisor-content');
+    
+    // Cache static pages
+    const cachedPages = ['mygreenhouses', 'harvest', 'sales', 'guide', 'workers', 'assign-tasks', 'pending-tasks', 'completed-tasks', 'create-task', 'completion-history', 'weekly-reports', 'feeding', 'tasks', 'categories', 'orders'];
+    if (cachedPages.includes(page) && this.pageCache.has(page)) {
+      content.innerHTML = this.pageCache.get(page);
+      return;
+    }
+    
     switch(page) {
-      case 'mygreenhouses': content.innerHTML = this.renderMyGreenhouses(); break;
-      case 'harvest': content.innerHTML = this.renderHarvest(); break;
-      case 'sales': content.innerHTML = this.renderSales(); break;
-      case 'guide': content.innerHTML = this.renderGuide(); break;
-      case 'workers': content.innerHTML = await this.renderWorkers(); break;
-      case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); break;
-      case 'pending-tasks': content.innerHTML = this.renderPendingTasks(); break;
-      case 'completed-tasks': content.innerHTML = this.renderCompletedTasks(); break;
-      case 'create-task': content.innerHTML = this.renderCreateTask(); break;
-      case 'completion-history': content.innerHTML = this.renderCompletionHistory(); break;
-      case 'weekly-reports': content.innerHTML = this.renderWeeklyReports(); break;
-      case 'feeding': content.innerHTML = this.renderFeeding(); break;
-      case 'tasks': content.innerHTML = this.renderTasks(); break;
-      case 'categories': content.innerHTML = this.renderCategories(); break;
-      case 'orders': content.innerHTML = this.renderOrders(); break;
+      case 'mygreenhouses': content.innerHTML = this.renderMyGreenhouses(); this.pageCache.set('mygreenhouses', content.innerHTML); break;
+      case 'harvest': content.innerHTML = this.renderHarvest(); this.pageCache.set('harvest', content.innerHTML); break;
+      case 'sales': content.innerHTML = this.renderSales(); this.pageCache.set('sales', content.innerHTML); break;
+      case 'guide': content.innerHTML = this.renderGuide(); this.pageCache.set('guide', content.innerHTML); break;
+      case 'workers': content.innerHTML = await this.renderWorkers(); this.pageCache.set('workers', content.innerHTML); break;
+      case 'assign-tasks': content.innerHTML = this.renderAssignTasks(); this.pageCache.set('assign-tasks', content.innerHTML); break;
+      case 'pending-tasks': content.innerHTML = this.renderPendingTasks(); this.pageCache.set('pending-tasks', content.innerHTML); break;
+      case 'completed-tasks': content.innerHTML = this.renderCompletedTasks(); this.pageCache.set('completed-tasks', content.innerHTML); break;
+      case 'create-task': content.innerHTML = this.renderCreateTask(); this.pageCache.set('create-task', content.innerHTML); break;
+      case 'completion-history': content.innerHTML = this.renderCompletionHistory(); this.pageCache.set('completion-history', content.innerHTML); break;
+      case 'weekly-reports': content.innerHTML = this.renderWeeklyReports(); this.pageCache.set('weekly-reports', content.innerHTML); break;
+      case 'feeding': content.innerHTML = this.renderFeeding(); this.pageCache.set('feeding', content.innerHTML); break;
+      case 'tasks': content.innerHTML = this.renderTasks(); this.pageCache.set('tasks', content.innerHTML); break;
+      case 'categories': content.innerHTML = this.renderCategories(); this.pageCache.set('categories', content.innerHTML); break;
+      case 'orders': content.innerHTML = this.renderOrders(); this.pageCache.set('orders', content.innerHTML); break;
     }
   },
 
@@ -567,7 +587,7 @@ const SupervisorDashboard = {
       });
     }
     
-    AFV.saveState();
+    this.saveState();
     this.closeHarvestModal();
     this.showPage('harvest');
   },
@@ -576,7 +596,7 @@ const SupervisorDashboard = {
     if(!confirm('Delete this harvest record?')) return;
     if(AFV.harvest[ghId]) {
       AFV.harvest[ghId] = AFV.harvest[ghId].filter(r => r.id !== recordId);
-      AFV.saveState();
+      this.saveState();
       this.showPage('harvest');
     }
   },
@@ -753,7 +773,7 @@ const SupervisorDashboard = {
         imageUrl: imageUrl
       });
       
-      AFV.saveState();
+      this.saveState();
       AFV.logActivity('🧾', `Sale recorded: ${product} - KES ${receiptAmount.toLocaleString()}`);
       
       showToast('Receipt saved successfully!', 'success');
@@ -943,7 +963,7 @@ const SupervisorDashboard = {
         task.status = 'in-progress';
         task.startedAt = new Date().toISOString();
         AFV.logActivity('▶️', `Task "${task.title || task.name}" started in ${gh.name}`);
-        AFV.saveState();
+        this.saveState();
         showToast('Task marked as In Progress!', 'success');
         this.showPage('pending-tasks');
       }
@@ -1379,7 +1399,7 @@ const SupervisorDashboard = {
     };
     
     gh.tasks.push(newTask);
-    AFV.saveState();
+    this.saveState();
     AFV.logActivity('➕', `Supervisor added task "${name}" to ${gh.name}`);
     
     showToast('Task added successfully! Admin will be notified.', 'success');
@@ -1738,7 +1758,7 @@ const SupervisorDashboard = {
     gh.tasks.push(newTask);
     
     AFV.logActivity('➕', `New task created: "${name}" in ${gh.name} by ${AFV.currentUser?.name}`);
-    AFV.saveState();
+    this.saveState();
     
     showToast(`Task "${name}" created successfully in ${gh.name}!`, 'success');
     this.showPage('pending-tasks');
@@ -2075,7 +2095,7 @@ const SupervisorDashboard = {
     if (task) {
       task.status = 'in-progress';
       task.startedAt = new Date().toISOString();
-      AFV.saveState();
+      this.saveState();
       showToast('Task started!', 'success');
       this.navigate('tasks');
     }
@@ -2126,7 +2146,7 @@ const SupervisorDashboard = {
       // Close modal
       document.getElementById('completion-notes-modal')?.remove();
       
-      AFV.saveState();
+      this.saveState();
       showToast('Task completed!', 'success');
       this.navigate('tasks');
     }
@@ -2312,7 +2332,7 @@ const SupervisorDashboard = {
       AFV.taskCategories.push(name);
     }
     
-    AFV.saveState();
+    this.saveState();
     
     // Close modal
     const modal = document.getElementById('supervisor-category-modal');
@@ -2328,7 +2348,7 @@ const SupervisorDashboard = {
     const idx = AFV.taskCategories.indexOf(category);
     if (idx > -1) {
       AFV.taskCategories.splice(idx, 1);
-      AFV.saveState();
+      this.saveState();
       showToast('Category deleted!', 'success');
       this.showPage('categories');
     }
@@ -2497,7 +2517,7 @@ const SupervisorDashboard = {
     };
     
     AFV.harvestOrders.push(newOrder);
-    AFV.saveState();
+    this.saveState();
     
     const modal = document.getElementById('supervisor-order-modal');
     if (modal) modal.remove();
@@ -2513,7 +2533,7 @@ const SupervisorDashboard = {
     if (order) {
       order.status = 'completed';
       order.completedAt = new Date();
-      AFV.saveState();
+      this.saveState();
       showToast('Harvest order completed!', 'success');
       this.showPage('orders');
     }
@@ -2553,7 +2573,7 @@ const SupervisorDashboard = {
     };
     
     AFV.weeklyReports.push(report);
-    AFV.saveState();
+    this.saveState();
     showToast('Weekly report submitted successfully!', 'success');
     this.showPage('weekly-reports');
   }

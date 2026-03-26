@@ -4,6 +4,8 @@
 
 const AgronomistDashboard = {
   currentPage: 'overview',
+  pageCache: new Map(),
+  lastNavTime: 0,
 
   // Refresh current page
   refreshCurrentPage() {
@@ -67,21 +69,39 @@ const AgronomistDashboard = {
     `;
   },
 
+  saveState() {
+    this.saveState();
+    this.pageCache.clear();
+  },
+
   showPage(page) {
+    // Debounce rapid navigation
+    const now = Date.now();
+    if (now - this.lastNavTime < 100) return;
+    this.lastNavTime = now;
+    
     this.currentPage = page;
     document.querySelectorAll('#agronomist-nav .nav-item').forEach(b => b.classList.remove('active'));
     const btn = document.querySelector(`#agronomist-nav [data-page="${page}"]`);
     if (btn) btn.classList.add('active');
     const content = document.getElementById('agronomist-content');
+    
+    // Cache static pages
+    const cachedPages = ['overview', 'gh-analysis', 'reports', 'task-audit', 'crop-data', 'feeding'];
+    if (cachedPages.includes(page) && this.pageCache.has(page)) {
+      content.innerHTML = this.pageCache.get(page);
+      return;
+    }
+    
     switch(page) {
-      case 'overview': content.innerHTML = this.renderOverview(); break;
-      case 'gh-analysis': content.innerHTML = this.renderGHAnalysis(); break;
-      case 'reports': content.innerHTML = this.renderReports(); break;
+      case 'overview': content.innerHTML = this.renderOverview(); this.pageCache.set('overview', content.innerHTML); break;
+      case 'gh-analysis': content.innerHTML = this.renderGHAnalysis(); this.pageCache.set('gh-analysis', content.innerHTML); break;
+      case 'reports': content.innerHTML = this.renderReports(); this.pageCache.set('reports', content.innerHTML); break;
       case 'add-report': content.innerHTML = this.renderAddReport(); this.attachReportEvents(); break;
       case 'edit-report': content.innerHTML = this.renderEditReport(); this.attachEditReportEvents(); break;
-      case 'task-audit': content.innerHTML = this.renderTaskAudit(); break;
-      case 'crop-data': content.innerHTML = this.renderCropData(); break;
-      case 'feeding': content.innerHTML = this.renderFeeding(); break;
+      case 'task-audit': content.innerHTML = this.renderTaskAudit(); this.pageCache.set('task-audit', content.innerHTML); break;
+      case 'crop-data': content.innerHTML = this.renderCropData(); this.pageCache.set('crop-data', content.innerHTML); break;
+      case 'feeding': content.innerHTML = this.renderFeeding(); this.pageCache.set('feeding', content.innerHTML); break;
     }
   },
 
@@ -425,7 +445,7 @@ const AgronomistDashboard = {
 
     const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
     AFV.addAgronomistReport(ghId, type || 'observation', text, tags);
-    AFV.saveState();
+    this.saveState();
     showToast('Report submitted to Admin! 🔬', 'success');
     this.showPage('reports');
   },
@@ -517,7 +537,7 @@ const AgronomistDashboard = {
 
     const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
     AFV.updateAgronomistReport(r.id, ghId, type || 'observation', text, tags);
-    AFV.saveState();
+    this.saveState();
     showToast('Report updated successfully! 🔬', 'success');
     this.currentEditingReport = null;
     this.showPage('reports');
@@ -848,7 +868,7 @@ const AgronomistDashboard = {
         // Log activity
         AFV.logActivity('📝', `Agronomist added note to task "${task.title || task.name}" in ${gh.name}`);
         
-        AFV.saveState();
+        this.saveState();
         showToast('Agronomic note added! Visible to Admin & Supervisor', 'success');
         this.showPage('task-audit');
       }
