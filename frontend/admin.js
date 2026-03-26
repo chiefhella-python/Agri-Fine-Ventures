@@ -117,8 +117,19 @@ const AdminDashboard = {
     if (greenhouses && greenhouses.length > 0) {
       AFV.save();
       console.log('Greenhouses loaded:', greenhouses.length);
-    } else if (!AFV.greenhouses || AFV.greenhouses.length === 0) {
-      await AFV.initGreenhouses();
+    } else {
+      // Backend returned empty or error - use default greenhouses from state.js
+      if (!AFV.greenhouses || AFV.greenhouses.length === 0) {
+        // Initialize with default greenhouses defined in state.js
+        AFV.greenhouses = [
+          { id: 'gh_1', name: 'Greenhouse 1', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+          { id: 'gh_2', name: 'Greenhouse 2', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+          { id: 'gh_3', name: 'Greenhouse 3', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+          { id: 'gh_4', name: 'Greenhouse 4', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+          { id: 'gh_5', name: 'Greenhouse 5', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } }
+        ];
+      }
+      console.log('Using default greenhouses (backend empty)');
     }
   },
 
@@ -712,7 +723,18 @@ const AdminDashboard = {
   },
 
   renderGreenhouses() {
-    const greenhouses = AFV.greenhouses || [];
+    let greenhouses = AFV.greenhouses || [];
+    // Ensure we have greenhouses even if fetch failed
+    if (greenhouses.length === 0) {
+      greenhouses = [
+        { id: 'gh_1', name: 'Greenhouse 1', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+        { id: 'gh_2', name: 'Greenhouse 2', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+        { id: 'gh_3', name: 'Greenhouse 3', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+        { id: 'gh_4', name: 'Greenhouse 4', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } },
+        { id: 'gh_5', name: 'Greenhouse 5', crop: '', variety: '', cropEmoji: '🏡', plants: 0, area: '', location: '', plantedDate: null, expectedHarvest: null, status: 'active', environment: { temp: '', humidity: '', ph: '', ec: '' }, notes: '', tasks: [], sensors: [], gradePrices: { grade1: 0, grade2: 0, grade3: 0, reject: 0 } }
+      ];
+      AFV.greenhouses = greenhouses;
+    }
     return `
       <div class="page-header">
         <div>
