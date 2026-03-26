@@ -19,18 +19,7 @@ const SupervisorDashboard = {
     try {
       window.SupervisorDashboard = this;
       this.renderNav();
-      if(!document.getElementById('supervisor-harvest-modal')) {
-        const modal = document.createElement('div');
-        modal.id = 'supervisor-harvest-modal';
-        modal.className = 'modal';
-        modal.style.display = 'none';
-        modal.style.position = 'fixed';
-        modal.style.inset = '0';
-        modal.style.background = 'rgba(0,0,0,0.5)';
-        modal.style.zIndex = '1000';
-        modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Grade</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" rows="3" placeholder="Optional notes..." style="width:100%;padding:10px"></textarea></div><button type="submit" class="btn-primary" style="width:100%;background:linear-gradient(135deg,var(--green-forest),var(--green-fresh))">💾 Save Harvest</button></form><button onclick="SupervisorDashboard.closeHarvestModal()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid var(--text-light);border-radius:var(--radius-sm);cursor:pointer">Cancel</button></div>`;
-        document.body.appendChild(modal);
-      }
+      this.createHarvestModal();
       document.getElementById('supervisor-content').innerHTML = '<div style="text-align:center;padding:40px">Loading greenhouses...</div>';
       this.fetchGreenhouses().then(async () => {
         await this.showPage('mygreenhouses');
@@ -456,7 +445,20 @@ const SupervisorDashboard = {
     console.log('Filtered greenhouses:', greenhouses.length);
     const harvest = AFV.harvest || {};
     
-    let html = `<div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none"><div><div class="page-title" style="color:white">Harvest 🌾</div><div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Track yields for your greenhouses</div></div></div><div class="page-body">`;
+    // Ensure modal exists
+    if (!document.getElementById('supervisor-harvest-modal')) {
+      this.createHarvestModal();
+    }
+    
+    let html = `<div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
+      <div>
+        <div class="page-title" style="color:white">Harvest 🌾</div>
+        <div class="page-subtitle" style="color:rgba(255,255,255,0.65)">Track yields for your greenhouses</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" onclick="SupervisorDashboard.openStandaloneHarvestModal()">+ Add Harvest</button>
+      </div>
+    </div><div class="page-body">`;
     
     greenhouses.forEach(gh => {
       const records = harvest[gh.id] || [];
@@ -495,6 +497,22 @@ const SupervisorDashboard = {
     const gh = AFV.greenhouses.find(g => g.id === ghId);
     const gradePrices = gh?.gradePrices || { grade1: 150, grade2: 120, grade3: 80, reject: 0 };
     const modal = document.getElementById('supervisor-harvest-modal');
+    
+    // Update greenhouse dropdown and select the specific one
+    const user = AFV.currentUser;
+    let assignedGH = user.assignedGH || [];
+    if (Array.isArray(assignedGH)) {
+      assignedGH = assignedGH.map(item => {
+        if (typeof item === 'object' && item !== null) return item.id;
+        return item;
+      }).filter(Boolean);
+    } else {
+      assignedGH = [];
+    }
+    const greenhouses = AFV.greenhouses.filter(g => assignedGH.includes(g.id));
+    const ghSelect = document.getElementById('supervisor-harvest-gh-select');
+    ghSelect.innerHTML = greenhouses.map(g => `<option value="${g.id}">${g.cropEmoji} ${g.name} - ${g.crop || 'Not planted'}</option>`).join('');
+    ghSelect.value = ghId;
     
     // Update the quality dropdown with grades
     const qualitySelect = document.getElementById('supervisor-harvest-quality');
@@ -542,9 +560,77 @@ const SupervisorDashboard = {
     document.getElementById('supervisor-harvest-modal').style.display = 'none';
   },
 
+  createHarvestModal() {
+    if (document.getElementById('supervisor-harvest-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'supervisor-harvest-modal';
+    modal.className = 'modal';
+    modal.style.display = 'none';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.5)';
+    modal.style.zIndex = '1000';
+    modal.innerHTML = `<div style="background:white;border-radius:var(--radius-md);padding:24px;max-width:400px;width:90%;margin:auto"><h2 style="color:var(--green-deep);margin:0 0 16px">Record Harvest</h2><form onsubmit="SupervisorDashboard.saveHarvest(event)"><input type="hidden" id="supervisor-harvest-gh-id"><input type="hidden" id="supervisor-harvest-price"><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Greenhouse</label><select id="supervisor-harvest-gh-select" required style="width:100%;padding:10px"></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Quantity</label><div style="display:flex;gap:8px"><input type="number" id="supervisor-harvest-qty" required placeholder="Amount" step="0.01" style="flex:2;padding:10px"><select id="supervisor-harvest-unit" style="flex:1;padding:10px"><option value="kg">kg</option><option value="g">grams</option></select></div></div><div style="margin-bottom:12px;padding:10px;background:var(--green-ultra-pale);border-radius:var(--radius-sm)"><div style="font-size:0.85rem;color:var(--text-light)">Estimated Value</div><div style="font-size:1.2rem;font-weight:700;color:var(--green-fresh)" id="supervisor-harvest-estimated-value">KES 0</div></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Price per kg (KES)</label><input type="number" id="supervisor-harvest-price-input" required placeholder="Price per kg" style="width:100%;padding:10px"></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Grade</label><select id="supervisor-harvest-quality" required style="width:100%;padding:10px"><option value="grade1">⭐ Grade 1</option><option value="grade2">⭐⭐ Grade 2</option><option value="grade3">⭐⭐⭐ Grade 3</option><option value="reject">❌ Reject</option></select></div><div style="margin-bottom:12px"><label style="display:block;margin-bottom:4px;color:var(--text)">Date</label><input type="date" id="supervisor-harvest-date" required style="width:100%;padding:10px"></div><div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;color:var(--text)">Notes</label><textarea id="supervisor-harvest-notes" placeholder="Optional notes..." style="width:100%;padding:10px;min-height:60px"></textarea></div><div style="display:flex;gap:10px"><button type="button" onclick="SupervisorDashboard.closeHarvestModal()" style="flex:1;padding:12px;background:var(--green-ultra-pale);border:none;border-radius:var(--radius-sm);cursor:pointer">Cancel</button><button type="submit" class="btn-primary" style="flex:1;padding:12px">Save Harvest</button></div></form></div></div>`;
+    document.body.appendChild(modal);
+  },
+
+  openStandaloneHarvestModal() {
+    const user = AFV.currentUser;
+    let assignedGH = user.assignedGH || [];
+    if (Array.isArray(assignedGH)) {
+      assignedGH = assignedGH.map(item => {
+        if (typeof item === 'object' && item !== null) return item.id;
+        return item;
+      }).filter(Boolean);
+    } else {
+      assignedGH = [];
+    }
+    const greenhouses = AFV.greenhouses.filter(g => assignedGH.includes(g.id));
+    const modal = document.getElementById('supervisor-harvest-modal');
+    
+    // Populate greenhouse dropdown
+    const ghSelect = document.getElementById('supervisor-harvest-gh-select');
+    ghSelect.innerHTML = greenhouses.map(g => `<option value="${g.id}">${g.cropEmoji} ${g.name} - ${g.crop || 'Not planted'}</option>`).join('');
+    
+    // Set default values
+    const defaultPrices = { grade1: 150, grade2: 120, grade3: 80, reject: 0 };
+    document.getElementById('supervisor-harvest-gh-id').value = greenhouses[0]?.id || '';
+    document.getElementById('supervisor-harvest-price').value = defaultPrices.grade1;
+    document.getElementById('supervisor-harvest-price-input').value = defaultPrices.grade1;
+    document.getElementById('supervisor-harvest-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('supervisor-harvest-qty').value = '';
+    document.getElementById('supervisor-harvest-notes').value = '';
+    document.getElementById('supervisor-harvest-unit').value = 'kg';
+    document.getElementById('supervisor-harvest-quality').value = 'grade1';
+    document.getElementById('supervisor-harvest-estimated-value').textContent = 'KES 0';
+    
+    // Set up event listeners
+    const qtyInput = document.getElementById('supervisor-harvest-qty');
+    const priceInput = document.getElementById('supervisor-harvest-price-input');
+    const estValue = document.getElementById('supervisor-harvest-estimated-value');
+    const updateValue = function() {
+      const qty = parseFloat(qtyInput.value) || 0;
+      const price = parseFloat(priceInput.value) || 0;
+      estValue.textContent = 'KES ' + (qty * price).toLocaleString();
+    };
+    qtyInput.oninput = updateValue;
+    priceInput.oninput = function() {
+      document.getElementById('supervisor-harvest-price').value = this.value;
+      updateValue();
+    };
+    
+    modal.style.display = 'flex';
+  },
+
   saveHarvest(e) {
     e.preventDefault();
-    const ghId = document.getElementById('supervisor-harvest-gh-id').value;
+    let ghId = document.getElementById('supervisor-harvest-gh-id').value;
+    // Also check the dropdown if it exists
+    const ghSelect = document.getElementById('supervisor-harvest-gh-select');
+    if (ghSelect && ghSelect.value) {
+      ghId = ghSelect.value;
+    }
+    
     const quantity = parseFloat(document.getElementById('supervisor-harvest-qty').value);
     const unit = document.getElementById('supervisor-harvest-unit').value;
     const quality = document.getElementById('supervisor-harvest-quality').value;
