@@ -5,7 +5,7 @@
 
 const API_BASE = (window.API_BASE) || (window.location.hostname === 'localhost' 
   ? 'http://localhost:3000/api'
-  : 'https://agri-fine-ventures-production.up.railway.app/api');
+  : '/api');
 
 // Get auth token from localStorage
 const getAuthHeader = () => {

@@ -174,7 +174,7 @@ async function getAllUsers() {
       greenhouses = [];
     }
     return {
-      uid: row.id,
+    uid: row.uid,
       email: row.email,
       name: row.display_name,
       displayName: row.display_name,
@@ -188,58 +188,27 @@ async function getAllUsers() {
 
 // Get user by email
 async function getUserByEmail(email) {
-  const result = await pool.query(
-    `
-    SELECT
-      u.id,
-      u.email,
-      u.display_name,
-      u.password,
-      u.role,
-      u.avatar,
-      u.image_url,
-      u.created_at,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id', g.id,
-            'name', g.name
-          )
-        ) FILTER (WHERE g.id IS NOT NULL),
-        '[]'
-      ) AS greenhouses
-    FROM users u
-    LEFT JOIN supervisor_greenhouses sg
-      ON sg.supervisor_id = u.id::uuid
-    LEFT JOIN greenhouses g
-      ON g.id = sg.greenhouse_id
-    WHERE u.email = $1
-    GROUP BY
-      u.id,
-      u.email,
-      u.display_name,
-      u.password,
-      u.role,
-      u.avatar,
-      u.image_url,
-      u.created_at
-    `,
-    [email]
-  );
+  const query = `
+  SELECT
+    u.uid,
+    u.email,
+    u.password,
+    u.display_name,
+    u.role
+  FROM users u
+  WHERE u.email = $1
+`;
+  const result = await pool.query(query, [email]);
 
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
   return {
-    uid: row.id,
+    uid: row.uid,
     name: row.display_name,
     email: row.email,
     password: row.password,
     displayName: row.display_name,
-    role: row.role,
-    avatar: row.avatar,
-    imageUrl: row.image_url,
-    assignedGH: row.greenhouses || [],
-    createdAt: row.created_at
+    role: row.role
   };
 }
 
