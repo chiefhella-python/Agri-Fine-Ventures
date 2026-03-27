@@ -156,7 +156,7 @@ async function getAllUsers() {
       ) AS greenhouses
     FROM users u
     LEFT JOIN supervisor_greenhouses sg
-      ON sg.supervisor_id = u.uid::uuid
+      ON sg.supervisor_id = u.uid
     LEFT JOIN greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
@@ -255,7 +255,7 @@ async function deleteUser(id) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const result = await client.query('DELETE FROM public.users WHERE id = $1::uuid RETURNING *', [id]);
+    const result = await client.query('DELETE FROM public.users WHERE uid = $1 RETURNING *', [id]);
     await client.query('COMMIT');
     return result.rows[0];
   } catch (err) {
