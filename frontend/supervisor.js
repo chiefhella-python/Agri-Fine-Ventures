@@ -1311,7 +1311,7 @@ const SupervisorDashboard = {
                       <td>
                         <select id="assign-worker-${gh.id}-${task.id}" style="padding:6px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.75rem;min-width:100px">
                           <option value="">Select Worker</option>
-                          ${workers.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                          ${workers.map(w => `<option value="${w.uid}">${w.name}</option>`).join('')}
                         </select>
                       </td>
                       <td>
@@ -1326,7 +1326,7 @@ const SupervisorDashboard = {
           <!-- Mobile Card View -->
           <div class="mobile-cards" style="display:none">
             ${allTasks.map(({gh, task}) => {
-              const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+              const assignedTo = task.assignedTo ? AFV.workers.find(w => w.uid === task.assignedTo) : null;
               return `
                 <div style="background:var(--green-ultra-pale);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid ${task.priority==='high'?'var(--red-alert)':task.priority==='medium'?'var(--orange-warn)':'var(--green-fresh)'}">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
@@ -1341,7 +1341,7 @@ const SupervisorDashboard = {
                     <div style="display:flex;gap:4px;align-items:center">
                       <select id="assign-worker-mobile-${gh.id}-${task.id}" style="padding:6px;border-radius:4px;border:1px solid var(--blue-pale);font-size:0.75rem;width:90px">
                         <option value="">Worker</option>
-                        ${workers.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                        ${workers.map(w => `<option value="${w.uid}">${w.name}</option>`).join('')}
                       </select>
                       <button onclick="SupervisorDashboard.assignTask('${gh.id}', '${task.id}')" style="padding:6px 10px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">Assign</button>
                     </div>
@@ -1634,7 +1634,7 @@ const SupervisorDashboard = {
               </thead>
               <tbody>
                 ${allTasks.map(({gh, task}) => {
-                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.uid === task.assignedTo) : null;
                   return `
                     <tr>
                       <td><div style="font-weight:600">${task.name}</div><div style="font-size:0.72rem;color:var(--text-light)">${task.desc?.substring(0,40)}...</div></td>
@@ -1977,7 +1977,7 @@ const SupervisorDashboard = {
               </thead>
               <tbody>
                 ${completedTasks.map(({gh, task}) => {
-                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.id === task.assignedTo) : null;
+                  const assignedTo = task.assignedTo ? AFV.workers.find(w => w.uid === task.assignedTo) : null;
                   const completedDate = task.completedAt ? task.completedAt.toLocaleDateString('en-KE') : (task.verifiedAt ? task.verifiedAt.toLocaleDateString('en-KE') : '—');
                   return `
                     <tr>
@@ -2130,7 +2130,7 @@ const SupervisorDashboard = {
               </thead>
               <tbody>
                 ${pending.map(t => {
-                  const worker = t.assignedTo ? (AFV.workers.find(w => w.id === t.assignedTo) || AFV.users?.[t.assignedTo]) : null;
+                  const worker = t.assignedTo ? (AFV.workers.find(w => w.uid === t.assignedTo) || AFV.users?.[t.assignedTo]) : null;
                   return `
                     <tr>
                       <td><div style="font-weight:600">${t.name}</div><div style="font-size:0.7rem;color:var(--text-light)">${t.desc?.substring(0,40)}...</div></td>
@@ -2162,7 +2162,7 @@ const SupervisorDashboard = {
               </thead>
               <tbody>
                 ${done.map(t => {
-                  const worker = t.assignedTo ? (AFV.workers.find(w => w.id === t.assignedTo) || AFV.users?.[t.assignedTo]) : null;
+                  const worker = t.assignedTo ? (AFV.workers.find(w => w.uid === t.assignedTo) || AFV.users?.[t.assignedTo]) : null;
                   return `
                     <tr>
                       <td style="text-decoration:line-through;opacity:0.7">${t.name}</td>

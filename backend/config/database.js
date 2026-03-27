@@ -139,7 +139,7 @@ async function initializeDatabase() {
 async function getAllUsers() {
   const result = await pool.query(`
     SELECT
-      u.id,
+      u.uid,
       u.email,
       u.display_name,
       u.role,
@@ -156,11 +156,11 @@ async function getAllUsers() {
       ) AS greenhouses
     FROM users u
     LEFT JOIN supervisor_greenhouses sg
-      ON sg.supervisor_id = u.id::uuid
+      ON sg.supervisor_id = u.uid::uuid
     LEFT JOIN greenhouses g
       ON g.id = sg.greenhouse_id
     GROUP BY
-      u.id,
+      u.uid,
       u.email,
       u.display_name,
       u.role,

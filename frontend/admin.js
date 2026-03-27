@@ -919,7 +919,7 @@ const AdminDashboard = {
                   let worker = null;
                   if (t.assignedTo) {
                     // Check in AFV.workers (supervisor-added workers)
-                    worker = (AFV.workers || []).find(w => w.id == t.assignedTo);
+                    worker = (AFV.workers || []).find(w => w.uid == t.assignedTo);
                     // Also check in AFV.users
                     if (!worker && AFV.users[t.assignedTo]) {
                       worker = AFV.users[t.assignedTo];
@@ -971,12 +971,12 @@ const AdminDashboard = {
                   // Check task.assignedTo first, then fallback to completedBy
                   let worker = null;
                   if (t.assignedTo) {
-                    worker = (AFV.workers || []).find(w => w.id == t.assignedTo);
+                    worker = (AFV.workers || []).find(w => w.uid == t.assignedTo);
                     if (!worker && AFV.users[t.assignedTo]) {
                       worker = AFV.users[t.assignedTo];
                     }
                   } else if (t.completedBy) {
-                    worker = (AFV.workers || []).find(w => w.id == t.completedBy) || AFV.users[t.completedBy];
+                    worker = (AFV.workers || []).find(w => w.uid == t.completedBy) || AFV.users[t.completedBy];
                   }
                   
                   // Agronomist notes
@@ -1130,7 +1130,7 @@ const AdminDashboard = {
                     <td>
                       <select id="admin-assign-worker-${t.gh.id}-${t.id}" style="padding:6px;border-radius:4px;border:1px solid var(--green-pale);font-size:0.8rem;min-width:100px">
                         <option value="">Select Worker</option>
-                        ${workers.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                        ${workers.map(w => `<option value="${w.uid}">${w.name}</option>`).join('')}
                       </select>
                     </td>
                     <td>
@@ -1158,7 +1158,7 @@ const AdminDashboard = {
               </thead>
               <tbody>
                 ${pending.filter(t => t.assignedTo).map(t => {
-                  const worker = workers.find(w => w.id == t.assignedTo) || (AFV.users[t.assignedTo] || {});
+                  const worker = workers.find(w => w.uid == t.assignedTo) || (AFV.users[t.assignedTo] || {});
                   return `
                     <tr>
                       <td><div style="font-weight:600">${t.name}</div></td>
@@ -1587,8 +1587,8 @@ const AdminDashboard = {
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
                   <div style="font-size:3rem;">${s.imageUrl ? `<img src="${s.imageUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid var(--green-primary)">` : (s.avatar || '👨‍🌾')}</div>
                   <div style="display:flex;gap:6px">
-                    <button onclick="AdminDashboard.openSupervisorModal('${s.uid || s.id}')" class="btn-icon" title="Edit worker" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
-                    <button onclick="AdminDashboard.deleteSupervisor('${s.uid || s.id}')" class="btn-icon" title="Delete worker" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
+                    <button onclick="AdminDashboard.openSupervisorModal('${s.uid}')" class="btn-icon" title="Edit worker" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
+                    <button onclick="AdminDashboard.deleteSupervisor('${s.uid}')" class="btn-icon" title="Delete worker" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
                   </div>
                 </div>
                 <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--green-deep)">${s.displayName || s.name || 'Unnamed'}</div>
@@ -1706,7 +1706,7 @@ const AdminDashboard = {
       const worker = AFV.users[workerId];
       if (worker) {
         title.textContent = 'Edit Supervisor';
-        const uid = worker.uid || worker.id;
+        const uid = worker.uid;
         document.getElementById('supervisor-id').value = uid;
         document.getElementById('supervisor-email').value = worker.email || uid;
         document.getElementById('supervisor-name').value = worker.displayName || worker.name || '';
@@ -1936,8 +1936,8 @@ const AdminDashboard = {
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
                     <div style="font-size:3rem;">${a.imageUrl ? `<img src="${a.imageUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #9b59b6">` : a.avatar}</div>
                     <div style="display:flex;gap:6px">
-                      <button onclick="AdminDashboard.openAgronomistModal('${a.uid || a.id}')" class="btn-icon" title="Edit agronomist" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
-                      <button onclick="AdminDashboard.deleteAgronomist('${a.uid || a.id}')" class="btn-icon" title="Delete agronomist" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
+                      <button onclick="AdminDashboard.openAgronomistModal('${a.uid}')" class="btn-icon" title="Edit agronomist" style="background:var(--blue-water);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">✏️</button>
+                      <button onclick="AdminDashboard.deleteAgronomist('${a.uid}')" class="btn-icon" title="Delete agronomist" style="background:var(--red-alert);color:white;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem">🗑️</button>
                     </div>
                   </div>
                   <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:#9b59b6">${a.displayName || a.name || 'Unnamed'}</div>
@@ -3597,7 +3597,7 @@ const AdminDashboard = {
     
     // Get all available workers
     const allWorkers = [...(AFV.workers || []), ...Object.values(AFV.users || {}).filter(u => u.role === 'worker')];
-    const uniqueWorkers = allWorkers.filter((w, i, a) => a.findIndex(x => x.id === w.id) === i);
+    const uniqueWorkers = allWorkers.filter((w, i, a) => a.findIndex(x => x.id === w.uid) === i);
     
     const modal = document.createElement('div');
     modal.id = 'assign-task-modal';
@@ -3622,7 +3622,7 @@ const AdminDashboard = {
               <label style="display:block;font-size:0.75rem;color:var(--text-light);margin-bottom:4px">Select Worker</label>
               <select id="assign-worker-select" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.9rem" required>
                 <option value="">-- Select a worker --</option>
-                ${uniqueWorkers.map(w => `<option value="${w.id}">${w.avatar || '👤'} ${w.name}</option>`).join('')}
+                ${uniqueWorkers.map(w => `<option value="${w.uid}">${w.avatar || '👤'} ${w.name}</option>`).join('')}
               </select>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end">
@@ -3657,7 +3657,7 @@ const AdminDashboard = {
       task.verified = false;
       
       // Find worker name for logging
-      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.uid == workerId);
+      const worker = (AFV.workers || []).find(w => w.uid == workerId) || Object.values(AFV.users || {}).find(u => u.uid == workerId);
       const workerName = worker?.name || 'Worker';
       
       this.saveState();
@@ -3717,7 +3717,7 @@ const AdminDashboard = {
       task.assignedBy = 'admin';
       task.verified = false;
       // Find worker name for logging
-      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.uid == workerId);
+      const worker = (AFV.workers || []).find(w => w.uid == workerId) || Object.values(AFV.users || {}).find(u => u.uid == workerId);
       const workerName = worker?.name || 'Worker';
       
       AFV.logActivity('📋', `Task "${task.title || task.name}" assigned to ${workerName} by Admin`);
@@ -4019,8 +4019,8 @@ AdminDashboard.renderSupervisorWorkers = async function() {
               <td><code style="font-size:0.75rem;background:var(--gray-100);padding:2px 6px;border-radius:4px">${w.transaction_code || '-'}</code></td>
               ${isAdmin ? `
                 <td>
-                  <button onclick="AdminDashboard.openWorkerModal(${w.id})" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:4px">✏️</button>
-                  <button onclick="AdminDashboard.deleteWorker(${w.id})" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">🗑️</button>
+                  <button onclick="AdminDashboard.openWorkerModal(${w.uid})" style="padding:4px 8px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:4px">✏️</button>
+                  <button onclick="AdminDashboard.deleteWorker(${w.uid})" style="padding:4px 8px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.75rem">🗑️</button>
                 </td>
               ` : ''}
             </tr>
@@ -4038,8 +4038,8 @@ AdminDashboard.renderSupervisorWorkers = async function() {
           <div class="workers-card-row"><span class="workers-card-label">Transaction</span><span class="workers-card-value">${w.transaction_code || '-'}</span></div>
           ${isAdmin ? `
             <div class="workers-card-actions">
-              <button onclick="AdminDashboard.openWorkerModal(${w.id})" style="padding:8px 12px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">✏️ Edit</button>
-              <button onclick="AdminDashboard.deleteWorker(${w.id})" style="padding:8px 12px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">🗑️</button>
+              <button onclick="AdminDashboard.openWorkerModal(${w.uid})" style="padding:8px 12px;background:var(--blue-water);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">✏️ Edit</button>
+              <button onclick="AdminDashboard.deleteWorker(${w.uid})" style="padding:8px 12px;background:var(--red-alert);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem">🗑️</button>
             </div>
           ` : ''}
         </div>
@@ -4127,10 +4127,10 @@ AdminDashboard.openWorkerModal = async function(workerId = null) {
   await this.loadWorkers();
   
   if (workerId) {
-    const worker = this.workersData.find(w => w.id === workerId);
+    const worker = this.workersData.find(w => w.uid === workerId);
     if (worker) {
       title.textContent = 'Edit Worker';
-      idInput.value = worker.id;
+      idInput.value = worker.uid;
       nameInput.value = worker.name || '';
       phoneInput.value = worker.phone || '';
       emailInput.value = worker.email || '';

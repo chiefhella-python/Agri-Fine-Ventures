@@ -227,7 +227,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     let user = this.users[workerId];
     
     if (!user || !user.assignedGH) {
-      user = this.workers?.find(w => w.id === workerId);
+      user = this.workers?.find(w => w.uid === workerId);
     }
     
     if (!user || !user.assignedGH) return [];
