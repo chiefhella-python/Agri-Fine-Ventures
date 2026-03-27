@@ -172,16 +172,25 @@ function navigateTo(role) {
   // Fetch weather data
   AFV.fetchWeather();
   
+  let screenEl, dashboard;
   if (role === 'admin') {
-    document.getElementById('admin-screen').classList.add('active');
-    AdminDashboard.init();
+    screenEl = document.getElementById('admin-screen');
+    dashboard = AdminDashboard;
   } else if (role === 'supervisor') {
-    document.getElementById('supervisor-screen').classList.add('active');
-    SupervisorDashboard.init();
+    screenEl = document.getElementById('supervisor-screen');
+    dashboard = SupervisorDashboard;
   } else if (role === 'agronomist') {
-    document.getElementById('agronomist-screen').classList.add('active');
-    AgronomistDashboard.init();
+    screenEl = document.getElementById('agronomist-screen');
+    dashboard = AgronomistDashboard;
   }
+  
+  if (screenEl) screenEl.classList.add('active');
+  // Defer init to next frame so browser completes style/layout pass first
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (dashboard) dashboard.init();
+    });
+  });
   
   startSync();
 }
