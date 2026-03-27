@@ -53,7 +53,7 @@ const SupervisorDashboard = {
         <div class="sidebar-logo-sub">Supervisor</div>
       </div>
       <div class="sidebar-user">
-        <div class="user-avatar" style="background:var(--blue-water)">${AFV.currentUser.imageUrl ? `<img src="${AFV.currentUser.imageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : (AFV.currentUser.avatar || '👨‍🌾')}</div>
+        <div class="user-avatar" style="background:var(--blue-water)">${AFV.currentUser.imageUrl ? `<img src="${AFV.currentUser.imageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<span style="color:white;font-weight:700;font-size:1.1rem">${(AFV.currentUser.name || 'S')[0].toUpperCase()}</span>`}</div>
         <div>
           <div class="user-name">${AFV.currentUser.name || 'Supervisor'}</div>
           <div class="user-role">Supervisor</div>
