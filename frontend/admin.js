@@ -1564,8 +1564,8 @@ const AdminDashboard = {
       <div class="page-body">
         <div class="stats-grid">
           ${supervisors.map(s => {
-            const name = s.displayName || s.name || s.id || 'Unnamed';
-            const tasks = AFV.getTasksForWorker(s.id);
+            const name = s.displayName || s.name || s.uid || 'Unnamed';
+            const tasks = AFV.getTasksForWorker(s.uid);
             let assignedGH = s.assignedGH;
             if (typeof assignedGH === 'string') {
               try { assignedGH = JSON.parse(assignedGH); } catch (e) { assignedGH = []; }
@@ -1930,7 +1930,7 @@ const AdminDashboard = {
           '<div class="card" style="text-align:center;padding:40px"><div style="font-size:3rem;margin-bottom:16px">🔬</div><div style="font-size:1.1rem;color:var(--text-mid)">No agronomists found. Add one to get started.</div></div>' :
           `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
             ${agronomists.map(a => {
-              const reports = AFV.agronomistReports.filter(r => r.authorId === a.id);
+              const reports = AFV.agronomistReports.filter(r => r.authorId === a.uid);
               return `
                 <div class="card" style="border:1px solid #e8d5e8;text-align:center">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
@@ -2021,8 +2021,8 @@ const AdminDashboard = {
       const agronomist = AFV.users[agronomistId];
       if (agronomist) {
         title.textContent = 'Edit Agronomist';
-        document.getElementById('agronomist-id').value = agronomist.id;
-        document.getElementById('agronomist-email').value = agronomist.email || agronomist.id;
+        document.getElementById('agronomist-id').value = agronomist.uid;
+        document.getElementById('agronomist-email').value = agronomist.email || agronomist.uid;
         document.getElementById('agronomist-name').value = agronomist.name;
         document.getElementById('agronomist-password').value = agronomist.password;
         document.getElementById('agronomist-image-url').value = agronomist.imageUrl || '';
