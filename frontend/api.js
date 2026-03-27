@@ -3,9 +3,7 @@
 // Connects frontend to backend API
 // ============================================
 
-const API_BASE = (window.API_BASE) || (window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000/api'
-  : '/api');
+const API_BASE = "https://agri-fine-ventures-production.up.railway.app/api";
 
 // Get auth token from localStorage
 const getAuthHeader = () => {
@@ -231,6 +229,7 @@ const AFV_API = {
 AFV_API.init();
 
 // Make available globally
+window.API_BASE = API_BASE;
 window.AFV_API = AFV_API;
 window.authFetch = authFetch;
 window.getAuthHeader = getAuthHeader;

@@ -646,9 +646,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
     if (!token) return [];
 
     try {
-      const apiBase = (window.API_BASE) || (window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/api'
-        : '/api');
+      const apiBase = "https://agri-fine-ventures-production.up.railway.app/api";
       
       const res = await fetch(`${apiBase}/greenhouses`, {
         headers: { 'Authorization': `Bearer ${token}` }
