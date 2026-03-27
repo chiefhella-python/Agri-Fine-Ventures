@@ -111,8 +111,13 @@ async function handleLogin() {
       AFV.currentUser = user;
       AFV.currentRole = user.role;
       
-      // Refresh users from backend to ensure we have latest data
+      // Refresh users from backend to ensure we have latest data (includes assignedGH)
       await AFV.fetchUsersFromBackend();
+      
+      // Sync currentUser with full backend data (has assignedGH from supervisor_greenhouses)
+      if (AFV.users[user.uid]) {
+        AFV.currentUser = { ...AFV.users[user.uid], id: user.uid };
+      }
       
       AFV.logActivity('🔐', `${user.name} logged in as ${user.role}`);
 
