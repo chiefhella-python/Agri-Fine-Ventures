@@ -340,7 +340,7 @@ Provide practical advice for Kenyan climate. Reference specific greenhouses. Inc
 
     task.completed = true;
     task.completedAt = new Date();
-    task.completedBy = this.currentUser?.id;
+    task.completedBy = this.currentUser?.uid;
 
     this.logActivity('✅', `Task "${task.title || task.name}" completed in ${gh.name}`);
 

@@ -1837,7 +1837,7 @@ const AdminDashboard = {
           };
           
           // Update current user if it's the same worker
-          if (AFV.currentUser?.id === id) {
+          if (AFV.currentUser?.uid === id) {
             AFV.currentUser = AFV.users[email];
             AFV.currentRole = 'supervisor';
           }
@@ -2125,7 +2125,7 @@ const AdminDashboard = {
           };
           
           // Update current user if it's the same agronomist
-          if (AFV.currentUser?.id === id) {
+          if (AFV.currentUser?.uid === id) {
             AFV.currentUser = AFV.users[email];
             AFV.currentRole = 'agronomist';
           }
@@ -3657,7 +3657,7 @@ const AdminDashboard = {
       task.verified = false;
       
       // Find worker name for logging
-      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.id == workerId);
+      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.uid == workerId);
       const workerName = worker?.name || 'Worker';
       
       this.saveState();
@@ -3717,8 +3717,9 @@ const AdminDashboard = {
       task.assignedBy = 'admin';
       task.verified = false;
       // Find worker name for logging
-      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.id == workerId);
+      const worker = (AFV.workers || []).find(w => w.id == workerId) || Object.values(AFV.users || {}).find(u => u.uid == workerId);
       const workerName = worker?.name || 'Worker';
+      
       AFV.logActivity('📋', `Task "${task.title || task.name}" assigned to ${workerName} by Admin`);
       this.saveState();
       showToast('Task assigned successfully!', 'success');

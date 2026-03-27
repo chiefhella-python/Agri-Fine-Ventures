@@ -579,7 +579,7 @@ function submitPasswordResetRequest() {
   const userEmail = user.email || username;
   
   // Check if request already exists
-  const existingRequest = AFV.passwordResetRequests?.find(r => r.username === user.id && !r.resolved);
+  const existingRequest = AFV.passwordResetRequests?.find(r => r.username === user.uid && !r.resolved);
   if (existingRequest) {
     showToast('A reset request already exists for this user', 'error');
     return;
@@ -590,7 +590,7 @@ function submitPasswordResetRequest() {
   
   const request = {
     id: 'req_' + Date.now(),
-    username: user.id,
+    username: user.uid,
     userName: user.name,
     userEmail: userEmail,
     userRole: user.role,

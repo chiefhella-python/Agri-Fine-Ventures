@@ -161,7 +161,7 @@ const SupervisorDashboard = {
 
   renderMyTasks() {
     const user = AFV.currentUser;
-    const tasks = AFV.getTasksForWorker(user.id);
+    const tasks = AFV.getTasksForWorker(user.uid);
     const doneTasks = (user.assignedGH || []).reduce((s, ghId) => {
       const gh = AFV.greenhouses.find(g => g.id === ghId);
       return s + (gh ? gh.tasks.filter(t => t.completed).length : 0);
@@ -694,7 +694,7 @@ const SupervisorDashboard = {
     const user = AFV.currentUser;
     const done = (user.assignedGH || []).flatMap(ghId => {
       const gh = AFV.greenhouses.find(g => g.id === ghId);
-      return gh ? gh.tasks.filter(t => t.completed && t.completedBy === user.id).map(t => ({...t, gh})) : [];
+      return gh ? gh.tasks.filter(t => t.completed && t.completedBy === user.uid).map(t => ({...t, gh})) : [];
     });
     return `
       <div class="page-header" style="background:linear-gradient(135deg,#1a2e4a,#2d4a6e);color:white;border-bottom:none">
@@ -1999,7 +1999,7 @@ const SupervisorDashboard = {
 
   renderWeeklyReports() {
     const reports = AFV.weeklyReports || [];
-    const userId = AFV.currentUser?.id;
+    const userId = AFV.currentUser?.uid;
     const myReports = reports.filter(r => r.supervisorId === userId);
     
     // Get current week info
@@ -2652,7 +2652,7 @@ const SupervisorDashboard = {
     
     const report = {
       id: 'report_' + Date.now(),
-      supervisorId: AFV.currentUser.id,
+      supervisorId: AFV.currentUser.uid,
       supervisorName: AFV.currentUser.name,
       weekStart: startOfWeek.toISOString(),
       summary,
