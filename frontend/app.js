@@ -90,10 +90,12 @@ async function handleLogin() {
       }
       const user = {
         id: response.user.uid,
+        uid: response.user.uid,
         email: response.user.email,
-        name: response.user.display_name || response.user.email.split('@')[0],
+        name: response.user.displayName || response.user.name || response.user.email.split('@')[0],
         role: response.user.role,
-        avatar: response.user.avatar,
+        avatar: response.user.avatar || '👤',
+        imageUrl: response.user.imageUrl || '',
         assignedGH: assignedGH
       };
       

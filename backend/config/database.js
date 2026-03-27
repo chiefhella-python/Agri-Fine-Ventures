@@ -194,7 +194,9 @@ async function getUserByEmail(email) {
     u.email,
     u.password,
     u.display_name,
-    u.role
+    u.role,
+    u.avatar,
+    u.image_url
   FROM users u
   WHERE u.email = $1
 `;
@@ -208,7 +210,9 @@ async function getUserByEmail(email) {
     email: row.email,
     password: row.password,
     displayName: row.display_name,
-    role: row.role
+    role: row.role,
+    avatar: row.avatar || '👤',
+    imageUrl: row.image_url || ''
   };
 }
 
