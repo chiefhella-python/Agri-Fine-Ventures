@@ -123,9 +123,9 @@ async function handleLogin() {
     
     let user;
     if (selectedRole === 'admin') {
-      user = Object.values(AFV.users).find(u => (u.email === username || u.id === username) && u.role === 'admin');
+      user = Object.values(AFV.users).find(u => (u.email === username || u.uid === username) && u.role === 'admin');
     } else {
-      user = Object.values(AFV.users).find(u => (u.id === username || u.name === username) && u.role === selectedRole);
+      user = Object.values(AFV.users).find(u => (u.uid === username || u.name === username) && u.role === selectedRole);
     }
     
     if (!user) {
