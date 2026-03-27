@@ -1728,6 +1728,13 @@ const SupervisorDashboard = {
   },
 
   renderCreateTask() {
+    // Ensure supervisor content container exists
+    const content = document.getElementById('supervisor-content');
+    if (!content) {
+      console.error('Supervisor content container missing!');
+      return '<div style="padding:40px;text-align:center"><h2>⚠️ Error Loading Page</h2><p>Supervisor content area not found. Please refresh the page.</p><button onclick="location.reload()" class="btn-primary" style="margin-top:20px">🔄 Reload Page</button></div>';
+    }
+
     const categoryLabels = {
       planting: '🌱 Planting & Establishment',
       irrigation: '💧 Irrigation & Water Management',
@@ -1750,7 +1757,7 @@ const SupervisorDashboard = {
       
       <div class="page-body">
         <div class="card" style="max-width:700px;margin:0 auto">
-          <form id="create-task-form" onsubmit="SupervisorDashboard.saveNewTask(event)">
+          <form id="create-task-form" onsubmit="SupervisorDashboard.saveNewTask(event); return false;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
               <div>
                 <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Greenhouse *</label>
@@ -1812,17 +1819,80 @@ const SupervisorDashboard = {
   saveNewTask(e) {
     e.preventDefault();
     
-    const ghId = document.getElementById('task-gh').value;
-    const name = document.getElementById('task-name').value.trim();
-    const category = document.getElementById('task-category').value;
-    const priority = document.getElementById('task-priority').value;
-    const duration = document.getElementById('task-duration').value.trim() || '1 hr';
-    const dueDate = document.getElementById('task-due-date').value;
-    const desc = document.getElementById('task-desc').value.trim();
+    // Verify supervisor content container exists first
+    const content = document.getElementById('supervisor-content');
+    if (!content) {
+      showToast('Dashboard container missing. Please refresh the page.', 'error');
+      console.error('supervisor-content container not found');
+      return;
+    }
+    
+    // Defensive null checks for all form elements
+    const taskGH = document.getElementById('task-gh');
+    const taskName = document.getElementById('task-name');
+    const taskCategory = document.getElementById('task-category');
+    const taskPriority = document.getElementById('task-priority');
+    const taskDuration = document.getElementById('task-duration');
+    const taskDueDate = document.getElementById('task-due-date');
+    const taskDesc = document.getElementById('task-desc');
+    
+    // Log all elements for debugging
+    console.log('Form elements check:', {
+      content: !!content,
+      taskGH: !!taskGH,
+      taskName: !!taskName,
+      taskCategory: !!taskCategory,
+      taskPriority: !!taskPriority,
+      taskDuration: !!taskDuration,
+      taskDueDate: !!taskDueDate,
+      taskDesc: !!taskDesc
+    });
+    
+    if (!taskGH || !taskName || !taskCategory || !taskPriority || !taskDesc) {
+      showToast('Create Task form not loaded. Please refresh and try again.', 'error');
+      console.error('Missing form elements - page may need refresh:', {
+        taskGH: !!taskGH,
+        taskName: !!taskName,
+        taskCategory: !!taskCategory,
+        taskPriority: !!taskPriority,
+        taskDesc: !!taskDesc
+      });
+      return;
+    }
+    
+    const ghId = taskGH.value;
+    const name = taskName.value.trim();
+    const category = taskCategory.value;
+    const priority = taskPriority.value;
+    const duration = taskDuration ? taskDuration.value.trim() || '1 hr' : '1 hr';
+    const dueDate = taskDueDate ? taskDueDate.value : '';
+    const desc = taskDesc.value.trim();
+    
+    // Validate required fields
+    if (!ghId) {
+      showToast('Please select a greenhouse', 'error');
+      taskGH.focus();
+      return;
+    }
+    if (!name) {
+      showToast('Please enter task name', 'error');
+      taskName.focus();
+      return;
+    }
+    if (!category) {
+      showToast('Please select a category', 'error');
+      taskCategory.focus();
+      return;
+    }
+    if (!desc) {
+      showToast('Please enter task description', 'error');
+      taskDesc.focus();
+      return;
+    }
     
     const gh = AFV.greenhouses.find(g => g.id === ghId);
     if (!gh) {
-      showToast('Greenhouse not found', 'error');
+      showToast('Selected greenhouse not found', 'error');
       return;
     }
     
@@ -1847,10 +1917,19 @@ const SupervisorDashboard = {
     gh.tasks.push(newTask);
     
     AFV.logActivity('➕', `New task created: "${name}" in ${gh.name} by ${AFV.currentUser?.name}`);
-    this.saveState();
+    SupervisorDashboard.saveState();
     
-    showToast(`Task "${name}" created successfully in ${gh.name}!`, 'success');
-    this.showPage('pending-tasks');
+    // Reset form safely
+    taskName.value = '';
+    taskDesc.value = '';
+    taskGH.value = '';
+    taskCategory.value = '';
+    taskPriority.value = 'medium';
+    if (taskDuration) taskDuration.value = '';
+    if (taskDueDate) taskDueDate.value = '';
+    
+    showToast(`✅ Task "${name}" created successfully in ${gh.name}!`, 'success');
+    SupervisorDashboard.showPage('pending-tasks');
   },
 
   renderCompletionHistory() {
