@@ -225,9 +225,6 @@ const AFV_API = {
   }
 };
 
-// Auto-initialize when loaded
-AFV_API.init();
-
 // Make available globally
 window.API_BASE = API_BASE;
 window.AFV_API = AFV_API;

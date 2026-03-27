@@ -70,6 +70,9 @@ async function handleLogin() {
       // Store token for authenticated requests
       localStorage.setItem('afv_token', response.token);
       
+      // Load greenhouses from backend now that we have a valid token
+      await AFV_API.init();
+      
       // Map API user to local user format
       let assignedGH = response.user.assignedGH;
       if (typeof assignedGH === 'string') {
