@@ -10,7 +10,7 @@ const AdminDashboard = {
   lastNavTime: 0,
 
   saveState() {
-    this.saveState();
+    AFV.saveState();
     // Clear page cache when data changes to force re-render
     this.pageCache.clear();
   },

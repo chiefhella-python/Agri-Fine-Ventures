@@ -548,6 +548,24 @@ document.getElementById('forgot-password-modal')?.addEventListener('click', func
 // Load saved state on init
 AFV.loadState();
 
+// Cross-tab state sync: listen for localStorage changes from other tabs
+window.addEventListener('storage', (e) => {
+  if (e.key === 'afv_state' && e.newValue) {
+    try {
+      const parsed = JSON.parse(e.newValue);
+      AFV.applyLoadedState(parsed);
+      // Clear page caches so dashboards re-render with new data
+      if (window.AdminDashboard?.pageCache) AdminDashboard.pageCache.clear();
+      if (window.SupervisorDashboard?.pageCache) SupervisorDashboard.pageCache.clear();
+      // Refresh current dashboard page if visible
+      if (window.AdminDashboard?.currentPage) AdminDashboard.refreshCurrentPage();
+      if (window.SupervisorDashboard?.currentPage) SupervisorDashboard.refreshCurrentPage();
+    } catch (err) {
+      console.error('Error syncing state from other tab:', err);
+    }
+  }
+});
+
 // Auto-initialize feeding calendar if not set (default to today)
 if (!AFV.feedingProgram?.calendarStartDate) {
   AFV.setFeedingCalendarStart(new Date().toISOString().split('T')[0]);
