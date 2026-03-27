@@ -1309,6 +1309,7 @@ const AdminDashboard = {
     if (modal) modal.remove();
     
     showToast(existingCategory ? 'Category updated!' : 'Category added!', 'success');
+    this.pageCache.delete('categories');
     this.showPage('categories');
   },
 
@@ -1320,6 +1321,7 @@ const AdminDashboard = {
       AFV.taskCategories.splice(idx, 1);
       this.saveState();
       showToast('Category deleted!', 'success');
+      this.pageCache.delete('categories');
       this.showPage('categories');
     }
   },
@@ -1884,6 +1886,7 @@ const AdminDashboard = {
     }
     
     this.closeSupervisorModal();
+    this.pageCache.delete('supervisors');
     this.showPage('supervisors');
   },
 
@@ -1906,6 +1909,7 @@ const AdminDashboard = {
     this.saveState();
     AFV.logActivity('🗑️', `Worker deleted: ${workerName}`);
     showToast(`Worker "${workerName}" has been deleted`, 'success');
+    this.pageCache.delete('supervisors');
     this.showPage('supervisors');
   },
 
@@ -2172,6 +2176,7 @@ const AdminDashboard = {
     }
     
     this.closeAgronomistModal();
+    this.pageCache.delete('agronomists');
     this.showPage('agronomists');
   },
 
@@ -2193,6 +2198,7 @@ const AdminDashboard = {
     delete AFV.users[agronomistId];
     AFV.logActivity('🗑️', `Agronomist deleted: ${agronomistName}`);
     showToast(`Agronomist "${agronomistName}" has been deleted`, 'success');
+    this.pageCache.delete('agronomists');
     this.showPage('agronomists');
   },
 
@@ -3436,6 +3442,7 @@ const AdminDashboard = {
     }
     
     this.closeGreenhouseModal();
+    this.pageCache.delete('greenhouses');
     this.showPage('greenhouses');
   },
 
@@ -4189,6 +4196,7 @@ AdminDashboard.saveWorker = async function(e) {
   }
   
   this.closeWorkerModal();
+  this.pageCache.delete('workers');
   this.showPage('workers');
 };
 
@@ -4203,6 +4211,7 @@ AdminDashboard.deleteWorker = async function(workerId) {
     showToast('Failed to delete worker', 'error');
   }
   
+  this.pageCache.delete('workers');
   this.showPage('workers');
 };
 
