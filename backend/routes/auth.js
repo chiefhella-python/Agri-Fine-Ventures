@@ -7,7 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const db = require('../config/database');
-const { authenticate, requireAdmin, requireSupervisorOrAdmin } = require('../middleware/auth');
+const { authenticate, requireAdmin, requireSupervisorOrAdmin, requireRole } = require('../middleware/auth');
 
 // For password hashing
 const bcrypt = require('bcrypt');
