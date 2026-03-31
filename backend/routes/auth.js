@@ -155,7 +155,7 @@ router.post('/logout', authenticate, (req, res) => {
 });
 
 // GET /api/auth/users - Get all users (for frontend sync)
-router.get('/users', authenticate, requireSupervisorOrAdmin, async (req, res) => {
+router.get('/users', authenticate, requireRole('supervisor', 'admin', 'agronomist'), async (req, res) => {
   try {
     const users = await db.getAllUsers();
     const usersWithoutPassword = users.map(({ password, ...user }) => user);
