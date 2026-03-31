@@ -73,7 +73,7 @@ const AgronomistDashboard = {
   },
 
   saveState() {
-    this.saveState();
+    AFV.saveState();
     this.pageCache.clear();
   },
 
