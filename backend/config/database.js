@@ -567,6 +567,77 @@ async function deleteWorker(id) {
   return result.rows[0] || null;
 }
 
+// Update user credentials (email and/or password)
+async function updateUser(uid, updates) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // Build dynamic update query
+    const setClauses = [];
+    const values = [];
+    let paramIndex = 1;
+    
+    if (updates.email !== undefined) {
+      setClauses.push('email = $' + paramIndex++);
+      values.push(updates.email);
+    }
+    
+    if (updates.password !== undefined) {
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(updates.password, SALT_ROUNDS);
+      setClauses.push('password = $' + paramIndex++);
+      values.push(hashedPassword);
+    }
+    
+    if (updates.displayName !== undefined) {
+      setClauses.push('display_name = $' + paramIndex++);
+      values.push(updates.displayName);
+    }
+    
+    if (updates.avatar !== undefined) {
+      setClauses.push('avatar = $' + paramIndex++);
+      values.push(updates.avatar);
+    }
+    
+    if (updates.imageUrl !== undefined) {
+      setClauses.push('image_url = $' + paramIndex++);
+      values.push(updates.imageUrl);
+    }
+    
+    if (setClauses.length === 0) {
+      throw new Error('No fields to update');
+    }
+    
+    values.push(uid);
+    const query = `
+      UPDATE public.users 
+      SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE uid = $${paramIndex}
+      RETURNING *
+    `;
+    
+    const result = await client.query(query, values);
+    await client.query('COMMIT');
+    
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      uid: row.uid,
+      email: row.email,
+      displayName: row.display_name,
+      role: row.role,
+      avatar: row.avatar,
+      imageUrl: row.image_url
+    };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 // Update supervisor greenhouse assignments
 async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
   const client = await pool.connect();
@@ -604,6 +675,7 @@ module.exports = {
   getAllUsers,
   getUserByEmail,
   createUser,
+  updateUser,
   deleteUser,
   resetUsers,
   resetWorkers,

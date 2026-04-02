@@ -2900,7 +2900,7 @@ const AdminDashboard = {
     }
   },
 
-  updateAccountSettings() {
+  async updateAccountSettings() {
     const email = document.getElementById('admin-email')?.value?.trim();
     const currentPassword = document.getElementById('admin-current-password')?.value;
     const newPassword = document.getElementById('admin-new-password')?.value;
@@ -2911,6 +2911,13 @@ const AdminDashboard = {
       return;
     }
 
+    // Get admin user once
+    const adminUser = AFV.users.admin || AFV.currentUser;
+    if (!adminUser) {
+      showToast('Admin user not found', 'error');
+      return;
+    }
+
     // If changing password, validate
     if (newPassword || confirmPassword) {
       if (!currentPassword) {
@@ -2918,8 +2925,8 @@ const AdminDashboard = {
         return;
       }
 
-      const adminUser = AFV.users.admin || AFV.currentUser;
-      if (adminUser.password !== currentPassword) {
+      // Check passwordHash (frontend uses passwordHash, not password)
+      if (adminUser.passwordHash !== currentPassword) {
         showToast('Current password is incorrect', 'error');
         return;
       }
@@ -2936,14 +2943,31 @@ const AdminDashboard = {
     }
 
     // Update admin user
-    const adminUser = AFV.users.admin;
-    if (adminUser) {
+    try {
+      // Call API to update user credentials
+      const updateData = { email };
+      if (newPassword) {
+        updateData.password = newPassword;
+        updateData.currentPassword = currentPassword;
+      }
+      
+      const result = await AFV_API.updateUser(adminUser.id || 'admin', updateData);
+      
+      if (result.error) {
+        showToast(result.error, 'error');
+        return;
+      }
+      
+      // Update local state
       adminUser.email = email;
       if (newPassword) {
-        adminUser.password = newPassword;
+        adminUser.passwordHash = newPassword;
       }
       this.saveState();
       showToast('Account settings updated successfully!', 'success');
+    } catch (error) {
+      console.error('Error updating account:', error);
+      showToast('Failed to update account settings', 'error');
     }
   },
 

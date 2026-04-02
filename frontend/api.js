@@ -128,6 +128,14 @@ const AFV_API = {
     return response.json();
   },
 
+  async updateUser(id, data) {
+    const response = await authFetch(`/auth/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  },
+
   async getSettings() {
     const response = await authFetch('/admin/settings');
     return response.json();

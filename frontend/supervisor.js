@@ -2634,7 +2634,7 @@ const SupervisorDashboard = {
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Buyer Name</label>
-              <input type="text" id="order-buyer" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., John Doe">
+              <input type="text" id="order-buyer" style="width:100%;padding:10px;border:1px solid var(--green-pale);border-radius:var(--radius-sm);font-size:0.95rem" placeholder="e.g., John Kamau">
             </div>
             <div style="margin-bottom:16px">
               <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-dark);margin-bottom:6px">Buyer Phone</label>

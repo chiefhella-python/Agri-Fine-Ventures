@@ -199,6 +199,70 @@ router.delete('/users/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// PUT /api/auth/users/:id - Update user credentials (email/password)
+router.put('/users/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { email, password, currentPassword } = req.body;
+  
+  try {
+    // Get the user by ID to verify current password if changing password
+    const user = await db.getUserByEmail(req.user.email);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Check if user is updating their own account or is admin
+    if (req.user.uid !== id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'You can only update your own account' });
+    }
+    
+    // If changing password, verify current password
+    if (password) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Current password is required to change password' });
+      }
+      
+      const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!passwordMatch) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+      
+      if (password.length < 4) {
+        return res.status(400).json({ error: 'New password must be at least 4 characters' });
+      }
+    }
+    
+    // If changing email, check if new email is already in use
+    if (email && email !== user.email) {
+      const existingUser = await db.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+    }
+    
+    // Build update object
+    const updates = {};
+    if (email) updates.email = email;
+    if (password) updates.password = password;
+    
+    // Update user in database
+    const updatedUser = await db.updateUser(id, updates);
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Return updated user without password
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    res.json({ 
+      message: 'User updated successfully',
+      user: userWithoutPassword
+    });
+  } catch (err) {
+    console.error('Update user error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/auth/reset-all - Full system reset (Admin only)
 router.post('/reset-all', authenticate, requireAdmin, async (req, res) => {
   try {
