@@ -1,6 +1,9 @@
 {
   "name": "agri-fine-ventures",
   "version": "1.0.0",
+  "engines": {
+    "node": "22.x"
+  },
   "description": "Agri-Fine Ventures - Greenhouse Management System",
   "scripts": {
     "install:backend": "cd backend && npm install",
