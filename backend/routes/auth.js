@@ -13,14 +13,19 @@ const { authenticate, requireAdmin, requireSupervisorOrAdmin, requireRole } = re
 const bcrypt = require('bcrypt');
 const SALT_ROUNDS = 10;
 
-// JWT utility (simple implementation - for production use jsonwebtoken)
+// JWT utility - secure implementation
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+
 const generateToken = (user) => {
   const payload = {
     uid: user.uid,
     email: user.email,
-    role: user.role
+    role: user.role,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
   };
-  return Buffer.from(JSON.stringify(payload)).toString('base64');
+  return jwt.sign(payload, JWT_SECRET);
 };
 
 // POST /api/auth/login - User login
@@ -132,21 +137,15 @@ router.post('/register', [
 
 // POST /api/auth/verify - Verify token
 router.post('/verify', authenticate, (req, res) => {
-  const { token } = req.body;
-  
-  if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
-  }
-  
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    res.json({
-      valid: true,
-      user: decoded
-    });
-  } catch (decodeError) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+  // Token already verified by authenticate middleware
+  res.json({
+    valid: true,
+    user: {
+      uid: req.user.uid,
+      email: req.user.email,
+      role: req.user.role
+    }
+  });
 });
 
 // POST /api/auth/logout - User logout

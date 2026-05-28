@@ -5,7 +5,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticate, requireAdmin, requireSupervisorOrAdmin } = require('../middleware/auth');
+const db = require('../config/database');
+const { authenticate, requireAdmin } = require('../middleware/auth');
 
 // In-memory sensor data storage (simulates IoT data)
 let sensorReadings = {};
@@ -30,14 +31,32 @@ router.get('/:greenhouseId', authenticate, async (req, res) => {
   const { greenhouseId } = req.params;
   const { limit = '50' } = req.query;
   
+  // Check if supervisor is assigned to this greenhouse
+  if (req.user.role === 'supervisor') {
+    const isAssigned = await db.isSupervisorAssignedToGreenhouse(req.user.uid, greenhouseId);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied to this greenhouse' });
+    }
+  }
+  
   const readings = sensorReadings[greenhouseId] || [];
   res.json(readings.slice(-parseInt(limit)));
 });
 
 // POST /api/sensors/:greenhouseId - Submit sensor reading
-router.post('/:greenhouseId', authenticate, requireSupervisorOrAdmin, (req, res) => {
+router.post('/:greenhouseId', authenticate, async (req, res) => {
   const { greenhouseId } = req.params;
   const { sensors, timestamp } = req.body;
+  
+  // Check if supervisor is assigned to this greenhouse
+  if (req.user.role === 'supervisor') {
+    const isAssigned = await db.isSupervisorAssignedToGreenhouse(req.user.uid, greenhouseId);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied to this greenhouse' });
+    }
+  } else if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
   
   if (!sensors || typeof sensors !== 'object') {
     return res.status(400).json({ error: 'Sensors data is required' });
@@ -67,8 +86,16 @@ router.post('/:greenhouseId', authenticate, requireSupervisorOrAdmin, (req, res)
 });
 
 // GET /api/sensors/:greenhouseId/latest - Get latest readings for greenhouse
-router.get('/:greenhouseId/latest', authenticate, (req, res) => {
+router.get('/:greenhouseId/latest', authenticate, async (req, res) => {
   const { greenhouseId } = req.params;
+  
+  // Check if supervisor is assigned to this greenhouse
+  if (req.user.role === 'supervisor') {
+    const isAssigned = await db.isSupervisorAssignedToGreenhouse(req.user.uid, greenhouseId);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied to this greenhouse' });
+    }
+  }
   
   const readings = sensorReadings[greenhouseId] || [];
   const latest = readings[readings.length - 1] || { 
@@ -80,9 +107,17 @@ router.get('/:greenhouseId/latest', authenticate, (req, res) => {
 });
 
 // GET /api/sensors/:greenhouseId/history - Get historical data
-router.get('/:greenhouseId/history', authenticate, (req, res) => {
+router.get('/:greenhouseId/history', authenticate, async (req, res) => {
   const { greenhouseId } = req.params;
   const { sensorType, limit = '100' } = req.query;
+  
+  // Check if supervisor is assigned to this greenhouse
+  if (req.user.role === 'supervisor') {
+    const isAssigned = await db.isSupervisorAssignedToGreenhouse(req.user.uid, greenhouseId);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied to this greenhouse' });
+    }
+  }
   
   let readings = sensorReadings[greenhouseId] || [];
   
@@ -98,9 +133,17 @@ router.get('/:greenhouseId/history', authenticate, (req, res) => {
 });
 
 // GET /api/sensors/:greenhouseId/analytics - Get sensor analytics
-router.get('/:greenhouseId/analytics', authenticate, (req, res) => {
+router.get('/:greenhouseId/analytics', authenticate, async (req, res) => {
   const { greenhouseId } = req.params;
   const { period = '24h' } = req.query;
+  
+  // Check if supervisor is assigned to this greenhouse
+  if (req.user.role === 'supervisor') {
+    const isAssigned = await db.isSupervisorAssignedToGreenhouse(req.user.uid, greenhouseId);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied to this greenhouse' });
+    }
+  }
   
   const readings = sensorReadings[greenhouseId] || [];
   

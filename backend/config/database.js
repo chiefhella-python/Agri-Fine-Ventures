@@ -668,6 +668,15 @@ async function updateSupervisorGreenhouses(supervisorId, greenhouseIds) {
   }
 }
 
+// Check if supervisor is assigned to a greenhouse
+async function isSupervisorAssignedToGreenhouse(supervisorId, greenhouseId) {
+  const result = await pool.query(
+    'SELECT 1 FROM public.supervisor_greenhouses WHERE supervisor_id = $1 AND greenhouse_id = $2',
+    [supervisorId, greenhouseId]
+  );
+  return result.rows.length > 0;
+}
+
 module.exports = {
   pool,
   initializeDatabase,
@@ -692,5 +701,6 @@ module.exports = {
   createWorker,
   updateWorker,
   deleteWorker,
-  updateSupervisorGreenhouses
+  updateSupervisorGreenhouses,
+  isSupervisorAssignedToGreenhouse
 };
