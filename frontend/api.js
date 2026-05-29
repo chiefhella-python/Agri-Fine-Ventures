@@ -3,7 +3,7 @@
 // Connects frontend to backend API
 // ============================================
 
-const API_BASE = "https://agri-fine-ventures-production.up.railway.app/api";
+const API_BASE = 'https://agri-fine-ventures.onrender.com';
 
 // Get auth token from localStorage
 const getAuthHeader = () => {
